@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Room Booking Viewer</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+    }
+    .calendar-container {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-around;
+      padding: 10px;
+    }
+    .calendar {
+      flex: 1 1 30%;
+      min-width: 300px;
+      height: 600px;
+      border: none;
+    }
+    .form-container {
+      width: 100%;
+      padding: 20px;
+    }
+    iframe.form {
+      width: 100%;
+      height: 800px;
+      border: none;
+    }
+    .error {
+      color: red;
+      font-size: 1.2em;
+      padding: 20px;
+    }
+  </style>
+</head>
+<body>
+  <div class="calendar-container" id="calendarContainer"></div>
+  <div class="form-container">
+    <iframe id="formFrame" class="form"></iframe>
+    <div id="formError" class="error" style="display:none;">Error loading form. Please check the link or try again.</div>
+  </div>
+
+  <script>
+    function isValidDate(str) {
+      return /^\d{4}-\d{2}-\d{2}$/.test(str) && !isNaN(Date.parse(str));
+    }
+
+    const urlParams = new URLSearchParams(window.location.search);
+    let dateParam = urlParams.get('date');
+    if (!isValidDate(dateParam)) {
+      const today = new Date();
+      dateParam = today.toISOString().slice(0,10);
+    }
+
+    const client = urlParams.get('client') || '';
+    const formattedDate = dateParam.replace(/-/g, ''); // YYYYMMDD
+
+    const calendarIDs = [
+      'oehotcbnt0ntd1ncstfi8i1c60@group.calendar.google.com',
+      'mnqbqal695n2jfhsgaf8hc6jqk@group.calendar.google.com',
+      'aft9c58esii6jf15j7pajr2do0@group.calendar.google.com'
+    ];
+
+    const calendarContainer = document.getElementById('calendarContainer');
+
+    calendarIDs.forEach(id => {
+      try {
+        const iframe = document.createElement('iframe');
+        iframe.className = 'calendar';
+        iframe.src = `https://calendar.google.com/calendar/embed?src=${encodeURIComponent(id)}&mode=day&dates=${formattedDate}%2F${formattedDate}&ctz=Europe%2FLondon`;
+        calendarContainer.appendChild(iframe);
+      } catch (e) {
+        const err = document.createElement('div');
+        err.className = 'error';
+        err.textContent = `Error loading calendar for ID: ${id}`;
+        calendarContainer.appendChild(err);
+      }
+    });
+
+    const formEntryId = 'entry.318804641';
+    const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSeO8S579NUfjFk9IjyiKllFWt0FHOF4TX6KXR5VxpQO3jq9tA/viewform';
+    const formUrl = `${formBaseUrl}?usp=pp_url&${formEntryId}=${encodeURIComponent(client)}`;
+
+    const formFrame = document.getElementById('formFrame');
+    formFrame.src = formUrl;
+    formFrame.onerror = () => {
+      document.getElementById('formError').style.display = 'block';
+    };
+  </script>
+</body>
+</html>
