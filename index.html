@@ -7,41 +7,52 @@
       font-family: Arial, sans-serif;
       margin: 0;
       padding: 0;
-    }
-    .calendar-container {
       display: flex;
-      flex-wrap: wrap;
-      justify-content: space-around;
-      padding: 10px;
-    }
-    .calendar {
-      flex: 1 1 30%;
-      min-width: 300px;
-      height: 600px;
-      border: none;
+      flex-direction: row;
+      height: 100vh;
+      overflow: hidden;
     }
     .form-container {
-      width: 100%;
-      padding: 20px;
+      flex: 1;
+      max-width: 400px;
+      min-width: 300px;
+      padding: 10px;
+      box-sizing: border-box;
+      overflow-y: auto;
     }
     iframe.form {
       width: 100%;
-      height: 800px;
+      height: 100%;
+      border: none;
+    }
+    .calendar-container {
+      flex: 3;
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      grid-auto-rows: 300px;
+      gap: 10px;
+      padding: 10px;
+      box-sizing: border-box;
+      overflow-y: auto;
+    }
+    .calendar {
+      width: 100%;
+      height: 100%;
       border: none;
     }
     .error {
       color: red;
       font-size: 1.2em;
-      padding: 20px;
+      padding: 10px;
     }
   </style>
 </head>
 <body>
-  <div class="calendar-container" id="calendarContainer"></div>
   <div class="form-container">
     <iframe id="formFrame" class="form"></iframe>
     <div id="formError" class="error" style="display:none;">Error loading form. Please check the link or try again.</div>
   </div>
+  <div class="calendar-container" id="calendarContainer"></div>
 
   <script>
     function isValidDate(str) {
@@ -61,7 +72,10 @@
     const calendarIDs = [
       'oehotcbnt0ntd1ncstfi8i1c60@group.calendar.google.com',
       'mnqbqal695n2jfhsgaf8hc6jqk@group.calendar.google.com',
-      'aft9c58esii6jf15j7pajr2do0@group.calendar.google.com'
+      'aft9c58esii6jf15j7pajr2do0@group.calendar.google.com',
+      'CALENDAR_ID_4_HERE',
+      'CALENDAR_ID_5_HERE',
+      'CALENDAR_ID_6_HERE'
     ];
 
     const calendarContainer = document.getElementById('calendarContainer');
