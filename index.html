@@ -28,8 +28,8 @@
     .calendar-container {
       flex: 3;
       display: grid;
-      grid-template-columns: repeat(6, 1fr);
-      grid-auto-rows: 300px;
+      grid-template-columns: repeat(3, 1fr);
+      grid-template-rows: repeat(2, 1fr);
       gap: 10px;
       padding: 10px;
       box-sizing: border-box;
@@ -67,7 +67,6 @@
     }
 
     const client = urlParams.get('client') || '';
-    const formattedDate = dateParam.replace(/-/g, ''); // YYYYMMDD
 
     const calendarIDs = [
       'oehotcbnt0ntd1ncstfi8i1c60@group.calendar.google.com',
@@ -84,7 +83,7 @@
       try {
         const iframe = document.createElement('iframe');
         iframe.className = 'calendar';
-        iframe.src = `https://calendar.google.com/calendar/embed?src=${encodeURIComponent(id)}&mode=day&dates=${formattedDate}%2F${formattedDate}&ctz=Europe%2FLondon`;
+        iframe.src = `https://calendar.google.com/calendar/embed?src=${encodeURIComponent(id)}&mode=WEEK&ctz=Europe%2FLondon`;
         calendarContainer.appendChild(iframe);
       } catch (e) {
         const err = document.createElement('div');
