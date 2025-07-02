@@ -23,14 +23,35 @@
     #calendar {
       height: 100vh;
     }
+    #error-message {
+      color: red;
+      font-weight: bold;
+      padding: 2em;
+      display: none;
+      text-align: center;
+    }
   </style>
 </head>
 <body>
+  <div id='error-message'></div>
   <div id='calendar'></div>
 
   <script>
     document.addEventListener('DOMContentLoaded', function () {
+      const errorEl = document.getElementById('error-message');
       const calendarEl = document.getElementById('calendar');
+
+      // Check if FullCalendar and resourceTimeline plugin exist
+      if (
+        typeof FullCalendar === 'undefined' ||
+        typeof FullCalendar.Calendar === 'undefined' ||
+        typeof FullCalendar.ResourceTimelineView === 'undefined'
+      ) {
+        errorEl.style.display = 'block';
+        errorEl.textContent = "Error: FullCalendar or its required plugins failed to load. Please check your internet connection or CDN links.";
+        calendarEl.style.display = 'none';
+        return;
+      }
 
       const calendar = new FullCalendar.Calendar(calendarEl, {
         schedulerLicenseKey: 'CC-Attribution-NonCommercial-NoDerivatives',
