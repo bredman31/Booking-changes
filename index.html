@@ -1,33 +1,36 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <meta charset="utf-8">
-  <title>Basic FullCalendar Example</title>
+  <meta charset="utf-8" />
+  <title>FullCalendar Resource Timeline (Working)</title>
 
-  <!-- ✅ Only include CSS for plugins that have them -->
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fullcalendar/daygrid@6.1.8/index.global.min.css">
-
-  <!-- ✅ Core JS and plugin JS -->
-  <script src="https://cdn.jsdelivr.net/npm/@fullcalendar/core@6.1.8/index.global.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@fullcalendar/daygrid@6.1.8/index.global.min.js"></script>
-
-  <style>
-    body { margin: 0; font-family: sans-serif; }
-    #calendar { height: 100vh; }
-  </style>
+  <!-- ✅ Only plugins with CSS need stylesheets -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fullcalendar/resource-timeline@6.1.8/index.global.min.css" />
 </head>
 <body>
-  <div id="calendar"></div>
+  <div id="calendar" style="height: 100vh;"></div>
+
+  <!-- ✅ Load JS scripts in the correct order -->
+  <script src="https://cdn.jsdelivr.net/npm/@fullcalendar/core@6.1.8/index.global.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@fullcalendar/resource-common@6.1.8/index.global.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@fullcalendar/timeline@6.1.8/index.global.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@fullcalendar/resource-timeline@6.1.8/index.global.min.js"></script>
 
   <script>
     document.addEventListener('DOMContentLoaded', function () {
       const calendarEl = document.getElementById('calendar');
 
       const calendar = new FullCalendar.Calendar(calendarEl, {
-        plugins: [FullCalendar.dayGridPlugin],
-        initialView: 'dayGridMonth',
+        schedulerLicenseKey: 'CC-Attribution-NonCommercial-NoDerivatives',
+        plugins: [ FullCalendar.resourceTimelinePlugin ],
+        initialView: 'resourceTimelineDay',
+        resources: [
+          { id: 'room1', title: 'Room 1' },
+          { id: 'room2', title: 'Room 2' }
+        ],
         events: [
-          { title: 'Test Event', start: '2025-06-23' }
+          { id: '1', resourceId: 'room1', title: 'Meeting A', start: '2025-06-22T10:00:00', end: '2025-06-22T11:00:00' },
+          { id: '2', resourceId: 'room2', title: 'Meeting B', start: '2025-06-22T12:00:00', end: '2025-06-22T13:00:00' }
         ]
       });
 
