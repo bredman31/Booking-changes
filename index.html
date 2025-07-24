@@ -2,9 +2,8 @@
 <html>
 <head>
   <meta charset='utf-8' />
-  <title>Room Booking Viewer - Vertical Layout</title>
+  <title>Room Booking Viewer - Google Calendar Events</title>
 
-  <!-- FullCalendar vertical grid + scheduler bundle -->
   <link href="https://cdn.jsdelivr.net/npm/fullcalendar-scheduler@6.1.10/index.global.min.css" rel="stylesheet" />
   <script src="https://cdn.jsdelivr.net/npm/fullcalendar-scheduler@6.1.10/index.global.min.js"></script>
 
@@ -53,46 +52,33 @@
 
   <script>
     document.addEventListener("DOMContentLoaded", function () {
-      const calendarEl = document.getElementById("calendar");
-
-      const calendar = new FullCalendar.Calendar(calendarEl, {
+      const calendar = new FullCalendar.Calendar(document.getElementById("calendar"), {
         schedulerLicenseKey: "CC-Attribution-NonCommercial-NoDerivatives",
         initialView: "resourceTimeGridDay",
         slotMinTime: "08:00:00",
         slotMaxTime: "20:00:00",
         nowIndicator: true,
         height: "100%",
+        googleCalendarApiKey: "AIzaSyB2gfDlwKOBZ6_l6HNwBjDwTmtACjBANqs",
         resources: [
-          { id: "room1", title: "Room 1" },
-          { id: "room2", title: "Room 2" },
-          { id: "room3", title: "Room 3" },
-          { id: "room4", title: "Room 4" },
-          { id: "room5", title: "Room 5" },
-          { id: "room6", title: "Room 6" }
+          { id: "oehotcbnt0ntd1ncstfi8i1c60@group.calendar.google.com", title: "Room 1" },
+          { id: "mnqbqal695n2jfhsgaf8hc6jqk@group.calendar.google.com", title: "Room 2" },
+          { id: "aft9c58esii6jf15j7pajr2do0@group.calendar.google.com", title: "Room 3" }
         ],
-        events: [
+        eventSources: [
           {
-            id: "1",
-            resourceId: "room1",
-            title: "Jane Doe",
-            start: "2025-06-20T10:00:00",
-            end: "2025-06-20T11:00:00",
+            googleCalendarId: "oehotcbnt0ntd1ncstfi8i1c60@group.calendar.google.com",
+            resourceId: "oehotcbnt0ntd1ncstfi8i1c60@group.calendar.google.com",
             color: "#1E90FF"
           },
           {
-            id: "2",
-            resourceId: "room2",
-            title: "John Smith",
-            start: "2025-06-20T12:00:00",
-            end: "2025-06-20T13:00:00",
+            googleCalendarId: "mnqbqal695n2jfhsgaf8hc6jqk@group.calendar.google.com",
+            resourceId: "mnqbqal695n2jfhsgaf8hc6jqk@group.calendar.google.com",
             color: "#32CD32"
           },
           {
-            id: "3",
-            resourceId: "room3",
-            title: "Emma Brown",
-            start: "2025-06-20T14:00:00",
-            end: "2025-06-20T15:00:00",
+            googleCalendarId: "aft9c58esii6jf15j7pajr2do0@group.calendar.google.com",
+            resourceId: "aft9c58esii6jf15j7pajr2do0@group.calendar.google.com",
             color: "#FF8C00"
           }
         ]
