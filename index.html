@@ -2,16 +2,34 @@
 <html>
 <head>
   <meta charset='utf-8' />
-  <title>Single Room Google Calendar - Stable View</title>
+  <title>Room Booking Viewer - Google Calendar Events</title>
+
   <link href="https://cdn.jsdelivr.net/npm/fullcalendar-scheduler@6.1.10/index.global.min.css" rel="stylesheet" />
   <script src="https://cdn.jsdelivr.net/npm/fullcalendar-scheduler@6.1.10/index.global.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@fullcalendar/google-calendar@6.1.10/index.global.min.js"></script>
+
   <style>
     body {
       margin: 0;
       font-family: Arial, sans-serif;
+      display: flex;
       height: 100vh;
       overflow: hidden;
+    }
+    .form-container {
+      width: 400px;
+      min-width: 300px;
+      border-right: 1px solid #ddd;
+      height: 100vh;
+      overflow-y: auto;
+    }
+    iframe.form {
+      width: 100%;
+      height: 100%;
+      border: none;
+    }
+    .calendar-container {
+      flex-grow: 1;
+      height: 100vh;
     }
     #calendar {
       height: 100%;
@@ -20,21 +38,50 @@
   </style>
 </head>
 <body>
-  <div id="calendar"></div>
+  <div class="form-container">
+    <iframe
+      class="form"
+      src="https://docs.google.com/forms/d/e/1FAIpQLSeO8S579NUfjFk9IjyiKllFWt0FHOF4TX6KXR5VxpQO3jq9tA/viewform?embedded=true"
+      allowfullscreen
+    ></iframe>
+  </div>
+
+  <div class="calendar-container">
+    <div id="calendar"></div>
+  </div>
 
   <script>
     document.addEventListener("DOMContentLoaded", function () {
       const calendar = new FullCalendar.Calendar(document.getElementById("calendar"), {
         schedulerLicenseKey: "CC-Attribution-NonCommercial-NoDerivatives",
-        plugins: [ FullCalendar.googleCalendarPlugin ],
-        initialView: "timeGridDay",
-        nowIndicator: true,
+        initialView: "resourceTimeGridDay",
         slotMinTime: "08:00:00",
         slotMaxTime: "20:00:00",
+        nowIndicator: true,
+        height: "100%",
         googleCalendarApiKey: "AIzaSyB2gfDlwKOBZ6_l6HNwBjDwTmtACjBANqs",
-        events: {
-          googleCalendarId: "oehotcbnt0ntd1ncstfi8i1c60@group.calendar.google.com"
-        }
+        resources: [
+          { id: "oehotcbnt0ntd1ncstfi8i1c60@group.calendar.google.com", title: "Room 1" },
+          { id: "mnqbqal695n2jfhsgaf8hc6jqk@group.calendar.google.com", title: "Room 2" },
+          { id: "aft9c58esii6jf15j7pajr2do0@group.calendar.google.com", title: "Room 3" }
+        ],
+        eventSources: [
+          {
+            googleCalendarId: "oehotcbnt0ntd1ncstfi8i1c60@group.calendar.google.com",
+            resourceId: "oehotcbnt0ntd1ncstfi8i1c60@group.calendar.google.com",
+            color: "#1E90FF"
+          },
+          {
+            googleCalendarId: "mnqbqal695n2jfhsgaf8hc6jqk@group.calendar.google.com",
+            resourceId: "mnqbqal695n2jfhsgaf8hc6jqk@group.calendar.google.com",
+            color: "#32CD32"
+          },
+          {
+            googleCalendarId: "aft9c58esii6jf15j7pajr2do0@group.calendar.google.com",
+            resourceId: "aft9c58esii6jf15j7pajr2do0@group.calendar.google.com",
+            color: "#FF8C00"
+          }
+        ]
       });
 
       calendar.render();
