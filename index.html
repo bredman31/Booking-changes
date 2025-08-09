@@ -70,12 +70,13 @@
       border: 1px solid #ccc;
       font-size: 0.85em;
       max-width: 100%;
+      min-height: 400px;
     }
-    .day-view {
+    .calendar-grid.day-view {
       grid-template-columns: 60px repeat(6, 1fr);
       grid-auto-rows: 35px;
     }
-    .week-view {
+    .calendar-grid.week-view {
       grid-template-columns: 80px repeat(7, 1fr);
       grid-auto-rows: 30px;
     }
@@ -288,26 +289,40 @@
     function switchView(view) {
       currentView = view;
       
+      console.log('Switching to view:', view);
+      
       // Update view buttons
-      document.querySelectorAll('.view-btn').forEach(btn => btn.classList.remove('active'));
-      event.target.classList.add('active');
+      const buttons = document.querySelectorAll('.view-btn');
+      if (buttons.length > 0) {
+        buttons.forEach(btn => btn.classList.remove('active'));
+        // Find the button that was clicked
+        const clickedButton = event ? event.target : document.querySelector(`[onclick="switchView('${view}')"]`);
+        if (clickedButton) {
+          clickedButton.classList.add('active');
+        }
+      }
       
       // Show/hide controls based on view
-      document.getElementById('dayControls').classList.toggle('hidden', view !== 'day');
-      document.getElementById('weekControls').classList.toggle('hidden', view !== 'week');
+      const dayControls = document.getElementById('dayControls');
+      const weekControls = document.getElementById('weekControls');
+      const counsellorFilter = document.getElementById('counsellorFilter');
       
-      // Show/hide counsellor filter - only for week view
-      document.getElementById('counsellorFilter').classList.toggle('hidden', view !== 'week');
+      if (dayControls) dayControls.classList.toggle('hidden', view !== 'day');
+      if (weekControls) weekControls.classList.toggle('hidden', view !== 'week');
+      if (counsellorFilter) counsellorFilter.classList.toggle('hidden', view !== 'week');
       
       // Reset counsellor filter for day view
       if (view === 'day') {
         selectedCounsellor = '';
-        document.getElementById('counsellorSelect').value = '';
+        const counsellorSelect = document.getElementById('counsellorSelect');
+        if (counsellorSelect) counsellorSelect.value = '';
       }
       
       // Update grid class
       const grid = document.getElementById('calendarGrid');
-      grid.className = `calendar-grid ${view}-view`;
+      if (grid) {
+        grid.className = `calendar-grid ${view}-view`;
+      }
       
       // Update page title and info
       updateCounsellorInfo();
@@ -399,7 +414,14 @@
     }
 
     function createCalendarGrid() {
+      console.log('Creating calendar grid for view:', currentView);
       const grid = document.getElementById("calendarGrid");
+      
+      if (!grid) {
+        console.error('Could not find calendarGrid element!');
+        return;
+      }
+      
       grid.innerHTML = '';
       
       if (currentView === 'day') {
@@ -407,9 +429,13 @@
       } else {
         createWeekGrid(grid);
       }
+      
+      console.log('Calendar grid created successfully!');
     }
 
     function createDayGrid(grid) {
+      console.log('Creating day grid...');
+      
       // Empty top-left cell
       const emptyCell = document.createElement("div");
       emptyCell.className = "grid-header";
@@ -423,6 +449,8 @@
         header.textContent = room;
         grid.appendChild(header);
       });
+      
+      console.log('Day grid headers added, adding time rows...');
       
       // Time rows
       businessHours.forEach(time => {
@@ -449,9 +477,13 @@
           grid.appendChild(cell);
         });
       });
+      
+      console.log('Day grid completed with', grid.children.length, 'cells');
     }
 
     function createWeekGrid(grid) {
+      console.log('Creating week grid...');
+      
       // Empty top-left cell
       const emptyCell = document.createElement("div");
       emptyCell.className = "grid-header";
@@ -468,6 +500,8 @@
         header.textContent = `${weekDays[i]} ${date.getDate()}/${date.getMonth() + 1}`;
         grid.appendChild(header);
       }
+      
+      console.log('Week grid headers added, adding time rows...');
       
       // Time rows
       businessHours.forEach(time => {
@@ -487,6 +521,7 @@
       });
       
       updateWeekDisplay();
+      console.log('Week grid completed with', grid.children.length, 'cells');
     }
 
     function populateCalendar() {
@@ -668,27 +703,32 @@
       updateURL();
     });
 
-    // Initialize
-    parseURLParams();
-    
-    // Set initial view buttons
-    document.querySelectorAll('.view-btn').forEach(btn => btn.classList.remove('active'));
-    if (currentView === 'day') {
-      document.querySelector(`[onclick="switchView('day')"]`).classList.add('active');
-    } else {
-      document.querySelector(`[onclick="switchView('week')"]`).classList.add('active');
-    }
-    
-    // Show appropriate controls and counsellor filter
-    document.getElementById('dayControls').classList.toggle('hidden', currentView !== 'day');
-    document.getElementById('weekControls').classList.toggle('hidden', currentView !== 'week');
-    document.getElementById('counsellorFilter').classList.toggle('hidden', currentView !== 'week');
-    
-    // Set grid class
-    document.getElementById('calendarGrid').className = `calendar-grid ${currentView}-view`;
-    
-    createCalendarGrid();
-    loadBookingData();
+    // Initialize when DOM is ready
+    document.addEventListener('DOMContentLoaded', function() {
+      console.log('DOM loaded, initializing...');
+      
+      // Parse URL parameters
+      parseURLParams();
+      
+      // Set initial view buttons
+      document.querySelectorAll('.view-btn').forEach(btn => btn.classList.remove('active'));
+      if (currentView === 'day') {
+        document.querySelector(`[onclick="switchView('day')"]`).classList.add('active');
+      } else {
+        document.querySelector(`[onclick="switchView('week')"]`).classList.add('active');
+      }
+      
+      // Show appropriate controls and counsellor filter
+      document.getElementById('dayControls').classList.toggle('hidden', currentView !== 'day');
+      document.getElementById('weekControls').classList.toggle('hidden', currentView !== 'week');
+      document.getElementById('counsellorFilter').classList.toggle('hidden', currentView !== 'week');
+      
+      // Set grid class
+      document.getElementById('calendarGrid').className = `calendar-grid ${currentView}-view`;
+      
+      createCalendarGrid();
+      loadBookingData();
+    });
   </script>
 </body>
 </html>
