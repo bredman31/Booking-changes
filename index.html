@@ -85,6 +85,7 @@
       <label class="date-selector">Date:</label>
       <input type="date" id="dateSelector" />
       <button onclick="refreshData()">Refresh Data</button>
+      <span id="dataStatus" style="margin-left: 15px; font-size: 0.9em; color: #666;"></span>
     </div>
     <div class="calendar-grid" id="calendarGrid">
       <!-- Dynamic grid will be inserted here -->
@@ -176,7 +177,10 @@
     }
 
     async function loadBookingData() {
+      const statusElement = document.getElementById('dataStatus');
+      
       try {
+        statusElement.textContent = 'Loading booking data...';
         console.log('Fetching data from Apps Script...');
         
         const response = await fetch(SCRIPT_URL);
@@ -190,18 +194,22 @@
         
         bookingData = jsonData;
         populateCalendar();
+        
+        statusElement.textContent = `Loaded ${jsonData.length} bookings`;
+        statusElement.style.color = '#28a745';
+        
+        // Clear status after 3 seconds
+        setTimeout(() => {
+          statusElement.textContent = '';
+        }, 3000);
+        
       } catch (error) {
         console.error('Error loading booking data:', error);
-        console.log('Using sample data as fallback...');
+        statusElement.textContent = 'Error loading data';
+        statusElement.style.color = '#dc3545';
         
-        // Fallback to sample data for local testing
-        bookingData = [
-          {date: '2025-08-09', start: '09:00', end: '10:00', room: 'Room_1', client: 'Emma Biggin', code: 'ird22vnvr'},
-          {date: '2025-08-09', start: '10:00', end: '11:00', room: 'Room_1', client: 'Emma Biggin', code: 'ird22x6km'},
-          {date: '2025-08-09', start: '14:00', end: '15:00', room: 'Room_2', client: 'Test Client', code: 'TEST001'},
-          {date: '2025-08-09', start: '16:00', end: '17:00', room: 'Room_3', client: 'Another Test', code: 'TEST002'}
-        ];
-        
+        alert(`Error loading booking data: ${error.message}\n\nPlease check that your Google Apps Script is deployed correctly.`);
+        bookingData = [];
         populateCalendar();
       }
     }
