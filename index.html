@@ -359,11 +359,11 @@
         summaryDiv.textContent = `${counsellorBookings.length} bookings found`;
         infoDiv.classList.remove('hidden');
         
-        document.getElementById('pageTitle').textContent = `Weekly Schedule - ${selectedCounsellor}`;
+        document.getElementById('pageTitle').textContent = `My Bookings - ${selectedCounsellor}`;
       } else {
         // Week view with no counsellor selected
         infoDiv.classList.add('hidden');
-        document.getElementById('pageTitle').textContent = 'Select a Counsellor for Weekly View';
+        document.getElementById('pageTitle').textContent = 'Select Your Name to View Your Bookings';
       }
     }
 
