@@ -286,13 +286,25 @@
       document.querySelectorAll('.view-btn').forEach(btn => btn.classList.remove('active'));
       event.target.classList.add('active');
       
-      // Show/hide controls
+      // Show/hide controls based on view
       document.getElementById('dayControls').classList.toggle('hidden', view !== 'day');
       document.getElementById('weekControls').classList.toggle('hidden', view !== 'week');
+      
+      // Show/hide counsellor filter - only for week view
+      document.getElementById('counsellorFilter').classList.toggle('hidden', view !== 'week');
+      
+      // Reset counsellor filter for day view
+      if (view === 'day') {
+        selectedCounsellor = '';
+        document.getElementById('counsellorSelect').value = '';
+      }
       
       // Update grid class
       const grid = document.getElementById('calendarGrid');
       grid.className = `calendar-grid ${view}-view`;
+      
+      // Update page title and info
+      updateCounsellorInfo();
       
       // Recreate grid and populate
       createCalendarGrid();
@@ -312,7 +324,12 @@
       const nameDiv = document.getElementById('counsellorName');
       const summaryDiv = document.getElementById('counsellorSummary');
       
-      if (selectedCounsellor) {
+      if (currentView === 'day') {
+        // Day view - show all bookings, no counsellor filter
+        infoDiv.classList.add('hidden');
+        document.getElementById('pageTitle').textContent = 'Cherry Tree Centre - Admin Day View';
+      } else if (selectedCounsellor) {
+        // Week view with counsellor selected
         const counsellorBookings = bookingData.filter(booking => 
           booking.client.toLowerCase().includes(selectedCounsellor.toLowerCase())
         );
@@ -321,10 +338,11 @@
         summaryDiv.textContent = `${counsellorBookings.length} bookings found`;
         infoDiv.classList.remove('hidden');
         
-        document.getElementById('pageTitle').textContent = `Bookings for ${selectedCounsellor}`;
+        document.getElementById('pageTitle').textContent = `Weekly Schedule - ${selectedCounsellor}`;
       } else {
+        // Week view with no counsellor selected
         infoDiv.classList.add('hidden');
-        document.getElementById('pageTitle').textContent = 'Cherry Tree Centre - Room Booking Calendar';
+        document.getElementById('pageTitle').textContent = 'Select a Counsellor for Weekly View';
       }
     }
 
@@ -338,8 +356,8 @@
         }
       });
       
-      // Clear existing options except "All Counsellors"
-      select.innerHTML = '<option value="">All Counsellors</option>';
+      // Clear existing options
+      select.innerHTML = '<option value="">Select Counsellor</option>';
       
       // Add counsellor options
       Array.from(counsellors).sort().forEach(counsellor => {
@@ -475,8 +493,8 @@
 
       let filteredBookings = bookingData;
       
-      // Filter by counsellor if selected
-      if (selectedCounsellor) {
+      // Filter by counsellor only in week view
+      if (currentView === 'week' && selectedCounsellor) {
         filteredBookings = bookingData.filter(booking => 
           booking.client.toLowerCase().includes(selectedCounsellor.toLowerCase())
         );
@@ -492,8 +510,8 @@
     function populateDayView(filteredBookings) {
       const selectedDate = document.getElementById('dateSelector').value;
       
-      // Filter bookings for selected date
-      const dayBookings = filteredBookings.filter(booking => booking.date === selectedDate);
+      // Filter bookings for selected date (no counsellor filter in day view)
+      const dayBookings = bookingData.filter(booking => booking.date === selectedDate);
       
       dayBookings.forEach(booking => {
         const startHour = parseInt(booking.start.split(':')[0]);
@@ -511,9 +529,10 @@
             
             if (cell) {
               cell.classList.add('booked', roomClass);
+              // Day view: Show client name as main heading
               cell.innerHTML = `
-                <div class="booking-info">${booking.code || ''}</div>
-                <div class="client-name">${booking.client || ''}</div>
+                <div class="booking-info">${booking.client || ''}</div>
+                <div class="client-name">${booking.code || ''}</div>
               `;
             }
           }
@@ -541,16 +560,29 @@
               
               if (cell) {
                 const {roomClass} = getRoomMapping(booking);
+                const roomDisplayName = getRoomDisplayName(booking);
+                
                 cell.classList.add('booked', roomClass);
+                // Week view: Show room name as main heading
                 cell.innerHTML = `
-                  <div class="booking-info">${booking.code || ''}</div>
-                  <div class="client-name">${booking.client || ''}</div>
+                  <div class="booking-info">${roomDisplayName}</div>
+                  <div class="client-name">${booking.code || ''}</div>
                 `;
               }
             }
           }
         });
       }
+    }
+
+    function getRoomDisplayName(booking) {
+      if (booking.room === 'Room_1' || booking.room === '1') return 'Room 1';
+      if (booking.room === 'Room_2' || booking.room === '2') return 'Room 2';
+      if (booking.room === 'Room_4' || booking.room === '4') return 'Room 4';
+      if (booking.room === 'Room_6' || booking.room === '6') return 'Room 6';
+      if (booking.room === 'Room_7' || booking.room === '7') return 'Room 7';
+      if (booking.location && booking.location.toLowerCase().includes('online')) return 'Online';
+      return booking.room || 'Unknown';
     }
 
     function getRoomMapping(booking) {
