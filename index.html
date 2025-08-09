@@ -253,7 +253,8 @@
         currentView = view;
       }
       
-      if (counsellor) {
+      // Only set counsellor for week view
+      if (counsellor && currentView === 'week') {
         selectedCounsellor = decodeURIComponent(counsellor);
       }
       
@@ -268,7 +269,12 @@
     function updateURL() {
       const params = new URLSearchParams();
       params.set('view', currentView);
-      if (selectedCounsellor) params.set('counsellor', encodeURIComponent(selectedCounsellor));
+      
+      // Only include counsellor parameter for week view
+      if (currentView === 'week' && selectedCounsellor) {
+        params.set('counsellor', encodeURIComponent(selectedCounsellor));
+      }
+      
       if (currentView === 'day') {
         params.set('date', document.getElementById('dateSelector').value);
       } else {
@@ -484,6 +490,8 @@
     }
 
     function populateCalendar() {
+      console.log('Populating calendar - View:', currentView, 'Selected counsellor:', selectedCounsellor);
+      
       // Clear all cells first
       const cells = document.querySelectorAll('.grid-cell');
       cells.forEach(cell => {
@@ -496,8 +504,11 @@
       // Filter by counsellor only in week view
       if (currentView === 'week' && selectedCounsellor) {
         filteredBookings = bookingData.filter(booking => 
-          booking.client.toLowerCase().includes(selectedCounsellor.toLowerCase())
+          booking.client && booking.client.toLowerCase().includes(selectedCounsellor.toLowerCase())
         );
+        console.log('Filtered bookings for', selectedCounsellor, ':', filteredBookings.length);
+      } else if (currentView === 'day') {
+        console.log('Day view - showing all bookings:', bookingData.length);
       }
       
       if (currentView === 'day') {
@@ -541,6 +552,11 @@
     }
 
     function populateWeekView(filteredBookings) {
+      // If no counsellor selected in week view, don't show any bookings
+      if (!selectedCounsellor) {
+        return;
+      }
+      
       for (let day = 0; day < 7; day++) {
         const date = new Date(currentWeekStart);
         date.setDate(date.getDate() + day);
@@ -655,13 +671,18 @@
     // Initialize
     parseURLParams();
     
-    // Set initial view
+    // Set initial view buttons
     document.querySelectorAll('.view-btn').forEach(btn => btn.classList.remove('active'));
-    document.querySelector(`[onclick="switchView('${currentView}')"]`).classList.add('active');
+    if (currentView === 'day') {
+      document.querySelector(`[onclick="switchView('day')"]`).classList.add('active');
+    } else {
+      document.querySelector(`[onclick="switchView('week')"]`).classList.add('active');
+    }
     
-    // Show appropriate controls
+    // Show appropriate controls and counsellor filter
     document.getElementById('dayControls').classList.toggle('hidden', currentView !== 'day');
     document.getElementById('weekControls').classList.toggle('hidden', currentView !== 'week');
+    document.getElementById('counsellorFilter').classList.toggle('hidden', currentView !== 'week');
     
     // Set grid class
     document.getElementById('calendarGrid').className = `calendar-grid ${currentView}-view`;
