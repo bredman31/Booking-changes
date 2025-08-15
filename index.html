@@ -738,63 +738,42 @@
       // Parse URL parameters first
       parseURLParams();
       
-      // Set initial view state
-      updateViewButtons();
-      updateControlsVisibility();
-      
-      // Set grid class and create grid
-      const grid = document.getElementById('calendarGrid');
-      grid.className = `calendar-grid ${currentView}-view`;
-      createCalendarGrid();
-      
-      // Load data and populate calendar
-      initializeData();
-      
-      // Auto-refresh data every 5 minutes
-      setInterval(() => {
-        loadBookingData().then(() => {
-          populateCalendar();
-        });
-      }, 5 * 60 * 1000);
-    });
-
-    function updateViewButtons() {
+      // Set initial view buttons
       document.querySelectorAll('.view-btn').forEach(btn => btn.classList.remove('active'));
       if (currentView === 'day') {
         document.querySelector(`[onclick="switchView('day')"]`).classList.add('active');
       } else {
         document.querySelector(`[onclick="switchView('week')"]`).classList.add('active');
       }
-    }
-
-    function updateControlsVisibility() {
+      
+      // Show appropriate controls and counsellor filter
       document.getElementById('dayControls').classList.toggle('hidden', currentView !== 'day');
       document.getElementById('weekControls').classList.toggle('hidden', currentView !== 'week');
       document.getElementById('counsellorFilter').classList.toggle('hidden', currentView !== 'week');
-    }
-
-    async function initializeData() {
-      try {
-        await loadBookingData();
-        
-        // Set up counsellor dropdown if in week view
+      
+      // Set grid class
+      document.getElementById('calendarGrid').className = `calendar-grid ${currentView}-view`;
+      
+      // Create grid first
+      createCalendarGrid();
+      
+      // Load data and populate
+      loadBookingData().then(() => {
+        // After data loads, populate counsellor dropdown if in week view
         if (currentView === 'week' && selectedCounsellor) {
+          // Set the counsellor dropdown value
           const select = document.getElementById('counsellorSelect');
           if (select) {
             select.value = selectedCounsellor;
           }
           updateCounsellorInfo();
         }
-        
-        // Always populate calendar after data loads
         populateCalendar();
-        
-      } catch (error) {
-        console.error('Error during data initialization:', error);
-        // Show empty calendar even if data loading fails
-        populateCalendar();
-      }
-    }
+      });
+      
+      // Auto-refresh data every 5 minutes
+      setInterval(loadBookingData, 5 * 60 * 1000);
+    });
   </script>
 </body>
 </html>
