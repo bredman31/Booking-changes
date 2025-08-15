@@ -743,42 +743,67 @@
     document.addEventListener('DOMContentLoaded', function() {
       console.log('DOM loaded, initializing...');
       
-      // Parse URL parameters first
-      parseURLParams();
-      
-      // Set initial view state
-      updateViewButtons();
-      updateControlsVisibility();
-      
-      // Set grid class and create grid
-      const grid = document.getElementById('calendarGrid');
-      grid.className = `calendar-grid ${currentView}-view`;
-      createCalendarGrid();
-      
-      // Load data and populate calendar
-      initializeData();
-      
-      // Auto-refresh data every 5 minutes
-      setInterval(() => {
-        loadBookingData().then(() => {
-          populateCalendar();
-        });
-      }, 5 * 60 * 1000);
+      // Small delay to ensure all elements are rendered
+      setTimeout(() => {
+        // Parse URL parameters first
+        parseURLParams();
+        
+        // Set initial view state with error checking
+        updateViewButtons();
+        updateControlsVisibility();
+        
+        // Set grid class and create grid
+        const grid = document.getElementById('calendarGrid');
+        if (grid) {
+          grid.className = `calendar-grid ${currentView}-view`;
+          createCalendarGrid();
+        } else {
+          console.error('Calendar grid element not found!');
+        }
+        
+        // Load data and populate calendar
+        initializeData();
+        
+        // Auto-refresh data every 5 minutes
+        setInterval(() => {
+          loadBookingData().then(() => {
+            populateCalendar();
+          });
+        }, 5 * 60 * 1000);
+      }, 100); // 100ms delay to ensure DOM is fully ready
     });
 
     function updateViewButtons() {
-      document.querySelectorAll('.view-btn').forEach(btn => btn.classList.remove('active'));
+      const buttons = document.querySelectorAll('.view-btn');
+      if (buttons.length === 0) {
+        console.warn('No view buttons found');
+        return;
+      }
+      
+      buttons.forEach(btn => btn.classList.remove('active'));
+      
+      let activeButton;
       if (currentView === 'day') {
-        document.querySelector(`[onclick="switchView('day')"]`).classList.add('active');
+        activeButton = document.querySelector(`[onclick="switchView('day')"]`);
       } else {
-        document.querySelector(`[onclick="switchView('week')"]`).classList.add('active');
+        activeButton = document.querySelector(`[onclick="switchView('week')"]`);
+      }
+      
+      if (activeButton) {
+        activeButton.classList.add('active');
+      } else {
+        console.warn(`No button found for view: ${currentView}`);
       }
     }
 
     function updateControlsVisibility() {
-      document.getElementById('dayControls').classList.toggle('hidden', currentView !== 'day');
-      document.getElementById('weekControls').classList.toggle('hidden', currentView !== 'week');
-      document.getElementById('counsellorFilter').classList.toggle('hidden', currentView !== 'week');
+      const dayControls = document.getElementById('dayControls');
+      const weekControls = document.getElementById('weekControls');
+      const counsellorFilter = document.getElementById('counsellorFilter');
+      
+      if (dayControls) dayControls.classList.toggle('hidden', currentView !== 'day');
+      if (weekControls) weekControls.classList.toggle('hidden', currentView !== 'week');
+      if (counsellorFilter) counsellorFilter.classList.toggle('hidden', currentView !== 'week');
     }
 
     async function initializeData() {
