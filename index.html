@@ -249,6 +249,9 @@
       const view = params.get('view');
       const counsellor = params.get('counsellor');
       const date = params.get('date');
+      const booking = params.get('booking');
+      const room = params.get('room');
+      const time = params.get('time');
       
       if (view && (view === 'day' || view === 'week')) {
         currentView = view;
@@ -264,6 +267,26 @@
         document.getElementById('dateSelector').value = currentDate;
         currentWeekStart = new Date(date);
         currentWeekStart.setDate(currentWeekStart.getDate() - currentWeekStart.getDay());
+      }
+      
+      // Handle booking pre-fill parameters
+      if (booking && room && time && date) {
+        prefillForm(booking, room, date, time);
+      }
+    }
+
+    function prefillForm(bookingCode, room, date, time) {
+      // Update the iframe src with pre-filled form
+      const iframe = document.querySelector('iframe[title="Change Booking Form"]');
+      if (iframe) {
+        const formUrl = `https://docs.google.com/forms/d/e/1FAIpQLSca60SAUPvDP1dHgYETrd-HYOqIlFnTs6ulM-dtPnIwNG6h9w/viewform?embedded=true&usp=pp_url` +
+          `&entry.318804641=${encodeURIComponent(bookingCode)}` +
+          `&entry.491164679=${encodeURIComponent(room)}` +
+          `&entry.1519263716=${encodeURIComponent(date)}` +
+          `&entry.438982955=${encodeURIComponent(time)}`;
+        
+        iframe.src = formUrl;
+        console.log('Pre-filled form with:', bookingCode, room, date, time);
       }
     }
 
@@ -660,7 +683,7 @@
       const statusElement = document.getElementById('dataStatus');
       
       try {
-        statusElement.textContent = 'Loading booking data...';
+        if (statusElement) statusElement.textContent = 'Loading booking data...';
         
         const response = await fetch(SCRIPT_URL);
         
@@ -673,22 +696,27 @@
         bookingData = jsonData;
         populateCounsellorDropdown();
         updateCounsellorInfo();
-        populateCalendar();
         
-        statusElement.textContent = `Loaded ${jsonData.length} bookings`;
-        statusElement.style.color = '#28a745';
+        if (statusElement) {
+          statusElement.textContent = `Loaded ${jsonData.length} bookings`;
+          statusElement.style.color = '#28a745';
+          
+          setTimeout(() => {
+            statusElement.textContent = '';
+          }, 3000);
+        }
         
-        setTimeout(() => {
-          statusElement.textContent = '';
-        }, 3000);
+        return Promise.resolve();
         
       } catch (error) {
         console.error('Error loading booking data:', error);
-        statusElement.textContent = 'Error loading data';
-        statusElement.style.color = '#dc3545';
+        if (statusElement) {
+          statusElement.textContent = 'Error loading data';
+          statusElement.style.color = '#dc3545';
+        }
         
         bookingData = [];
-        populateCalendar();
+        return Promise.resolve();
       }
     }
 
@@ -707,7 +735,7 @@
     document.addEventListener('DOMContentLoaded', function() {
       console.log('DOM loaded, initializing...');
       
-      // Parse URL parameters
+      // Parse URL parameters first
       parseURLParams();
       
       // Set initial view buttons
@@ -726,9 +754,53 @@
       // Set grid class
       document.getElementById('calendarGrid').className = `calendar-grid ${currentView}-view`;
       
+      // Create grid immediately
       createCalendarGrid();
-      loadBookingData();
+      
+      // Load data and populate
+      loadBookingData().then(() => {
+        // After data loads, populate counsellor dropdown if in week view
+        if (currentView === 'week' && selectedCounsellor) {
+          // Set the counsellor dropdown value
+          const select = document.getElementById('counsellorSelect');
+          if (select) {
+            select.value = selectedCounsellor;
+          }
+          updateCounsellorInfo();
+        }
+        // Always populate calendar after data loads
+        populateCalendar();
+      }).catch((error) => {
+        console.error('Error during initialization:', error);
+        // Even if data loading fails, show empty calendar
+        populateCalendar();
+      });
+      
+      // Auto-refresh data every 5 minutes
+      setInterval(() => {
+        loadBookingData().then(() => {
+          populateCalendar();
+        });
+      }, 5 * 60 * 1000);
     });
+
+    // Fallback initialization if DOMContentLoaded already fired
+    if (document.readyState === 'loading') {
+      // DOMContentLoaded listener will handle this
+    } else {
+      // DOM already loaded, initialize immediately
+      setTimeout(() => {
+        if (!document.getElementById('calendarGrid').hasChildNodes()) {
+          console.log('Fallback initialization triggered');
+          parseURLParams();
+          document.getElementById('calendarGrid').className = `calendar-grid ${currentView}-view`;
+          createCalendarGrid();
+          loadBookingData().then(() => {
+            populateCalendar();
+          });
+        }
+      }, 100);
+    }
   </script>
 </body>
 </html>
