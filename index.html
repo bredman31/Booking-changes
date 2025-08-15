@@ -548,10 +548,12 @@
     }
 
     function populateCalendar() {
-      console.log('Populating calendar - View:', currentView, 'Selected counsellor:', selectedCounsellor);
+      console.log('Populating calendar - View:', currentView, 'Selected counsellor:', selectedCounsellor, 'Booking data length:', bookingData.length);
       
       // Clear all cells first
       const cells = document.querySelectorAll('.grid-cell');
+      console.log('Found', cells.length, 'grid cells to populate');
+      
       cells.forEach(cell => {
         cell.innerHTML = '';
         cell.classList.remove('booked', 'room-1', 'room-2', 'room-4', 'room-6', 'room-7', 'online');
@@ -574,6 +576,8 @@
       } else {
         populateWeekView(filteredBookings);
       }
+      
+      console.log('Calendar population complete');
     }
 
     function populateDayView(filteredBookings) {
@@ -721,7 +725,11 @@
     }
 
     function refreshData() {
-      loadBookingData();
+      console.log('Manual refresh triggered');
+      loadBookingData().then(() => {
+        console.log('Refresh complete, repopulating calendar');
+        populateCalendar();
+      });
     }
 
     // Date selector handler
@@ -738,42 +746,63 @@
       // Parse URL parameters first
       parseURLParams();
       
-      // Set initial view buttons
+      // Set initial view state
+      updateViewButtons();
+      updateControlsVisibility();
+      
+      // Set grid class and create grid
+      const grid = document.getElementById('calendarGrid');
+      grid.className = `calendar-grid ${currentView}-view`;
+      createCalendarGrid();
+      
+      // Load data and populate calendar
+      initializeData();
+      
+      // Auto-refresh data every 5 minutes
+      setInterval(() => {
+        loadBookingData().then(() => {
+          populateCalendar();
+        });
+      }, 5 * 60 * 1000);
+    });
+
+    function updateViewButtons() {
       document.querySelectorAll('.view-btn').forEach(btn => btn.classList.remove('active'));
       if (currentView === 'day') {
         document.querySelector(`[onclick="switchView('day')"]`).classList.add('active');
       } else {
         document.querySelector(`[onclick="switchView('week')"]`).classList.add('active');
       }
-      
-      // Show appropriate controls and counsellor filter
+    }
+
+    function updateControlsVisibility() {
       document.getElementById('dayControls').classList.toggle('hidden', currentView !== 'day');
       document.getElementById('weekControls').classList.toggle('hidden', currentView !== 'week');
       document.getElementById('counsellorFilter').classList.toggle('hidden', currentView !== 'week');
-      
-      // Set grid class
-      document.getElementById('calendarGrid').className = `calendar-grid ${currentView}-view`;
-      
-      // Create grid first
-      createCalendarGrid();
-      
-      // Load data and populate
-      loadBookingData().then(() => {
-        // After data loads, populate counsellor dropdown if in week view
+    }
+
+    async function initializeData() {
+      try {
+        await loadBookingData();
+        
+        // Set up counsellor dropdown if in week view
         if (currentView === 'week' && selectedCounsellor) {
-          // Set the counsellor dropdown value
           const select = document.getElementById('counsellorSelect');
           if (select) {
             select.value = selectedCounsellor;
           }
           updateCounsellorInfo();
         }
+        
+        // Always populate calendar after data loads
         populateCalendar();
-      });
-      
-      // Auto-refresh data every 5 minutes
-      setInterval(loadBookingData, 5 * 60 * 1000);
-    });
+        
+      } catch (error) {
+        console.error('Error during data initialization:', error);
+        // Show empty calendar even if data loading fails
+        populateCalendar();
+      }
+    }
   </script>
 </body>
 </html>
