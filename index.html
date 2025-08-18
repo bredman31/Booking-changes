@@ -187,7 +187,7 @@
       </div>
       
       <iframe
-        src="https://docs.google.com/forms/d/e/1FAIpQLSeO8S579NUfjFk9IjyiKllFWt0FHOF4TX6KXR5VxpQO3jq9tA/viewform?embedded=true"
+        src="https://docs.google.com/forms/d/e/1FAIpQLSeO8S579NUfjFk9IjyiKllFWt0FHOF4TX6KXR5VxpQO3jq9tA/viewform?embedded=true&v=2"
         width="100%"
         height="80%"
         frameborder="0"
@@ -705,13 +705,35 @@
       try {
         if (statusElement) statusElement.textContent = 'Loading booking data...';
         
-        const response = await fetch(SCRIPT_URL);
+        // Add cache-busting and performance headers
+        const response = await fetch(SCRIPT_URL, {
+          method: 'GET',
+          headers: {
+            'Cache-Control': 'no-cache, no-store, must-revalidate',
+            'Pragma': 'no-cache',
+            'Expires': '0'
+          }
+        });
         
         if (!response.ok) {
           throw new Error(`Failed to fetch data: ${response.statusText}`);
         }
         
         const jsonData = await response.json();
+        
+        // Cache the data in browser memory with timestamp
+        const cachedData = {
+          data: jsonData,
+          timestamp: Date.now(),
+          expiry: Date.now() + (2 * 60 * 1000) // Cache for 2 minutes
+        };
+        
+        // Store in sessionStorage for faster subsequent loads
+        try {
+          sessionStorage.setItem('bookingDataCache', JSON.stringify(cachedData));
+        } catch (e) {
+          console.warn('Could not cache data in sessionStorage:', e);
+        }
         
         bookingData = jsonData;
         populateCounsellorDropdown();
@@ -740,8 +762,53 @@
       }
     }
 
+    // New function to check cache first
+    async function loadBookingDataWithCache() {
+      const statusElement = document.getElementById('dataStatus');
+      
+      // Try to load from cache first
+      try {
+        const cached = sessionStorage.getItem('bookingDataCache');
+        if (cached) {
+          const cachedData = JSON.parse(cached);
+          if (cachedData.timestamp && Date.now() < cachedData.expiry) {
+            console.log('Loading data from cache');
+            if (statusElement) {
+              statusElement.textContent = 'Loading from cache...';
+              statusElement.style.color = '#28a745';
+            }
+            
+            bookingData = cachedData.data;
+            populateCounsellorDropdown();
+            updateCounsellorInfo();
+            
+            if (statusElement) {
+              statusElement.textContent = `Loaded ${cachedData.data.length} bookings (cached)`;
+              setTimeout(() => {
+                statusElement.textContent = '';
+              }, 2000);
+            }
+            
+            return Promise.resolve();
+          }
+        }
+      } catch (e) {
+        console.warn('Cache read error:', e);
+      }
+      
+      // If no valid cache, load from server
+      return loadBookingData();
+    }
+
     function refreshData() {
       console.log('Manual refresh triggered');
+      // Clear cache on manual refresh
+      try {
+        sessionStorage.removeItem('bookingDataCache');
+      } catch (e) {
+        console.warn('Could not clear cache:', e);
+      }
+      
       loadBookingData().then(() => {
         console.log('Refresh complete, repopulating calendar');
         populateCalendar();
@@ -780,9 +847,9 @@
         // Load data and populate calendar
         initializeData();
         
-        // Auto-refresh data every 5 minutes
+        // Auto-refresh data every 5 minutes (but use cache if available)
         setInterval(() => {
-          loadBookingData().then(() => {
+          loadBookingDataWithCache().then(() => {
             populateCalendar();
           });
         }, 5 * 60 * 1000);
@@ -824,7 +891,7 @@
 
     async function initializeData() {
       try {
-        await loadBookingData();
+        await loadBookingDataWithCache();
         
         // Set up counsellor dropdown if in week view
         if (currentView === 'week' && selectedCounsellor) {
