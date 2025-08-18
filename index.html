@@ -422,10 +422,14 @@
           const result = await response.text(); // Use text() instead of json()
           console.log('Response:', result);
           
-          statusDiv.style.background = '#d4edda';
-          statusDiv.style.color = '#155724';
-          statusDiv.style.border = '1px solid #c3e6cb';
-          statusDiv.textContent = 'Change request submitted successfully! You will be contacted about the change.';
+          if (result.includes('SUCCESS')) {
+            statusDiv.style.background = '#d4edda';
+            statusDiv.style.color = '#155724';
+            statusDiv.style.border = '1px solid #c3e6cb';
+            statusDiv.textContent = 'Change request submitted successfully! Check the "Booking Change Requests" tab in your spreadsheet.';
+          } else {
+            throw new Error('Submission failed: ' + result);
+          }
           
           // Clear the new values (keep current values visible)
           document.getElementById('newRoomInput').value = '';
@@ -433,10 +437,10 @@
           document.getElementById('newTimeInput').value = '';
           document.getElementById('notesInput').value = '';
           
-          // Hide status after 5 seconds
+          // Hide status after 7 seconds
           setTimeout(() => {
             statusDiv.style.display = 'none';
-          }, 5000);
+          }, 7000);
           
         } else {
           throw new Error(`Server responded with ${response.status}`);
