@@ -235,7 +235,22 @@
           
           <div style="margin-bottom: 15px;">
             <label style="display: block; font-weight: bold; margin-bottom: 5px;">New Time (if changing):</label>
-            <input type="time" id="newTimeInput" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px;">
+            <select id="newTimeInput" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px;">
+              <option value="">No change</option>
+              <option value="08:00">08:00</option>
+              <option value="09:00">09:00</option>
+              <option value="10:00">10:00</option>
+              <option value="11:00">11:00</option>
+              <option value="12:00">12:00</option>
+              <option value="13:00">13:00</option>
+              <option value="14:00">14:00</option>
+              <option value="15:00">15:00</option>
+              <option value="16:00">16:00</option>
+              <option value="17:00">17:00</option>
+              <option value="18:00">18:00</option>
+              <option value="19:00">19:00</option>
+              <option value="20:00">20:00</option>
+            </select>
           </div>
           
           <div style="margin-bottom: 15px;">
@@ -244,8 +259,9 @@
           </div>
           
           <div style="margin-bottom: 20px;">
-            <label style="display: block; font-weight: bold; margin-bottom: 5px;">Your Name:</label>
-            <input type="text" id="counsellorNameInput" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px;" required>
+            <label style="display: block; font-weight: bold; margin-bottom: 5px;">Counsellor:</label>
+            <input type="text" id="counsellorNameInput" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; background: #f5f5f5;" readonly>
+            <small style="color: #666; font-size: 12px;">Auto-filled based on your personalized link</small>
           </div>
           
           <button type="submit" style="background: #007bff; color: white; padding: 12px 24px; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; width: 100%; font-weight: bold;">
@@ -345,9 +361,12 @@
       currentDateInput.value = date || '';
       currentTimeInput.value = time || '';
       
-      // Auto-fill counsellor name if we know it
+      // Always auto-fill counsellor name (it's read-only now)
       if (selectedCounsellor && counsellorNameInput) {
         counsellorNameInput.value = selectedCounsellor;
+      } else if (counsellorNameInput) {
+        // Set a default if no counsellor is selected
+        counsellorNameInput.value = 'Please select counsellor from dropdown above';
       }
       
       // Clear any previous new values
@@ -366,6 +385,7 @@
       console.log('  Room:', room);
       console.log('  Date:', date);
       console.log('  Time:', time);
+      console.log('  Counsellor:', selectedCounsellor || 'Not set');
     }
 
     async function submitBookingChange(changeData) {
@@ -1067,8 +1087,9 @@
             return;
           }
           
-          if (!changeData.counsellorName) {
-            alert('Please enter your name.');
+          // Auto-filled counsellor name, but validate it exists
+          if (!changeData.counsellorName || changeData.counsellorName === 'Please select counsellor from dropdown above') {
+            alert('Please select a counsellor from the dropdown above first.');
             return;
           }
           
