@@ -398,21 +398,29 @@
         statusDiv.style.border = '1px solid #ffeaa7';
         statusDiv.textContent = 'Submitting change request...';
         
-        // Submit to Google Apps Script
+        // Use FormData for better Google Apps Script compatibility
+        const formData = new FormData();
+        formData.append('action', 'submitBookingChange');
+        formData.append('timestamp', new Date().toISOString());
+        formData.append('originalBookingCode', changeData.originalBookingCode);
+        formData.append('originalRoom', changeData.originalRoom);
+        formData.append('originalDate', changeData.originalDate);
+        formData.append('originalTime', changeData.originalTime);
+        formData.append('newRoom', changeData.newRoom || '');
+        formData.append('newDate', changeData.newDate || '');
+        formData.append('newTime', changeData.newTime || '');
+        formData.append('notes', changeData.notes || '');
+        formData.append('counsellorName', changeData.counsellorName);
+        
+        // Submit to Google Apps Script using FormData
         const response = await fetch(SCRIPT_URL, {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            action: 'submitBookingChange',
-            timestamp: new Date().toISOString(),
-            ...changeData
-          })
+          body: formData
         });
         
         if (response.ok) {
-          const result = await response.json();
+          const result = await response.text(); // Use text() instead of json()
+          console.log('Response:', result);
           
           statusDiv.style.background = '#d4edda';
           statusDiv.style.color = '#155724';
