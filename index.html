@@ -649,7 +649,7 @@
                 
                 // Add click handler to populate form with booking data
                 cell.addEventListener('click', function() {
-                  const bookingCode = booking.code || '';
+                  const bookingCode = booking.finalBookingId || booking.code || '';
                   const room = roomDisplayName;
                   const date = dateStr;
                   const time = booking.start;
