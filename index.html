@@ -1,191 +1,142 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Room Booking Calendar</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+// Add this function to handle booking clicks
+function handleBookingClick(booking, room, date, startTime) {
+    // Extract booking data
+    const bookingCode = booking.finalBookingId || booking.originalBookingCode || '';
+    const roomName = room;
+    const bookingDate = date;
+    const time = startTime;
+    
+    // Pre-fill the form with the clicked booking data
+    preFillForm(bookingCode, roomName, bookingDate, time);
+    
+    // Scroll to the form for better UX
+    const formContainer = document.getElementById('google-form-container');
+    if (formContainer) {
+        formContainer.scrollIntoView({ behavior: 'smooth' });
+    }
+    
+    // Optional: Add visual feedback
+    showFormStatus(`Form updated with booking: ${roomName}, ${formatDate(bookingDate)}, ${time}`);
+}
 
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #f5f5f5;
-            color: #333;
-        }
+// Enhanced preFillForm function to work with dynamic data
+function preFillForm(bookingCode, room, date, time) {
+    const iframe = document.getElementById('google-form');
+    if (!iframe) return;
+    
+    // Build the pre-filled form URL
+    const baseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSca60SAUPvDP1dHgYETrd-HYOqIlFnTs6ulM-dtPnIwNG6h9w/viewform';
+    const params = new URLSearchParams({
+        'entry.318804641': bookingCode,  // Booking Code (Column H)
+        'entry.491164679': room,         // Room
+        'entry.1519263716': date,        // Date (YYYY-MM-DD)
+        'entry.438982955': time          // Time (HH:MM)
+    });
+    
+    const preFilledUrl = `${baseUrl}?${params.toString()}`;
+    iframe.src = preFilledUrl;
+    
+    console.log('Form pre-filled with:', { bookingCode, room, date, time });
+}
 
-        .header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 20px;
-            text-align: center;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-        }
+// Enhanced booking rendering in the week view
+function renderWeeklyBookingsForRoom(bookings, room, startDate) {
+    const container = document.getElementById(`${room.toLowerCase().replace(' ', '')}-bookings`);
+    if (!container) return;
+    
+    container.innerHTML = '';
+    
+    // Create time slots for the week
+    for (let day = 0; day < 7; day++) {
+        const currentDate = new Date(startDate);
+        currentDate.setDate(startDate.getDate() + day);
+        const dateStr = currentDate.toISOString().split('T')[0];
+        
+        const dayBookings = bookings.filter(booking => 
+            booking.room === room && 
+            booking.date === dateStr
+        );
+        
+        dayBookings.forEach(booking => {
+            const bookingElement = createClickableBookingElement(booking, room, dateStr);
+            container.appendChild(bookingElement);
+        });
+    }
+}
 
-        .header h1 {
-            font-size: 2em;
-            margin-bottom: 10px;
-        }
+// Create clickable booking elements
+function createClickableBookingElement(booking, room, date) {
+    const bookingDiv = document.createElement('div');
+    bookingDiv.className = 'booking-slot clickable-booking';
+    bookingDiv.style.cssText = `
+        background-color: ${getRoomColor(room)};
+        color: white;
+        padding: 8px;
+        margin: 2px 0;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: opacity 0.2s, transform 0.1s;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    `;
+    
+    // Add hover effects
+    bookingDiv.addEventListener('mouseenter', function() {
+        this.style.opacity = '0.8';
+        this.style.transform = 'translateY(-1px)';
+    });
+    
+    bookingDiv.addEventListener('mouseleave', function() {
+        this.style.opacity = '1';
+        this.style.transform = 'translateY(0)';
+    });
+    
+    // Format the booking display
+    const startTime = booking.startDateTime.split(' ')[1].substring(0, 5); // Extract HH:MM
+    const endTime = booking.endDateTime.split(' ')[1].substring(0, 5);
+    
+    bookingDiv.innerHTML = `
+        <div style="font-weight: bold; font-size: 12px;">
+            ${startTime}-${endTime}
+        </div>
+        <div style="font-size: 11px; margin-top: 2px;">
+            ${booking.clientCounsellorName || 'Booking'}
+        </div>
+        <div style="font-size: 10px; opacity: 0.8; margin-top: 1px;">
+            Click to modify
+        </div>
+    `;
+    
+    // Add click handler
+    bookingDiv.addEventListener('click', function() {
+        handleBookingClick(booking, room, date, startTime);
+        
+        // Visual feedback for the click
+        this.style.transform = 'scale(0.95)';
+        setTimeout(() => {
+            this.style.transform = 'translateY(0)';
+        }, 150);
+    });
+    
+    // Position the booking in the grid
+    const startHour = parseInt(startTime.split(':')[0]);
+    const startMinute = parseInt(startTime.split(':')[1]);
+    const topPosition = ((startHour - 8) * 60 + startMinute) * (50 / 60); // 50px per hour
+    
+    bookingDiv.style.position = 'absolute';
+    bookingDiv.style.top = `${topPosition}px`;
+    bookingDiv.style.left = '0';
+    bookingDiv.style.right = '0';
+    
+    return bookingDiv;
+}
 
-        .controls {
-            background: white;
-            padding: 20px;
-            margin: 20px;
-            border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            display: flex;
-            gap: 15px;
-            align-items: center;
-            flex-wrap: wrap;
-        }
-
-        .controls input, .controls select, .controls button {
-            padding: 10px;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-            font-size: 14px;
-        }
-
-        .controls button {
-            background: #667eea;
-            color: white;
-            cursor: pointer;
-            transition: background 0.3s;
-        }
-
-        .controls button:hover {
-            background: #5a67d8;
-        }
-
-        .calendar-container {
-            background: white;
-            margin: 20px;
-            border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            overflow: hidden;
-        }
-
-        .calendar-grid {
-            display: grid;
-            min-height: 600px;
-        }
-
-        .day-view {
-            grid-template-columns: 100px repeat(auto-fit, minmax(200px, 1fr));
-        }
-
-        .week-view {
-            grid-template-columns: 100px repeat(6, 1fr);
-        }
-
-        .time-header, .room-header, .day-header {
-            background: #f8f9fa;
-            padding: 15px 10px;
-            font-weight: bold;
-            text-align: center;
-            border-right: 1px solid #e9ecef;
-            border-bottom: 1px solid #e9ecef;
-        }
-
-        .time-slot {
-            padding: 10px;
-            border-right: 1px solid #e9ecef;
-            border-bottom: 1px solid #e9ecef;
-            font-size: 12px;
-            text-align: center;
-            background: #fafafa;
-        }
-
-        .booking-cell {
-            border-right: 1px solid #e9ecef;
-            border-bottom: 1px solid #e9ecef;
-            position: relative;
-            min-height: 50px;
-        }
-
-        .booking-slot {
-            background: #007bff;
-            color: white;
-            padding: 8px;
-            margin: 2px;
-            border-radius: 4px;
-            font-size: 11px;
-            position: absolute;
-            left: 2px;
-            right: 2px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-
-        .clickable-booking {
-            cursor: pointer;
-            transition: opacity 0.2s, transform 0.1s;
-            user-select: none;
-        }
-
-        .clickable-booking:hover {
-            opacity: 0.8;
-            transform: translateY(-1px);
-            box-shadow: 0 4px 8px rgba(0,0,0,0.2) !important;
-        }
-
-        .clickable-booking:active {
-            transform: scale(0.95) !important;
-        }
-
-        .room-1 { background-color: #d4a5a5; }
-        .room-2 { background-color: #9370db; }
-        .room-4 { background-color: #90ee90; }
-        .room-6 { background-color: #cd853f; }
-        .room-7 { background-color: #ffd700; color: #333; }
-        .room-online { background-color: #90ee90; }
-
-        .loading {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 400px;
-            font-size: 18px;
-        }
-
-        .spinner {
-            border: 4px solid #f3f3f3;
-            border-top: 4px solid #667eea;
-            border-radius: 50%;
-            width: 50px;
-            height: 50px;
-            animation: spin 1s linear infinite;
-            margin-right: 20px;
-        }
-
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-
-        .form-container {
-            background: white;
-            margin: 20px;
-            border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            padding: 20px;
-        }
-
-        .form-container h2 {
-            margin-bottom: 15px;
-            color: #333;
-        }
-
-        .form-container iframe {
-            width: 100%;
-            height: 800px;
-            border: none;
-            border-radius: 5px;
-        }
-
-        #form-status {
+// Add status message display
+function showFormStatus(message) {
+    let statusDiv = document.getElementById('form-status');
+    if (!statusDiv) {
+        statusDiv = document.createElement('div');
+        statusDiv.id = 'form-status';
+        statusDiv.style.cssText = `
             position: fixed;
             top: 20px;
             right: 20px;
@@ -197,433 +148,75 @@
             z-index: 1000;
             font-size: 14px;
             transition: opacity 0.3s;
-            animation: slideIn 0.3s ease-out;
-        }
-
-        @keyframes slideIn {
-            from {
-                transform: translateX(100%);
-                opacity: 0;
+        `;
+        document.body.appendChild(statusDiv);
+    }
+    
+    statusDiv.textContent = message;
+    statusDiv.style.opacity = '1';
+    
+    // Hide after 3 seconds
+    setTimeout(() => {
+        statusDiv.style.opacity = '0';
+        setTimeout(() => {
+            if (statusDiv.parentNode) {
+                statusDiv.parentNode.removeChild(statusDiv);
             }
-            to {
-                transform: translateX(0);
-                opacity: 1;
-            }
-        }
+        }, 300);
+    }, 3000);
+}
 
-        .week-view .booking-slot {
-            min-height: 40px;
-        }
+// Enhanced CSS for clickable bookings (add to your existing styles)
+const clickableBookingStyles = `
+.clickable-booking {
+    user-select: none;
+    position: relative;
+}
 
-        @media (max-width: 768px) {
-            .controls {
-                flex-direction: column;
-                align-items: stretch;
-            }
-            
-            .controls > * {
-                margin: 5px 0;
-            }
-            
-            .calendar-grid {
-                font-size: 12px;
-            }
-        }
-    </style>
-</head>
-<body>
-    <div class="header">
-        <h1>Room Booking Calendar</h1>
-        <p id="current-info">Loading...</p>
-    </div>
+.clickable-booking:hover {
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2) !important;
+}
 
-    <div class="controls">
-        <label for="date-input">Date:</label>
-        <input type="date" id="date-input">
-        
-        <label for="view-select">View:</label>
-        <select id="view-select">
-            <option value="day">Day View</option>
-            <option value="week">My Bookings (Week)</option>
-        </select>
-        
-        <label for="counsellor-input" id="counsellor-label" style="display:none;">Counsellor:</label>
-        <input type="text" id="counsellor-input" placeholder="Enter counsellor name" style="display:none;">
-        
-        <button onclick="loadCalendar()">Refresh</button>
-        <button onclick="goToToday()">Today</button>
-    </div>
+.clickable-booking:active {
+    transform: scale(0.95) !important;
+}
 
-    <div class="calendar-container">
-        <div id="calendar-content" class="loading">
-            <div class="spinner"></div>
-            <span>Loading calendar data...</span>
-        </div>
-    </div>
+.week-view .booking-slot {
+    min-height: 40px;
+}
 
-    <div class="form-container" id="google-form-container">
-        <h2>Modify Booking</h2>
-        <p id="form-instructions">Click on a booking above to modify it, or use the form below to make changes.</p>
-        <iframe id="google-form" 
-                src="https://docs.google.com/forms/d/e/1FAIpQLSca60SAUPvDP1dHgYETrd-HYOqIlFnTs6ulM-dtPnIwNG6h9w/viewform">
-        </iframe>
-    </div>
+#form-status {
+    animation: slideIn 0.3s ease-out;
+}
 
-    <script>
-        // Configuration
-        const API_URL = 'https://script.google.com/macros/s/AKfycbwUM0zUG1P4YFHTQy60yqyCUTY-JjWlKucBxRaWD8gmppRzdeHf9Lgx-nQwl0RqdT_Org/exec';
-        const ROOMS = ['Room 1', 'Room 2', 'Room 4', 'Room 6', 'Room 7', 'Online'];
-        const BUSINESS_HOURS = { start: 8, end: 20 };
+@keyframes slideIn {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+`;
 
-        let globalBookingsData = [];
-        let currentView = 'day';
-        let currentDate = new Date().toISOString().split('T')[0];
-        let currentCounsellor = '';
+// Add the styles to the page
+function addClickableBookingStyles() {
+    const styleSheet = document.createElement('style');
+    styleSheet.textContent = clickableBookingStyles;
+    document.head.appendChild(styleSheet);
+}
 
-        // Initialize page
-        document.addEventListener('DOMContentLoaded', function() {
-            initializePage();
-        });
+// Initialize the enhanced functionality
+function initializeClickableBookings() {
+    addClickableBookingStyles();
+    
+    // If we're in week view, make sure bookings are clickable
+    if (getUrlParameter('view') === 'week' || document.body.classList.contains('week-view')) {
+        console.log('Clickable bookings initialized for week view');
+    }
+}
 
-        function initializePage() {
-            // Get URL parameters
-            const urlParams = new URLSearchParams(window.location.search);
-            currentView = urlParams.get('view') || 'day';
-            currentDate = urlParams.get('date') || new Date().toISOString().split('T')[0];
-            currentCounsellor = urlParams.get('counsellor') || '';
-
-            // Set form values
-            document.getElementById('date-input').value = currentDate;
-            document.getElementById('view-select').value = currentView;
-            if (currentCounsellor) {
-                document.getElementById('counsellor-input').value = currentCounsellor;
-            }
-
-            // Show/hide counsellor input
-            toggleCounsellorInput();
-
-            // Handle view changes
-            document.getElementById('view-select').addEventListener('change', function() {
-                currentView = this.value;
-                toggleCounsellorInput();
-                loadCalendar();
-            });
-
-            document.getElementById('date-input').addEventListener('change', function() {
-                currentDate = this.value;
-                loadCalendar();
-            });
-
-            document.getElementById('counsellor-input').addEventListener('input', function() {
-                currentCounsellor = this.value;
-                if (currentView === 'week') {
-                    loadCalendar();
-                }
-            });
-
-            // Handle URL parameters for form pre-filling
-            const bookingCode = urlParams.get('booking');
-            const room = urlParams.get('room');
-            const time = urlParams.get('time');
-            
-            if (bookingCode && room && time) {
-                preFillForm(bookingCode, room, currentDate, time);
-            }
-
-            // Load initial calendar
-            loadCalendar();
-
-            // Set up auto-refresh
-            setInterval(loadCalendar, 300000); // Refresh every 5 minutes
-        }
-
-        function toggleCounsellorInput() {
-            const counsellorLabel = document.getElementById('counsellor-label');
-            const counsellorInput = document.getElementById('counsellor-input');
-            
-            if (currentView === 'week') {
-                counsellorLabel.style.display = 'inline';
-                counsellorInput.style.display = 'inline';
-            } else {
-                counsellorLabel.style.display = 'none';
-                counsellorInput.style.display = 'none';
-            }
-        }
-
-        async function loadCalendar() {
-            const calendarContent = document.getElementById('calendar-content');
-            const currentInfo = document.getElementById('current-info');
-
-            // Show loading state
-            calendarContent.innerHTML = '<div class="loading"><div class="spinner"></div><span>Loading calendar data...</span></div>';
-            
-            // Update current info
-            const dateObj = new Date(currentDate + 'T00:00:00');
-            const formattedDate = dateObj.toLocaleDateString('en-GB', { 
-                weekday: 'long', 
-                year: 'numeric', 
-                month: 'long', 
-                day: 'numeric' 
-            });
-
-            if (currentView === 'day') {
-                currentInfo.textContent = `Day View - ${formattedDate}`;
-            } else {
-                const weekStart = getWeekStartDate(dateObj);
-                const weekEnd = new Date(weekStart);
-                weekEnd.setDate(weekStart.getDate() + 6);
-                
-                currentInfo.textContent = `Week View - ${currentCounsellor || 'All Counsellors'} - ${weekStart.toLocaleDateString('en-GB')} to ${weekEnd.toLocaleDateString('en-GB')}`;
-            }
-
-            try {
-                const response = await fetch(API_URL);
-                const data = await response.json();
-                globalBookingsData = data;
-
-                if (currentView === 'day') {
-                    renderDayView(data, currentDate);
-                } else {
-                    renderWeekView(data, currentDate, currentCounsellor);
-                }
-            } catch (error) {
-                console.error('Error loading calendar data:', error);
-                calendarContent.innerHTML = '<div style="text-align: center; padding: 50px;">Error loading calendar data. Please try again.</div>';
-            }
-        }
-
-        function renderDayView(bookingsData, date) {
-            const calendarContent = document.getElementById('calendar-content');
-            calendarContent.className = 'calendar-grid day-view';
-
-            // Filter bookings for the selected date
-            const dayBookings = bookingsData.filter(booking => booking.date === date);
-
-            // Create grid
-            let gridHTML = '<div class="time-header">Time</div>';
-            
-            // Room headers
-            ROOMS.forEach(room => {
-                gridHTML += `<div class="room-header">${room}</div>`;
-            });
-
-            // Time slots and bookings
-            for (let hour = BUSINESS_HOURS.start; hour < BUSINESS_HOURS.end; hour++) {
-                const timeSlot = `${hour.toString().padStart(2, '0')}:00`;
-                gridHTML += `<div class="time-slot">${timeSlot}</div>`;
-
-                ROOMS.forEach(room => {
-                    const roomBookings = dayBookings.filter(booking => 
-                        booking.room === room && 
-                        booking.startDateTime.includes(`${hour.toString().padStart(2, '0')}:`)
-                    );
-
-                    gridHTML += '<div class="booking-cell">';
-                    roomBookings.forEach(booking => {
-                        const startTime = booking.startDateTime.split(' ')[1];
-                        const endTime = booking.endDateTime.split(' ')[1];
-                        const roomClass = getRoomClass(room);
-                        
-                        gridHTML += `<div class="booking-slot ${roomClass}">${booking.clientCounsellorName}<br><small>${startTime.substring(0,5)} - ${endTime.substring(0,5)}</small></div>`;
-                    });
-                    gridHTML += '</div>';
-                });
-            }
-
-            calendarContent.innerHTML = gridHTML;
-        }
-
-        function renderWeekView(bookingsData, date, counsellor) {
-            const calendarContent = document.getElementById('calendar-content');
-            calendarContent.className = 'calendar-grid week-view';
-
-            // Get week start date (Monday)
-            const weekStart = getWeekStartDate(new Date(date + 'T00:00:00'));
-            
-            // Filter bookings for the week and counsellor
-            const weekBookings = bookingsData.filter(booking => {
-                const bookingDate = new Date(booking.date + 'T00:00:00');
-                const isInWeek = bookingDate >= weekStart && bookingDate <= new Date(weekStart.getTime() + 6 * 24 * 60 * 60 * 1000);
-                const isCounsellor = !counsellor || booking.clientCounsellorName.toLowerCase().includes(counsellor.toLowerCase());
-                return isInWeek && isCounsellor;
-            });
-
-            // Create grid - but use ROOMS as headers instead of days (this was the key difference!)
-            let gridHTML = '<div class="time-header">Time</div>';
-            
-            // Room headers (this is how the original worked - rooms as columns, not days)
-            ROOMS.forEach(room => {
-                gridHTML += `<div class="room-header">${room}</div>`;
-            });
-
-            // Create time slots
-            for (let hour = BUSINESS_HOURS.start; hour < BUSINESS_HOURS.end; hour++) {
-                const timeSlot = `${hour.toString().padStart(2, '0')}:00`;
-                gridHTML += `<div class="time-slot">${timeSlot}</div>`;
-
-                // For each room
-                ROOMS.forEach((room, roomIndex) => {
-                    gridHTML += `<div class="booking-cell" id="cell-${hour}-${roomIndex}"></div>`;
-                });
-            }
-
-            calendarContent.innerHTML = gridHTML;
-
-            // Now add the clickable bookings
-            weekBookings.forEach(booking => {
-                const roomIndex = ROOMS.indexOf(booking.room);
-                if (roomIndex === -1) return; // Skip if room not found
-                
-                const startTime = booking.startDateTime.split(' ')[1];
-                const startHour = parseInt(startTime.split(':')[0]);
-                
-                if (startHour >= BUSINESS_HOURS.start && startHour < BUSINESS_HOURS.end) {
-                    const cell = document.getElementById(`cell-${startHour}-${roomIndex}`);
-                    if (cell) {
-                        const bookingElement = createClickableBookingElement(booking, booking.date, startTime);
-                        cell.appendChild(bookingElement);
-                    }
-                }
-            });
-        }
-
-        function createClickableBookingElement(booking, date, startTime) {
-            const bookingDiv = document.createElement('div');
-            const roomClass = getRoomClass(booking.room);
-            bookingDiv.className = `booking-slot clickable-booking ${roomClass}`;
-            
-            // Format times
-            const endTime = booking.endDateTime.split(' ')[1];
-            const timeDisplay = `${startTime.substring(0,5)}-${endTime.substring(0,5)}`;
-            
-            bookingDiv.innerHTML = `
-                <div style="font-weight: bold; font-size: 12px;">
-                    ${booking.room}
-                </div>
-                <div style="font-size: 11px; margin-top: 2px;">
-                    ${timeDisplay}
-                </div>
-                <div style="font-size: 10px; margin-top: 1px;">
-                    ${booking.clientCounsellorName || 'Booking'}
-                </div>
-                <div style="font-size: 9px; opacity: 0.8; margin-top: 2px; font-style: italic;">
-                    Click to modify
-                </div>
-            `;
-            
-            // Add click handler
-            bookingDiv.addEventListener('click', function() {
-                handleBookingClick(booking, date, startTime);
-                
-                // Visual feedback for the click
-                this.style.transform = 'scale(0.95)';
-                setTimeout(() => {
-                    this.style.transform = 'scale(1)';
-                }, 150);
-            });
-            
-            return bookingDiv;
-        }
-
-        function handleBookingClick(booking, date, startTime) {
-            // Extract booking data - use Column H (finalBookingId) as priority
-            const bookingCode = booking.finalBookingId || booking.originalBookingCode || '';
-            const room = booking.room;
-            const bookingDate = date;
-            const time = startTime.substring(0, 5); // Extract HH:MM
-            
-            console.log('Booking clicked:', { bookingCode, room, bookingDate, time });
-            
-            // Pre-fill the form with the clicked booking data
-            preFillForm(bookingCode, room, bookingDate, time);
-            
-            // Scroll to the form for better UX
-            const formContainer = document.getElementById('google-form-container');
-            if (formContainer) {
-                formContainer.scrollIntoView({ behavior: 'smooth' });
-            }
-            
-            // Show confirmation message
-            const dateObj = new Date(bookingDate + 'T00:00:00');
-            const formattedDate = dateObj.toLocaleDateString('en-GB', { 
-                weekday: 'long',
-                day: 'numeric', 
-                month: 'long'
-            });
-            
-            showFormStatus(`Form updated with booking: ${room}, ${formattedDate}, ${time}`);
-        }
-
-        function preFillForm(bookingCode, room, date, time) {
-            const iframe = document.getElementById('google-form');
-            if (!iframe) return;
-            
-            // Build the pre-filled form URL
-            const baseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSca60SAUPvDP1dHgYETrd-HYOqIlFnTs6ulM-dtPnIwNG6h9w/viewform';
-            const params = new URLSearchParams({
-                'entry.318804641': bookingCode,  // Booking Code (Column H)
-                'entry.491164679': room,         // Room
-                'entry.1519263716': date,        // Date (YYYY-MM-DD)
-                'entry.438982955': time          // Time (HH:MM)
-            });
-            
-            const preFilledUrl = `${baseUrl}?${params.toString()}`;
-            iframe.src = preFilledUrl;
-            
-            console.log('Form pre-filled with:', { bookingCode, room, date, time });
-            
-            // Update form instructions
-            const instructions = document.getElementById('form-instructions');
-            if (instructions) {
-                instructions.innerHTML = `<strong>Form loaded with:</strong> ${room}, ${date}, ${time} (Booking ID: ${bookingCode})`;
-            }
-        }
-
-        function showFormStatus(message) {
-            let statusDiv = document.getElementById('form-status');
-            if (!statusDiv) {
-                statusDiv = document.createElement('div');
-                statusDiv.id = 'form-status';
-                document.body.appendChild(statusDiv);
-            }
-            
-            statusDiv.textContent = message;
-            statusDiv.style.opacity = '1';
-            
-            // Hide after 3 seconds
-            setTimeout(() => {
-                statusDiv.style.opacity = '0';
-                setTimeout(() => {
-                    if (statusDiv.parentNode) {
-                        statusDiv.parentNode.removeChild(statusDiv);
-                    }
-                }, 300);
-            }, 3000);
-        }
-
-        function getRoomClass(room) {
-            return room.toLowerCase().replace(' ', '-').replace('room-', 'room-');
-        }
-
-        function getWeekStartDate(date) {
-            const result = new Date(date);
-            const day = result.getDay();
-            const diff = result.getDate() - day + (day === 0 ? -6 : 1); // Monday as start
-            result.setDate(diff);
-            result.setHours(0, 0, 0, 0);
-            return result;
-        }
-
-        function goToToday() {
-            currentDate = new Date().toISOString().split('T')[0];
-            document.getElementById('date-input').value = currentDate;
-            loadCalendar();
-        }
-
-        function getUrlParameter(name) {
-            const urlParams = new URLSearchParams(window.location.search);
-            return urlParams.get(name);
-        }
-    </script>
-</body>
-</html>
+// Call this when the page loads
+document.addEventListener('DOMContentLoaded', initializeClickableBookings);
