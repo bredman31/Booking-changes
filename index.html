@@ -638,10 +638,10 @@
             
             if (cell) {
               cell.classList.add('booked', roomClass);
-              // Day view: Show client name as main heading
+              // Day view: Show client name as main heading, finalBookingId instead of code
               cell.innerHTML = `
                 <div class="booking-info">${booking.client || ''}</div>
-                <div class="client-name">${booking.code || ''}</div>
+                <div class="client-name">${booking.finalBookingId || ''}</div>
               `;
             }
           }
@@ -677,10 +677,10 @@
                 const roomDisplayName = getRoomDisplayName(booking);
                 
                 cell.classList.add('booked', roomClass);
-                // Week view: Show room name as main heading
+                // Week view: Show room name as main heading, finalBookingId instead of code
                 cell.innerHTML = `
                   <div class="booking-info">${roomDisplayName}</div>
-                  <div class="client-name">${booking.code || ''}</div>
+                  <div class="client-name">${booking.finalBookingId || ''}</div>
                 `;
               }
             }
@@ -866,6 +866,17 @@
         populateCalendar();
       }
     }
-  </script>
-</body>
-</html>
+
+    function showLoading() {
+      const spinner = document.getElementById('loadingSpinner');
+      if (spinner) {
+        spinner.classList.remove('hidden');
+      }
+    }
+
+    function hideLoading() {
+      const spinner = document.getElementById('loadingSpinner');
+      if (spinner) {
+        spinner.classList.add('hidden');
+      }
+    }
