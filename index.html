@@ -276,28 +276,82 @@
     }
 
     function prefillForm(bookingCode, room, date, time) {
-      // Update the iframe src with pre-filled form
-      const iframe = document.querySelector('iframe[title="Change Booking Form"]');
-      if (iframe) {
-        // Use the full form URL without embedded=true for better submission handling
-        const formUrl = `https://docs.google.com/forms/d/e/1FAIpQLSca60SAUPvDP1dHgYETrd-HYOqIlFnTs6ulM-dtPnIwNG6h9w/viewform?usp=pp_url` +
-          `&entry.318804641=${encodeURIComponent(bookingCode)}` +
-          `&entry.491164679=${encodeURIComponent(room)}` +
-          `&entry.1519263716=${encodeURIComponent(date)}` +
-          `&entry.438982955=${encodeURIComponent(time)}`;
+      // Pre-fill the form with current booking details
+      document.getElementById('bookingCodeInput').value = bookingCode || '';
+      document.getElementById('currentRoomInput').value = room || '';
+      document.getElementById('currentDateInput').value = date || '';
+      document.getElementById('currentTimeInput').value = time || '';
+      
+      // Auto-fill counsellor name if we know it
+      if (selectedCounsellor) {
+        document.getElementById('counsellorNameInput').value = selectedCounsellor;
+      }
+      
+      // Clear any previous new values
+      document.getElementById('newRoomInput').value = '';
+      document.getElementById('newDateInput').value = '';
+      document.getElementById('newTimeInput').value = '';
+      document.getElementById('notesInput').value = '';
+      
+      console.log('Pre-filled form with:');
+      console.log('  Booking Code:', bookingCode);
+      console.log('  Room:', room);
+      console.log('  Date:', date);
+      console.log('  Time:', time);
+    }
+
+    async function submitBookingChange(changeData) {
+      const statusDiv = document.getElementById('submitStatus');
+      
+      try {
+        statusDiv.style.display = 'block';
+        statusDiv.style.background = '#fff3cd';
+        statusDiv.style.color = '#856404';
+        statusDiv.style.border = '1px solid #ffeaa7';
+        statusDiv.textContent = 'Submitting change request...';
         
-        iframe.src = formUrl;
-        console.log('Pre-filled form with:');
-        console.log('  Booking Code:', bookingCode);
-        console.log('  Room:', room);
-        console.log('  Date:', date);
-        console.log('  Time:', time);
-        console.log('  Full URL:', formUrl);
+        // Submit to Google Apps Script
+        const response = await fetch(SCRIPT_URL, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            action: 'submitBookingChange',
+            timestamp: new Date().toISOString(),
+            ...changeData
+          })
+        });
         
-        // Add submission tracking
-        iframe.onload = function() {
-          console.log('Form loaded successfully');
-        };
+        if (response.ok) {
+          const result = await response.json();
+          
+          statusDiv.style.background = '#d4edda';
+          statusDiv.style.color = '#155724';
+          statusDiv.style.border = '1px solid #c3e6cb';
+          statusDiv.textContent = 'Change request submitted successfully! You will be contacted about the change.';
+          
+          // Clear the new values (keep current values visible)
+          document.getElementById('newRoomInput').value = '';
+          document.getElementById('newDateInput').value = '';
+          document.getElementById('newTimeInput').value = '';
+          document.getElementById('notesInput').value = '';
+          
+          // Hide status after 5 seconds
+          setTimeout(() => {
+            statusDiv.style.display = 'none';
+          }, 5000);
+          
+        } else {
+          throw new Error(`Server responded with ${response.status}`);
+        }
+        
+      } catch (error) {
+        console.error('Submission error:', error);
+        statusDiv.style.background = '#f8d7da';
+        statusDiv.style.color = '#721c24';
+        statusDiv.style.border = '1px solid #f5c6cb';
+        statusDiv.textContent = 'Error submitting request. Please try again or contact support.';
       }
     }
 
@@ -908,6 +962,42 @@
     // Initialize when DOM is ready
     document.addEventListener('DOMContentLoaded', function() {
       console.log('DOM loaded, initializing...');
+      
+      // Set up booking change form handler
+      const changeForm = document.getElementById('bookingChangeForm');
+      if (changeForm) {
+        changeForm.addEventListener('submit', function(e) {
+          e.preventDefault();
+          
+          const changeData = {
+            // Current booking info
+            originalBookingCode: document.getElementById('bookingCodeInput').value,
+            originalRoom: document.getElementById('currentRoomInput').value,
+            originalDate: document.getElementById('currentDateInput').value,
+            originalTime: document.getElementById('currentTimeInput').value,
+            
+            // Requested changes
+            newRoom: document.getElementById('newRoomInput').value,
+            newDate: document.getElementById('newDateInput').value,
+            newTime: document.getElementById('newTimeInput').value,
+            notes: document.getElementById('notesInput').value,
+            counsellorName: document.getElementById('counsellorNameInput').value
+          };
+          
+          // Validate that at least one change is requested
+          if (!changeData.newRoom && !changeData.newDate && !changeData.newTime && !changeData.notes) {
+            alert('Please specify what changes you would like to make.');
+            return;
+          }
+          
+          if (!changeData.counsellorName) {
+            alert('Please enter your name.');
+            return;
+          }
+          
+          submitBookingChange(changeData);
+        });
+      }
       
       // Small delay to ensure all elements are rendered
       setTimeout(() => {
