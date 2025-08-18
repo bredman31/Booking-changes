@@ -279,14 +279,25 @@
       // Update the iframe src with pre-filled form
       const iframe = document.querySelector('iframe[title="Change Booking Form"]');
       if (iframe) {
-        const formUrl = `https://docs.google.com/forms/d/e/1FAIpQLSca60SAUPvDP1dHgYETrd-HYOqIlFnTs6ulM-dtPnIwNG6h9w/viewform?embedded=true&usp=pp_url` +
+        // Use the full form URL without embedded=true for better submission handling
+        const formUrl = `https://docs.google.com/forms/d/e/1FAIpQLSca60SAUPvDP1dHgYETrd-HYOqIlFnTs6ulM-dtPnIwNG6h9w/viewform?usp=pp_url` +
           `&entry.318804641=${encodeURIComponent(bookingCode)}` +
           `&entry.491164679=${encodeURIComponent(room)}` +
           `&entry.1519263716=${encodeURIComponent(date)}` +
           `&entry.438982955=${encodeURIComponent(time)}`;
         
         iframe.src = formUrl;
-        console.log('Pre-filled form with:', bookingCode, room, date, time);
+        console.log('Pre-filled form with:');
+        console.log('  Booking Code:', bookingCode);
+        console.log('  Room:', room);
+        console.log('  Date:', date);
+        console.log('  Time:', time);
+        console.log('  Full URL:', formUrl);
+        
+        // Add submission tracking
+        iframe.onload = function() {
+          console.log('Form loaded successfully');
+        };
       }
     }
 
