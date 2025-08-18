@@ -646,6 +646,22 @@
                   <div class="booking-info">${roomDisplayName}</div>
                   <div class="client-name">${booking.code || ''}</div>
                 `;
+                
+                // Add click handler to populate form with booking data
+                cell.addEventListener('click', function() {
+                  const bookingCode = booking.code || '';
+                  const room = roomDisplayName;
+                  const date = dateStr;
+                  const time = booking.start;
+                  
+                  prefillForm(bookingCode, room, date, time);
+                  
+                  // Scroll to form for better UX
+                  const formContainer = document.querySelector('.form-container');
+                  if (formContainer) {
+                    formContainer.scrollIntoView({ behavior: 'smooth' });
+                  }
+                });
               }
             }
           }
