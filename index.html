@@ -276,22 +276,39 @@
     }
 
     function prefillForm(bookingCode, room, date, time) {
+      // Check if form elements exist before trying to access them
+      const bookingCodeInput = document.getElementById('bookingCodeInput');
+      const currentRoomInput = document.getElementById('currentRoomInput');
+      const currentDateInput = document.getElementById('currentDateInput');
+      const currentTimeInput = document.getElementById('currentTimeInput');
+      const counsellorNameInput = document.getElementById('counsellorNameInput');
+      
+      if (!bookingCodeInput || !currentRoomInput || !currentDateInput || !currentTimeInput) {
+        console.warn('Form elements not found, cannot pre-fill form');
+        return;
+      }
+      
       // Pre-fill the form with current booking details
-      document.getElementById('bookingCodeInput').value = bookingCode || '';
-      document.getElementById('currentRoomInput').value = room || '';
-      document.getElementById('currentDateInput').value = date || '';
-      document.getElementById('currentTimeInput').value = time || '';
+      bookingCodeInput.value = bookingCode || '';
+      currentRoomInput.value = room || '';
+      currentDateInput.value = date || '';
+      currentTimeInput.value = time || '';
       
       // Auto-fill counsellor name if we know it
-      if (selectedCounsellor) {
-        document.getElementById('counsellorNameInput').value = selectedCounsellor;
+      if (selectedCounsellor && counsellorNameInput) {
+        counsellorNameInput.value = selectedCounsellor;
       }
       
       // Clear any previous new values
-      document.getElementById('newRoomInput').value = '';
-      document.getElementById('newDateInput').value = '';
-      document.getElementById('newTimeInput').value = '';
-      document.getElementById('notesInput').value = '';
+      const newRoomInput = document.getElementById('newRoomInput');
+      const newDateInput = document.getElementById('newDateInput');
+      const newTimeInput = document.getElementById('newTimeInput');
+      const notesInput = document.getElementById('notesInput');
+      
+      if (newRoomInput) newRoomInput.value = '';
+      if (newDateInput) newDateInput.value = '';
+      if (newTimeInput) newTimeInput.value = '';
+      if (notesInput) notesInput.value = '';
       
       console.log('Pre-filled form with:');
       console.log('  Booking Code:', bookingCode);
@@ -478,6 +495,15 @@
         }
         select.appendChild(option);
       });
+    }
+
+    function getWeekStartDate(date) {
+      const result = new Date(date);
+      const day = result.getDay();
+      const diff = result.getDate() - day + (day === 0 ? -6 : 1); // Monday as start
+      result.setDate(diff);
+      result.setHours(0, 0, 0, 0);
+      return result;
     }
 
     function formatDate(date) {
