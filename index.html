@@ -448,16 +448,12 @@
                 return isInWeek && isCounsellor;
             });
 
-            // Create grid
+            // Create grid - but use ROOMS as headers instead of days (this was the key difference!)
             let gridHTML = '<div class="time-header">Time</div>';
             
-            // Day headers (Monday to Saturday)
-            const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-            days.forEach((day, index) => {
-                const dayDate = new Date(weekStart);
-                dayDate.setDate(weekStart.getDate() + index);
-                const dayStr = dayDate.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
-                gridHTML += `<div class="day-header">${day}<br><small>${dayStr}</small></div>`;
+            // Room headers (this is how the original worked - rooms as columns, not days)
+            ROOMS.forEach(room => {
+                gridHTML += `<div class="room-header">${room}</div>`;
             });
 
             // Create time slots
@@ -465,34 +461,27 @@
                 const timeSlot = `${hour.toString().padStart(2, '0')}:00`;
                 gridHTML += `<div class="time-slot">${timeSlot}</div>`;
 
-                // For each day of the week
-                for (let dayOffset = 0; dayOffset < 6; dayOffset++) {
-                    const currentDay = new Date(weekStart);
-                    currentDay.setDate(weekStart.getDate() + dayOffset);
-                    const currentDateStr = currentDay.toISOString().split('T')[0];
-
-                    gridHTML += `<div class="booking-cell" id="cell-${hour}-${dayOffset}"></div>`;
-                }
+                // For each room
+                ROOMS.forEach((room, roomIndex) => {
+                    gridHTML += `<div class="booking-cell" id="cell-${hour}-${roomIndex}"></div>`;
+                });
             }
 
             calendarContent.innerHTML = gridHTML;
 
             // Now add the clickable bookings
             weekBookings.forEach(booking => {
-                const bookingDate = new Date(booking.date + 'T00:00:00');
-                const dayOffset = Math.floor((bookingDate - weekStart) / (24 * 60 * 60 * 1000));
+                const roomIndex = ROOMS.indexOf(booking.room);
+                if (roomIndex === -1) return; // Skip if room not found
                 
-                if (dayOffset >= 0 && dayOffset < 6) {
-                    const startTime = booking.startDateTime.split(' ')[1];
-                    const startHour = parseInt(startTime.split(':')[0]);
-                    const startMinute = parseInt(startTime.split(':')[1]);
-                    
-                    if (startHour >= BUSINESS_HOURS.start && startHour < BUSINESS_HOURS.end) {
-                        const cell = document.getElementById(`cell-${startHour}-${dayOffset}`);
-                        if (cell) {
-                            const bookingElement = createClickableBookingElement(booking, currentDateStr, startTime);
-                            cell.appendChild(bookingElement);
-                        }
+                const startTime = booking.startDateTime.split(' ')[1];
+                const startHour = parseInt(startTime.split(':')[0]);
+                
+                if (startHour >= BUSINESS_HOURS.start && startHour < BUSINESS_HOURS.end) {
+                    const cell = document.getElementById(`cell-${startHour}-${roomIndex}`);
+                    if (cell) {
+                        const bookingElement = createClickableBookingElement(booking, booking.date, startTime);
+                        cell.appendChild(bookingElement);
                     }
                 }
             });
