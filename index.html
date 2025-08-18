@@ -644,7 +644,7 @@
                 // Week view: Show room name as main heading
                 cell.innerHTML = `
                   <div class="booking-info">${roomDisplayName}</div>
-                  <div class="client-name">${booking.code || ''}</div>
+                  <div class="client-name">${booking.finalBookingId || booking.code || ''}</div>
                 `;
                 
                 // Add click handler to populate form with booking data
@@ -705,15 +705,8 @@
       try {
         if (statusElement) statusElement.textContent = 'Loading booking data...';
         
-        // Add cache-busting and performance headers
-        const response = await fetch(SCRIPT_URL, {
-          method: 'GET',
-          headers: {
-            'Cache-Control': 'no-cache, no-store, must-revalidate',
-            'Pragma': 'no-cache',
-            'Expires': '0'
-          }
-        });
+        // Simple fetch without problematic headers for Google Apps Script
+        const response = await fetch(SCRIPT_URL);
         
         if (!response.ok) {
           throw new Error(`Failed to fetch data: ${response.statusText}`);
@@ -762,7 +755,86 @@
       }
     }
 
-    // New function to check cache first
+    // Progressive loading: Load current week first, then background load other data
+    async function loadBookingDataProgressive() {
+      const statusElement = document.getElementById('dataStatus');
+      
+      try {
+        if (statusElement) statusElement.textContent = 'Loading current week...';
+        
+        // For now, just load all data since your Apps Script doesn't support date ranges yet
+        // We can add the date range feature to your Apps Script later
+        const response = await fetch(SCRIPT_URL);
+        
+        if (!response.ok) {
+          throw new Error(`Failed to fetch data: ${response.statusText}`);
+        }
+        
+        const allData = await response.json();
+        
+        // Filter current week data client-side for now
+        const currentWeekStart = getWeekStartDate(new Date(currentDate + 'T00:00:00'));
+        const currentWeekEnd = new Date(currentWeekStart);
+        currentWeekEnd.setDate(currentWeekStart.getDate() + 6);
+        
+        const currentWeekData = allData.filter(booking => {
+          const bookingDate = new Date(booking.date + 'T00:00:00');
+          return bookingDate >= currentWeekStart && bookingDate <= currentWeekEnd;
+        });
+        
+        // Immediately populate with current week data
+        bookingData = currentWeekData;
+        populateCounsellorDropdown();
+        updateCounsellorInfo();
+        populateCalendar();
+        
+        if (statusElement) {
+          statusElement.textContent = `Loaded current week (${currentWeekData.length} bookings)`;
+          statusElement.style.color = '#28a745';
+        }
+        
+        // Background loading: Update with all data after a short delay
+        setTimeout(() => {
+          try {
+            // Cache the complete data
+            const cachedData = {
+              data: allData,
+              timestamp: Date.now(),
+              expiry: Date.now() + (2 * 60 * 1000)
+            };
+            
+            try {
+              sessionStorage.setItem('bookingDataCache', JSON.stringify(cachedData));
+            } catch (e) {
+              console.warn('Could not cache data:', e);
+            }
+            
+            // Update with complete data
+            bookingData = allData;
+            populateCounsellorDropdown();
+            updateCounsellorInfo();
+            
+            if (statusElement) {
+              statusElement.textContent = `Complete data loaded (${allData.length} bookings)`;
+              setTimeout(() => {
+                statusElement.textContent = '';
+              }, 3000);
+            }
+          } catch (error) {
+            console.warn('Background processing failed:', error);
+          }
+        }, 100);
+        
+        return Promise.resolve();
+        
+      } catch (error) {
+        console.error('Error loading data:', error);
+        // Fall back to regular loading
+        return loadBookingData();
+      }
+    }
+
+    // Enhanced cache function with progressive loading fallback
     async function loadBookingDataWithCache() {
       const statusElement = document.getElementById('dataStatus');
       
@@ -796,8 +868,8 @@
         console.warn('Cache read error:', e);
       }
       
-      // If no valid cache, load from server
-      return loadBookingData();
+      // If no valid cache, use progressive loading
+      return loadBookingDataProgressive();
     }
 
     function refreshData() {
