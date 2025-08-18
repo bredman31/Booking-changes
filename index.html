@@ -186,16 +186,75 @@
         <p id="counsellorSummary"></p>
       </div>
       
-      <iframe
-        src="https://docs.google.com/forms/d/e/1FAIpQLSeO8S579NUfjFk9IjyiKllFWt0FHOF4TX6KXR5VxpQO3jq9tA/viewform?embedded=true&v=2"
-        width="100%"
-        height="80%"
-        frameborder="0"
-        marginheight="0"
-        marginwidth="0"
-        title="Change Booking Form">
-        Loading…
-      </iframe>
+      <!-- Custom booking change form -->
+      <div style="background: #f9f9f9; padding: 20px; border-radius: 8px;">
+        <h3>Modify Booking</h3>
+        <p style="margin-bottom: 15px; font-size: 14px; color: #666;">Click on a booking in the calendar to modify it.</p>
+        
+        <form id="bookingChangeForm">
+          <div style="margin-bottom: 15px;">
+            <label style="display: block; font-weight: bold; margin-bottom: 5px;">Booking Code:</label>
+            <input type="text" id="bookingCodeInput" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; background: #f5f5f5;" readonly>
+          </div>
+          
+          <div style="margin-bottom: 15px;">
+            <label style="display: block; font-weight: bold; margin-bottom: 5px;">Current Room:</label>
+            <input type="text" id="currentRoomInput" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; background: #f5f5f5;" readonly>
+          </div>
+          
+          <div style="margin-bottom: 15px;">
+            <label style="display: block; font-weight: bold; margin-bottom: 5px;">Current Date:</label>
+            <input type="date" id="currentDateInput" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; background: #f5f5f5;" readonly>
+          </div>
+          
+          <div style="margin-bottom: 15px;">
+            <label style="display: block; font-weight: bold; margin-bottom: 5px;">Current Time:</label>
+            <input type="time" id="currentTimeInput" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; background: #f5f5f5;" readonly>
+          </div>
+          
+          <hr style="margin: 20px 0; border: 1px solid #ddd;">
+          <h4 style="margin-bottom: 15px; color: #007bff;">Requested Changes:</h4>
+          
+          <div style="margin-bottom: 15px;">
+            <label style="display: block; font-weight: bold; margin-bottom: 5px;">New Room (if changing):</label>
+            <select id="newRoomInput" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px;">
+              <option value="">No change</option>
+              <option value="Room 1">Room 1</option>
+              <option value="Room 2">Room 2</option>
+              <option value="Room 4">Room 4</option>
+              <option value="Room 6">Room 6</option>
+              <option value="Room 7">Room 7</option>
+              <option value="Online">Online</option>
+            </select>
+          </div>
+          
+          <div style="margin-bottom: 15px;">
+            <label style="display: block; font-weight: bold; margin-bottom: 5px;">New Date (if changing):</label>
+            <input type="date" id="newDateInput" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px;">
+          </div>
+          
+          <div style="margin-bottom: 15px;">
+            <label style="display: block; font-weight: bold; margin-bottom: 5px;">New Time (if changing):</label>
+            <input type="time" id="newTimeInput" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px;">
+          </div>
+          
+          <div style="margin-bottom: 15px;">
+            <label style="display: block; font-weight: bold; margin-bottom: 5px;">Additional Notes:</label>
+            <textarea id="notesInput" placeholder="Describe the changes you need or provide additional details..." style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; height: 80px; resize: vertical;"></textarea>
+          </div>
+          
+          <div style="margin-bottom: 20px;">
+            <label style="display: block; font-weight: bold; margin-bottom: 5px;">Your Name:</label>
+            <input type="text" id="counsellorNameInput" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px;" required>
+          </div>
+          
+          <button type="submit" style="background: #007bff; color: white; padding: 12px 24px; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; width: 100%; font-weight: bold;">
+            Submit Change Request
+          </button>
+        </form>
+        
+        <div id="submitStatus" style="margin-top: 15px; padding: 12px; border-radius: 4px; display: none;"></div>
+      </div>
     </div>
     
     <div class="calendar-container">
@@ -249,9 +308,6 @@
       const view = params.get('view');
       const counsellor = params.get('counsellor');
       const date = params.get('date');
-      const booking = params.get('booking');
-      const room = params.get('room');
-      const time = params.get('time');
       
       if (view && (view === 'day' || view === 'week')) {
         currentView = view;
@@ -267,11 +323,6 @@
         document.getElementById('dateSelector').value = currentDate;
         currentWeekStart = new Date(date);
         currentWeekStart.setDate(currentWeekStart.getDate() - currentWeekStart.getDay());
-      }
-      
-      // Handle booking pre-fill parameters
-      if (booking && room && time && date) {
-        prefillForm(booking, room, date, time);
       }
     }
 
@@ -696,7 +747,7 @@
               // Day view: Show client name as main heading
               cell.innerHTML = `
                 <div class="booking-info">${booking.client || ''}</div>
-                <div class="client-name">${booking.code || ''}</div>
+                <div class="client-name">${booking.finalBookingId || booking.code || ''}</div>
               `;
             }
           }
