@@ -641,7 +641,7 @@
               // Day view: Show client name as main heading
               cell.innerHTML = `
                 <div class="booking-info">${booking.client || ''}</div>
-                <div class="client-name">${booking.finalBookingId || ''}</div>
+                <div class="client-name">${booking.code || ''}</div>
               `;
             }
           }
@@ -680,7 +680,7 @@
                 // Week view: Show room name as main heading
                 cell.innerHTML = `
                   <div class="booking-info">${roomDisplayName}</div>
-                  <div class="client-name">${booking.finalBookingId || ''}</div>
+                  <div class="client-name">${booking.code || ''}</div>
                 `;
               }
             }
@@ -770,20 +770,6 @@
       });
     }
 
-    function showLoading() {
-      const spinner = document.getElementById('loadingSpinner');
-      if (spinner) {
-        spinner.classList.remove('hidden');
-      }
-    }
-
-    function hideLoading() {
-      const spinner = document.getElementById('loadingSpinner');
-      if (spinner) {
-        spinner.classList.add('hidden');
-      }
-    }
-
     // Date selector handler
     document.getElementById('dateSelector').addEventListener('change', function() {
       currentDate = this.value;
@@ -840,3 +826,46 @@
       } else {
         activeButton = document.querySelector(`[onclick="switchView('week')"]`);
       }
+      
+      if (activeButton) {
+        activeButton.classList.add('active');
+      } else {
+        console.warn(`No button found for view: ${currentView}`);
+      }
+    }
+
+    function updateControlsVisibility() {
+      const dayControls = document.getElementById('dayControls');
+      const weekControls = document.getElementById('weekControls');
+      const counsellorFilter = document.getElementById('counsellorFilter');
+      
+      if (dayControls) dayControls.classList.toggle('hidden', currentView !== 'day');
+      if (weekControls) weekControls.classList.toggle('hidden', currentView !== 'week');
+      if (counsellorFilter) counsellorFilter.classList.toggle('hidden', currentView !== 'week');
+    }
+
+    async function initializeData() {
+      try {
+        await loadBookingData();
+        
+        // Set up counsellor dropdown if in week view
+        if (currentView === 'week' && selectedCounsellor) {
+          const select = document.getElementById('counsellorSelect');
+          if (select) {
+            select.value = selectedCounsellor;
+          }
+          updateCounsellorInfo();
+        }
+        
+        // Always populate calendar after data loads
+        populateCalendar();
+        
+      } catch (error) {
+        console.error('Error during data initialization:', error);
+        // Show empty calendar even if data loading fails
+        populateCalendar();
+      }
+    }
+  </script>
+</body>
+</html>
