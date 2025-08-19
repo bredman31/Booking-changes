@@ -193,24 +193,19 @@
         
         <form id="bookingChangeForm">
           <div style="margin-bottom: 15px;">
-            <label style="display: block; font-weight: bold; margin-bottom: 5px;">Booking Code:</label>
-            <input type="text" id="bookingCodeInput" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; background: #f5f5f5;" readonly>
+            <div style="font-size: 14px; line-height: 1.4;">
+              <div style="margin-bottom: 8px;"><strong>Current Room:</strong> <span id="currentRoomDisplay"></span></div>
+              <div style="margin-bottom: 8px;"><strong>Current Date:</strong> <span id="currentDateDisplay"></span></div>
+              <div style="margin-bottom: 8px;"><strong>Current Time:</strong> <span id="currentTimeDisplay"></span></div>
+            </div>
           </div>
           
-          <div style="margin-bottom: 15px;">
-            <label style="display: block; font-weight: bold; margin-bottom: 5px;">Current Room:</label>
-            <input type="text" id="currentRoomInput" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; background: #f5f5f5;" readonly>
-          </div>
-          
-          <div style="margin-bottom: 15px;">
-            <label style="display: block; font-weight: bold; margin-bottom: 5px;">Current Date:</label>
-            <input type="date" id="currentDateInput" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; background: #f5f5f5;" readonly>
-          </div>
-          
-          <div style="margin-bottom: 15px;">
-            <label style="display: block; font-weight: bold; margin-bottom: 5px;">Current Time:</label>
-            <input type="time" id="currentTimeInput" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; background: #f5f5f5;" readonly>
-          </div>
+          <!-- Hidden fields for form submission -->
+          <input type="hidden" id="bookingCodeInput">
+          <input type="hidden" id="currentRoomInput">
+          <input type="hidden" id="currentDateInput">
+          <input type="hidden" id="currentTimeInput">
+          <input type="hidden" id="counsellorNameInput">
           
           <hr style="margin: 20px 0; border: 1px solid #ddd;">
           <h4 style="margin-bottom: 15px; color: #007bff;">Requested Changes:</h4>
@@ -233,7 +228,7 @@
             <input type="date" id="newDateInput" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px;">
           </div>
           
-          <div style="margin-bottom: 15px;">
+          <div style="margin-bottom: 20px;">
             <label style="display: block; font-weight: bold; margin-bottom: 5px;">New Time (if changing):</label>
             <select id="newTimeInput" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px;">
               <option value="">No change</option>
@@ -251,17 +246,6 @@
               <option value="19:00">19:00</option>
               <option value="20:00">20:00</option>
             </select>
-          </div>
-          
-          <div style="margin-bottom: 15px;">
-            <label style="display: block; font-weight: bold; margin-bottom: 5px;">Additional Notes:</label>
-            <textarea id="notesInput" placeholder="Describe the changes you need or provide additional details..." style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; height: 80px; resize: vertical;"></textarea>
-          </div>
-          
-          <div style="margin-bottom: 20px;">
-            <label style="display: block; font-weight: bold; margin-bottom: 5px;">Counsellor:</label>
-            <input type="text" id="counsellorNameInput" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; background: #f5f5f5;" readonly>
-            <small style="color: #666; font-size: 12px;">Auto-filled based on your personalized link</small>
           </div>
           
           <button type="submit" style="background: #007bff; color: white; padding: 12px 24px; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; width: 100%; font-weight: bold;">
@@ -343,29 +327,38 @@
     }
 
     function prefillForm(bookingCode, room, date, time) {
-      // Check if form elements exist before trying to access them
+      // Update the visible display spans
+      const roomDisplay = document.getElementById('currentRoomDisplay');
+      const dateDisplay = document.getElementById('currentDateDisplay');
+      const timeDisplay = document.getElementById('currentTimeDisplay');
+      
+      // Update the hidden form inputs for submission
       const bookingCodeInput = document.getElementById('bookingCodeInput');
       const currentRoomInput = document.getElementById('currentRoomInput');
       const currentDateInput = document.getElementById('currentDateInput');
       const currentTimeInput = document.getElementById('currentTimeInput');
       const counsellorNameInput = document.getElementById('counsellorNameInput');
       
-      if (!bookingCodeInput || !currentRoomInput || !currentDateInput || !currentTimeInput) {
-        console.warn('Form elements not found, cannot pre-fill form');
+      if (!roomDisplay || !dateDisplay || !timeDisplay) {
+        console.warn('Display elements not found, cannot pre-fill form');
         return;
       }
       
-      // Pre-fill the form with current booking details
-      bookingCodeInput.value = bookingCode || '';
-      currentRoomInput.value = room || '';
-      currentDateInput.value = date || '';
-      currentTimeInput.value = time || '';
+      // Update visible displays
+      roomDisplay.textContent = room || '';
+      dateDisplay.textContent = date || '';
+      timeDisplay.textContent = time || '';
       
-      // Always auto-fill counsellor name (it's read-only now)
+      // Update hidden inputs for form submission
+      if (bookingCodeInput) bookingCodeInput.value = bookingCode || '';
+      if (currentRoomInput) currentRoomInput.value = room || '';
+      if (currentDateInput) currentDateInput.value = date || '';
+      if (currentTimeInput) currentTimeInput.value = time || '';
+      
+      // Always auto-fill counsellor name (hidden field for submission)
       if (selectedCounsellor && counsellorNameInput) {
         counsellorNameInput.value = selectedCounsellor;
       } else if (counsellorNameInput) {
-        // Set a default if no counsellor is selected
         counsellorNameInput.value = 'Please select counsellor from dropdown above';
       }
       
@@ -373,12 +366,10 @@
       const newRoomInput = document.getElementById('newRoomInput');
       const newDateInput = document.getElementById('newDateInput');
       const newTimeInput = document.getElementById('newTimeInput');
-      const notesInput = document.getElementById('notesInput');
       
       if (newRoomInput) newRoomInput.value = '';
       if (newDateInput) newDateInput.value = '';
       if (newTimeInput) newTimeInput.value = '';
-      if (notesInput) notesInput.value = '';
       
       console.log('Pre-filled form with:');
       console.log('  Booking Code:', bookingCode);
@@ -1092,12 +1083,11 @@
             newRoom: document.getElementById('newRoomInput').value,
             newDate: document.getElementById('newDateInput').value,
             newTime: document.getElementById('newTimeInput').value,
-            notes: document.getElementById('notesInput').value,
             counsellorName: document.getElementById('counsellorNameInput').value
           };
           
           // Validate that at least one change is requested
-          if (!changeData.newRoom && !changeData.newDate && !changeData.newTime && !changeData.notes) {
+          if (!changeData.newRoom && !changeData.newDate && !changeData.newTime) {
             alert('Please specify what changes you would like to make.');
             return;
           }
