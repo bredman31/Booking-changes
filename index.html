@@ -825,7 +825,8 @@
                 
                 // Add click handler to populate form with booking data
                 cell.addEventListener('click', function() {
-                  const bookingCode = booking.finalBookingId || booking.code || '';
+                  // Use Column H (finalBookingId) only - no fallback needed
+                  const bookingCode = booking.finalBookingId;
                   const room = roomDisplayName;
                   const date = dateStr;
                   const time = booking.start;
