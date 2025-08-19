@@ -400,8 +400,14 @@
         formData.append('newRoom', changeData.newRoom || '');
         formData.append('newDate', changeData.newDate || '');
         formData.append('newTime', changeData.newTime || '');
-        formData.append('notes', changeData.notes || '');
         formData.append('counsellorName', changeData.counsellorName);
+        
+        console.log('Submitting form data:');
+        console.log('  Original Booking Code:', changeData.originalBookingCode);
+        console.log('  Counsellor Name:', changeData.counsellorName);
+        console.log('  New Room:', changeData.newRoom);
+        console.log('  New Date:', changeData.newDate);
+        console.log('  New Time:', changeData.newTime);
         
         // Submit to the dedicated change requests Google Sheet
         const CHANGE_REQUESTS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwVIQAryAHaD9HfEqAvaxXDo-nd1BSN664E4Kyg1tVWgmOsTfG6VS7JYgHohqN7HQiz/exec';
