@@ -822,11 +822,25 @@
                 
                 // Add click handler to populate form with booking data
                 cell.addEventListener('click', function() {
+                  console.log('=== BOOKING CLICK DEBUG ===');
+                  console.log('Full booking object:', booking);
+                  console.log('booking.finalBookingId:', booking.finalBookingId);
+                  console.log('booking.code:', booking.code);
+                  console.log('typeof finalBookingId:', typeof booking.finalBookingId);
+                  console.log('typeof code:', typeof booking.code);
+                  
                   // Use Column H (finalBookingId) only - no fallback needed
                   const bookingCode = booking.finalBookingId;
                   const room = roomDisplayName;
                   const date = dateStr;
                   const time = booking.start;
+                  
+                  console.log('Final values being sent to form:');
+                  console.log('  bookingCode (finalBookingId):', bookingCode);
+                  console.log('  room:', room);
+                  console.log('  date:', date);
+                  console.log('  time:', time);
+                  console.log('=== END CLICK DEBUG ===');
                   
                   prefillForm(bookingCode, room, date, time);
                   
@@ -887,6 +901,28 @@
         }
         
         const jsonData = await response.json();
+        
+        // Debug: Log the first few bookings to see the data structure
+        console.log('=== BOOKING DATA DEBUG ===');
+        console.log('Total bookings loaded:', jsonData.length);
+        if (jsonData.length > 0) {
+          console.log('Sample booking (first one):');
+          console.log('Full booking object:', jsonData[0]);
+          console.log('Available fields:', Object.keys(jsonData[0]));
+          console.log('finalBookingId field:', jsonData[0].finalBookingId);
+          console.log('code field:', jsonData[0].code);
+          
+          // Check a few more bookings
+          for (let i = 0; i < Math.min(5, jsonData.length); i++) {
+            console.log(`Booking ${i + 1}:`, {
+              finalBookingId: jsonData[i].finalBookingId,
+              code: jsonData[i].code,
+              client: jsonData[i].client,
+              room: jsonData[i].room
+            });
+          }
+        }
+        console.log('=== END DEBUG ===');
         
         // Cache the data in browser memory with timestamp
         const cachedData = {
