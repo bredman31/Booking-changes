@@ -412,8 +412,10 @@
         formData.append('notes', changeData.notes || '');
         formData.append('counsellorName', changeData.counsellorName);
         
-        // Submit to Google Apps Script using FormData
-        const response = await fetch(SCRIPT_URL, {
+        // Submit to the dedicated change requests Google Sheet
+        const CHANGE_REQUESTS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwVIQAryAHaD9HfEqAvaxXDo-nd1BSN664E4Kyg1tVWgmOsTfG6VS7JYgHohqN7HQiz/exec';
+        
+        const response = await fetch(CHANGE_REQUESTS_SCRIPT_URL, {
           method: 'POST',
           body: formData
         });
