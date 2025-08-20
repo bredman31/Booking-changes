@@ -302,6 +302,22 @@
     // Set current week
     currentWeekStart.setDate(currentWeekStart.getDate() - currentWeekStart.getDay()); // Start of week (Sunday)
 
+    // Function to format date and time for SimplybookMe
+    function formatDateTimeForSimplybookMe(date, time) {
+      if (!date || !time) {
+        return '';
+      }
+      
+      // Ensure time has seconds
+      let formattedTime = time;
+      if (time.length === 5) { // Format like "14:30"
+        formattedTime = time + ':00'; // Add seconds
+      }
+      
+      // Return in ISO 8601 format: YYYY-MM-DDTHH:MM:SS
+      return `${date}T${formattedTime}`;
+    }
+
     // Parse URL parameters
     function parseURLParams() {
       const params = new URLSearchParams(window.location.search);
@@ -402,12 +418,31 @@
         formData.append('newTime', changeData.newTime || '');
         formData.append('counsellorName', changeData.counsellorName);
         
+        // NEW: Add formatted datetime for SimplybookMe (Column G)
+        let simplybookMeDateTime = '';
+        if (changeData.newDate && changeData.newTime) {
+          // Both date and time are being changed
+          simplybookMeDateTime = formatDateTimeForSimplybookMe(changeData.newDate, changeData.newTime);
+        } else if (changeData.newDate && !changeData.newTime) {
+          // Only date is being changed, use original time
+          simplybookMeDateTime = formatDateTimeForSimplybookMe(changeData.newDate, changeData.originalTime);
+        } else if (!changeData.newDate && changeData.newTime) {
+          // Only time is being changed, use original date
+          simplybookMeDateTime = formatDateTimeForSimplybookMe(changeData.originalDate, changeData.newTime);
+        } else {
+          // No date/time changes, use original values
+          simplybookMeDateTime = formatDateTimeForSimplybookMe(changeData.originalDate, changeData.originalTime);
+        }
+        
+        formData.append('simplybookMeDateTime', simplybookMeDateTime);
+        
         console.log('Submitting form data:');
         console.log('  Original Booking Code:', changeData.originalBookingCode);
         console.log('  Counsellor Name:', changeData.counsellorName);
         console.log('  New Room:', changeData.newRoom);
         console.log('  New Date:', changeData.newDate);
         console.log('  New Time:', changeData.newTime);
+        console.log('  SimplybookMe DateTime (Column G):', simplybookMeDateTime);
         
         // Submit to the dedicated change requests Google Sheet
         const CHANGE_REQUESTS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwVIQAryAHaD9HfEqAvaxXDo-nd1BSN664E4Kyg1tVWgmOsTfG6VS7JYgHohqN7HQiz/exec';
@@ -434,7 +469,6 @@
           document.getElementById('newRoomInput').value = '';
           document.getElementById('newDateInput').value = '';
           document.getElementById('newTimeInput').value = '';
-          document.getElementById('notesInput').value = '';
           
           // Hide status after 7 seconds
           setTimeout(() => {
