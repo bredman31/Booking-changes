@@ -186,32 +186,29 @@
         <p id="counsellorSummary"></p>
       </div>
       
-      <!-- Clean booking change form -->
+      <!-- Custom booking change form -->
       <div style="background: #f9f9f9; padding: 20px; border-radius: 8px;">
         <h3>Modify Booking</h3>
+        <p style="margin-bottom: 15px; font-size: 14px; color: #666;">Click on a booking in the calendar to modify it.</p>
+        
         <form id="bookingChangeForm">
           <div style="margin-bottom: 15px;">
-            <label style="display: block; font-weight: bold; margin-bottom: 5px;">Booking Code:</label>
-            <input type="text" id="bookingCodeInput" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px;" readonly>
+            <div style="font-size: 14px; line-height: 1.4;">
+              <div style="margin-bottom: 8px;"><strong>Current Room:</strong> <span id="currentRoomDisplay"></span></div>
+              <div style="margin-bottom: 8px;"><strong>Current Date:</strong> <span id="currentDateDisplay"></span></div>
+              <div style="margin-bottom: 8px;"><strong>Current Time:</strong> <span id="currentTimeDisplay"></span></div>
+            </div>
           </div>
           
-          <div style="margin-bottom: 15px;">
-            <label style="display: block; font-weight: bold; margin-bottom: 5px;">Current Room:</label>
-            <input type="text" id="currentRoomInput" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px;" readonly>
-          </div>
-          
-          <div style="margin-bottom: 15px;">
-            <label style="display: block; font-weight: bold; margin-bottom: 5px;">Current Date:</label>
-            <input type="date" id="currentDateInput" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px;" readonly>
-          </div>
-          
-          <div style="margin-bottom: 15px;">
-            <label style="display: block; font-weight: bold; margin-bottom: 5px;">Current Time:</label>
-            <input type="time" id="currentTimeInput" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px;" readonly>
-          </div>
+          <!-- Hidden fields for form submission -->
+          <input type="hidden" id="bookingCodeInput">
+          <input type="hidden" id="currentRoomInput">
+          <input type="hidden" id="currentDateInput">
+          <input type="hidden" id="currentTimeInput">
+          <input type="hidden" id="counsellorNameInput">
           
           <hr style="margin: 20px 0; border: 1px solid #ddd;">
-          <h4 style="margin-bottom: 15px;">Requested Changes:</h4>
+          <h4 style="margin-bottom: 15px; color: #007bff;">Requested Changes:</h4>
           
           <div style="margin-bottom: 15px;">
             <label style="display: block; font-weight: bold; margin-bottom: 5px;">New Room (if changing):</label>
@@ -231,7 +228,7 @@
             <input type="date" id="newDateInput" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px;">
           </div>
           
-          <div style="margin-bottom: 15px;">
+          <div style="margin-bottom: 20px;">
             <label style="display: block; font-weight: bold; margin-bottom: 5px;">New Time (if changing):</label>
             <select id="newTimeInput" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px;">
               <option value="">No change</option>
@@ -251,12 +248,7 @@
             </select>
           </div>
           
-          <div style="margin-bottom: 15px;">
-            <label style="display: block; font-weight: bold; margin-bottom: 5px;">Your Name:</label>
-            <input type="text" id="counsellorNameInput" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px;" required>
-          </div>
-          
-          <button type="submit" style="background: #007bff; color: white; padding: 12px 24px; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; width: 100%;">
+          <button type="submit" style="background: #007bff; color: white; padding: 12px 24px; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; width: 100%; font-weight: bold;">
             Submit Change Request
           </button>
         </form>
@@ -335,27 +327,56 @@
     }
 
     function prefillForm(bookingCode, room, date, time) {
-      // Pre-fill the form with current booking details
-      document.getElementById('bookingCodeInput').value = bookingCode || '';
-      document.getElementById('currentRoomInput').value = room || '';
-      document.getElementById('currentDateInput').value = date || '';
-      document.getElementById('currentTimeInput').value = time || '';
+      // Update the visible display spans
+      const roomDisplay = document.getElementById('currentRoomDisplay');
+      const dateDisplay = document.getElementById('currentDateDisplay');
+      const timeDisplay = document.getElementById('currentTimeDisplay');
       
-      // Auto-fill counsellor name if we know it
-      if (selectedCounsellor) {
-        document.getElementById('counsellorNameInput').value = selectedCounsellor;
+      // Update the hidden form inputs for submission
+      const bookingCodeInput = document.getElementById('bookingCodeInput');
+      const currentRoomInput = document.getElementById('currentRoomInput');
+      const currentDateInput = document.getElementById('currentDateInput');
+      const currentTimeInput = document.getElementById('currentTimeInput');
+      const counsellorNameInput = document.getElementById('counsellorNameInput');
+      
+      if (!roomDisplay || !dateDisplay || !timeDisplay) {
+        console.warn('Display elements not found, cannot pre-fill form');
+        return;
+      }
+      
+      // Update visible displays
+      roomDisplay.textContent = room || '';
+      dateDisplay.textContent = date || '';
+      timeDisplay.textContent = time || '';
+      
+      // Update hidden inputs for form submission
+      if (bookingCodeInput) bookingCodeInput.value = bookingCode || '';
+      if (currentRoomInput) currentRoomInput.value = room || '';
+      if (currentDateInput) currentDateInput.value = date || '';
+      if (currentTimeInput) currentTimeInput.value = time || '';
+      
+      // Always auto-fill counsellor name (hidden field for submission)
+      if (selectedCounsellor && counsellorNameInput) {
+        counsellorNameInput.value = selectedCounsellor;
+      } else if (counsellorNameInput) {
+        counsellorNameInput.value = 'Please select counsellor from dropdown above';
       }
       
       // Clear any previous new values
-      document.getElementById('newRoomInput').value = '';
-      document.getElementById('newDateInput').value = '';
-      document.getElementById('newTimeInput').value = '';
+      const newRoomInput = document.getElementById('newRoomInput');
+      const newDateInput = document.getElementById('newDateInput');
+      const newTimeInput = document.getElementById('newTimeInput');
+      
+      if (newRoomInput) newRoomInput.value = '';
+      if (newDateInput) newDateInput.value = '';
+      if (newTimeInput) newTimeInput.value = '';
       
       console.log('Pre-filled form with:');
       console.log('  Booking Code:', bookingCode);
       console.log('  Room:', room);
       console.log('  Date:', date);
       console.log('  Time:', time);
+      console.log('  Counsellor:', selectedCounsellor || 'Not set');
     }
 
     async function submitBookingChange(changeData) {
@@ -368,27 +389,25 @@
         statusDiv.style.border = '1px solid #ffeaa7';
         statusDiv.textContent = 'Submitting change request...';
         
-        // Combine date and time into a single field for the spreadsheet
-        let newStartDateTime = '';
-        if (changeData.newDate && changeData.newTime) {
-          newStartDateTime = `${changeData.newDate} ${changeData.newTime}`;
-        } else if (changeData.newDate) {
-          newStartDateTime = changeData.newDate;
-        } else if (changeData.newTime) {
-          newStartDateTime = changeData.newTime;
-        }
-        
-        // Use FormData for Google Apps Script
+        // Use FormData for better Google Apps Script compatibility
         const formData = new FormData();
         formData.append('action', 'submitBookingChange');
         formData.append('timestamp', new Date().toISOString());
-        formData.append('counsellorName', changeData.counsellorName);
         formData.append('originalBookingCode', changeData.originalBookingCode);
         formData.append('originalRoom', changeData.originalRoom);
         formData.append('originalDate', changeData.originalDate);
         formData.append('originalTime', changeData.originalTime);
         formData.append('newRoom', changeData.newRoom || '');
-        formData.append('newStartDateTime', newStartDateTime);
+        formData.append('newDate', changeData.newDate || '');
+        formData.append('newTime', changeData.newTime || '');
+        formData.append('counsellorName', changeData.counsellorName);
+        
+        console.log('Submitting form data:');
+        console.log('  Original Booking Code:', changeData.originalBookingCode);
+        console.log('  Counsellor Name:', changeData.counsellorName);
+        console.log('  New Room:', changeData.newRoom);
+        console.log('  New Date:', changeData.newDate);
+        console.log('  New Time:', changeData.newTime);
         
         // Submit to the dedicated change requests Google Sheet
         const CHANGE_REQUESTS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwVIQAryAHaD9HfEqAvaxXDo-nd1BSN664E4Kyg1tVWgmOsTfG6VS7JYgHohqN7HQiz/exec';
@@ -399,20 +418,28 @@
         });
         
         if (response.ok) {
-          statusDiv.style.background = '#d4edda';
-          statusDiv.style.color = '#155724';
-          statusDiv.style.border = '1px solid #c3e6cb';
-          statusDiv.textContent = 'Change request submitted successfully!';
+          const result = await response.text(); // Use text() instead of json()
+          console.log('Response:', result);
           
-          // Clear the new values
+          if (result.includes('SUCCESS')) {
+            statusDiv.style.background = '#d4edda';
+            statusDiv.style.color = '#155724';
+            statusDiv.style.border = '1px solid #c3e6cb';
+            statusDiv.textContent = 'Change request submitted successfully! Check the "Booking Change Requests" tab in your spreadsheet.';
+          } else {
+            throw new Error('Submission failed: ' + result);
+          }
+          
+          // Clear the new values (keep current values visible)
           document.getElementById('newRoomInput').value = '';
           document.getElementById('newDateInput').value = '';
           document.getElementById('newTimeInput').value = '';
+          document.getElementById('notesInput').value = '';
           
-          // Hide status after 5 seconds
+          // Hide status after 7 seconds
           setTimeout(() => {
             statusDiv.style.display = 'none';
-          }, 5000);
+          }, 7000);
           
         } else {
           throw new Error(`Server responded with ${response.status}`);
@@ -423,7 +450,7 @@
         statusDiv.style.background = '#f8d7da';
         statusDiv.style.color = '#721c24';
         statusDiv.style.border = '1px solid #f5c6cb';
-        statusDiv.textContent = 'Error submitting request. Please try again.';
+        statusDiv.textContent = 'Error submitting request. Please try again or contact support.';
       }
     }
 
@@ -455,6 +482,7 @@
       const buttons = document.querySelectorAll('.view-btn');
       if (buttons.length > 0) {
         buttons.forEach(btn => btn.classList.remove('active'));
+        // Find the button that was clicked
         const clickedButton = event ? event.target : document.querySelector(`[onclick="switchView('${view}')"]`);
         if (clickedButton) {
           clickedButton.classList.add('active');
@@ -505,9 +533,11 @@
       const summaryDiv = document.getElementById('counsellorSummary');
       
       if (currentView === 'day') {
+        // Day view - show all bookings, no counsellor filter
         infoDiv.classList.add('hidden');
         document.getElementById('pageTitle').textContent = 'Cherry Tree Centre - Admin Day View';
       } else if (selectedCounsellor) {
+        // Week view with counsellor selected
         const counsellorBookings = bookingData.filter(booking => 
           booking.client.toLowerCase().includes(selectedCounsellor.toLowerCase())
         );
@@ -518,6 +548,7 @@
         
         document.getElementById('pageTitle').textContent = `My Bookings - ${selectedCounsellor}`;
       } else {
+        // Week view with no counsellor selected
         infoDiv.classList.add('hidden');
         document.getElementById('pageTitle').textContent = 'Select Your Name to View Your Bookings';
       }
@@ -546,6 +577,15 @@
         }
         select.appendChild(option);
       });
+    }
+
+    function getWeekStartDate(date) {
+      const result = new Date(date);
+      const day = result.getDay();
+      const diff = result.getDate() - day + (day === 0 ? -6 : 1); // Monday as start
+      result.setDate(diff);
+      result.setHours(0, 0, 0, 0);
+      return result;
     }
 
     function formatDate(date) {
@@ -754,4 +794,439 @@
       
       for (let day = 0; day < 7; day++) {
         const date = new Date(currentWeekStart);
-        date.setDate(date.getDate()
+        date.setDate(date.getDate() + day);
+        const dateStr = formatDate(date);
+        
+        const dayBookings = filteredBookings.filter(booking => booking.date === dateStr);
+        
+        dayBookings.forEach(booking => {
+          const startHour = parseInt(booking.start.split(':')[0]);
+          const endHour = parseInt(booking.end.split(':')[0]);
+          
+          for (let hour = startHour; hour < endHour; hour++) {
+            if (hour >= 8 && hour <= 20) {
+              const timeString = `${String(hour).padStart(2, '0')}:00`;
+              const cellId = `week-cell-${day}-${timeString}`;
+              const cell = document.getElementById(cellId);
+              
+              if (cell) {
+                const {roomClass} = getRoomMapping(booking);
+                const roomDisplayName = getRoomDisplayName(booking);
+                
+                cell.classList.add('booked', roomClass);
+                // Week view: Show room name as main heading
+                cell.innerHTML = `
+                  <div class="booking-info">${roomDisplayName}</div>
+                  <div class="client-name">${booking.bookingId || booking.code || ''}</div>
+                `;
+                
+                // Add click handler to populate form with booking data
+                cell.addEventListener('click', function() {
+                  console.log('=== BOOKING CLICK DEBUG ===');
+                  console.log('Full booking object:', booking);
+                  console.log('booking.bookingId:', booking.bookingId);
+                  console.log('booking.code:', booking.code);
+                  
+                  // Use Column H (bookingId) - this is the correct field name
+                  const bookingCode = booking.bookingId;
+                  const room = roomDisplayName;
+                  const date = dateStr;
+                  const time = booking.start;
+                  
+                  console.log('Final values being sent to form:');
+                  console.log('  bookingCode (bookingId):', bookingCode);
+                  console.log('  room:', room);
+                  console.log('  date:', date);
+                  console.log('  time:', time);
+                  console.log('=== END CLICK DEBUG ===');
+                  
+                  prefillForm(bookingCode, room, date, time);
+                  
+                  // Scroll to form for better UX
+                  const formContainer = document.querySelector('.form-container');
+                  if (formContainer) {
+                    formContainer.scrollIntoView({ behavior: 'smooth' });
+                  }
+                });
+              }
+            }
+          }
+        });
+      }
+    }
+
+    function getRoomDisplayName(booking) {
+      if (booking.room === 'Room_1' || booking.room === '1') return 'Room 1';
+      if (booking.room === 'Room_2' || booking.room === '2') return 'Room 2';
+      if (booking.room === 'Room_4' || booking.room === '4') return 'Room 4';
+      if (booking.room === 'Room_6' || booking.room === '6') return 'Room 6';
+      if (booking.room === 'Room_7' || booking.room === '7') return 'Room 7';
+      if (booking.location && booking.location.toLowerCase().includes('online')) return 'Online';
+      return booking.room || 'Unknown';
+    }
+
+    function getRoomMapping(booking) {
+      let roomNumber, roomClass;
+      
+      if (booking.room === 'Room_1' || booking.room === '1') {
+        roomNumber = '1'; roomClass = 'room-1';
+      } else if (booking.room === 'Room_2' || booking.room === '2') {
+        roomNumber = '2'; roomClass = 'room-2';
+      } else if (booking.room === 'Room_4' || booking.room === '4') {
+        roomNumber = '4'; roomClass = 'room-4';
+      } else if (booking.room === 'Room_6' || booking.room === '6') {
+        roomNumber = '6'; roomClass = 'room-6';
+      } else if (booking.room === 'Room_7' || booking.room === '7') {
+        roomNumber = '7'; roomClass = 'room-7';
+      } else if (booking.location && booking.location.toLowerCase().includes('online')) {
+        roomNumber = 'online'; roomClass = 'online';
+      }
+      
+      return {roomNumber, roomClass};
+    }
+
+    async function loadBookingData() {
+      const statusElement = document.getElementById('dataStatus');
+      
+      try {
+        if (statusElement) statusElement.textContent = 'Loading booking data...';
+        
+        // Simple fetch without problematic headers for Google Apps Script
+        const response = await fetch(SCRIPT_URL);
+        
+        if (!response.ok) {
+          throw new Error(`Failed to fetch data: ${response.statusText}`);
+        }
+        
+        const jsonData = await response.json();
+        
+        // Debug: Log the first few bookings to see the data structure
+        console.log('=== BOOKING DATA DEBUG ===');
+        console.log('Total bookings loaded:', jsonData.length);
+        if (jsonData.length > 0) {
+          console.log('Sample booking (first one):');
+          console.log('Full booking object:', jsonData[0]);
+          console.log('Available fields:', Object.keys(jsonData[0]));
+          console.log('finalBookingId field:', jsonData[0].finalBookingId);
+          console.log('code field:', jsonData[0].code);
+          
+          // Check a few more bookings
+          for (let i = 0; i < Math.min(5, jsonData.length); i++) {
+            console.log(`Booking ${i + 1}:`, {
+              finalBookingId: jsonData[i].finalBookingId,
+              code: jsonData[i].code,
+              client: jsonData[i].client,
+              room: jsonData[i].room
+            });
+          }
+        }
+        console.log('=== END DEBUG ===');
+        
+        // Cache the data in browser memory with timestamp
+        const cachedData = {
+          data: jsonData,
+          timestamp: Date.now(),
+          expiry: Date.now() + (2 * 60 * 1000) // Cache for 2 minutes
+        };
+        
+        // Store in sessionStorage for faster subsequent loads
+        try {
+          sessionStorage.setItem('bookingDataCache', JSON.stringify(cachedData));
+        } catch (e) {
+          console.warn('Could not cache data in sessionStorage:', e);
+        }
+        
+        bookingData = jsonData;
+        populateCounsellorDropdown();
+        updateCounsellorInfo();
+        
+        if (statusElement) {
+          statusElement.textContent = `Loaded ${jsonData.length} bookings`;
+          statusElement.style.color = '#28a745';
+          
+          setTimeout(() => {
+            statusElement.textContent = '';
+          }, 3000);
+        }
+        
+        return Promise.resolve();
+        
+      } catch (error) {
+        console.error('Error loading booking data:', error);
+        if (statusElement) {
+          statusElement.textContent = 'Error loading data';
+          statusElement.style.color = '#dc3545';
+        }
+        
+        bookingData = [];
+        return Promise.resolve();
+      }
+    }
+
+    // Progressive loading: Load current week first, then background load other data
+    async function loadBookingDataProgressive() {
+      const statusElement = document.getElementById('dataStatus');
+      
+      try {
+        if (statusElement) statusElement.textContent = 'Loading current week...';
+        
+        // For now, just load all data since your Apps Script doesn't support date ranges yet
+        // We can add the date range feature to your Apps Script later
+        const response = await fetch(SCRIPT_URL);
+        
+        if (!response.ok) {
+          throw new Error(`Failed to fetch data: ${response.statusText}`);
+        }
+        
+        const allData = await response.json();
+        
+        // Filter current week data client-side for now
+        const currentWeekStart = getWeekStartDate(new Date(currentDate + 'T00:00:00'));
+        const currentWeekEnd = new Date(currentWeekStart);
+        currentWeekEnd.setDate(currentWeekStart.getDate() + 6);
+        
+        const currentWeekData = allData.filter(booking => {
+          const bookingDate = new Date(booking.date + 'T00:00:00');
+          return bookingDate >= currentWeekStart && bookingDate <= currentWeekEnd;
+        });
+        
+        // Immediately populate with current week data
+        bookingData = currentWeekData;
+        populateCounsellorDropdown();
+        updateCounsellorInfo();
+        populateCalendar();
+        
+        if (statusElement) {
+          statusElement.textContent = `Loaded current week (${currentWeekData.length} bookings)`;
+          statusElement.style.color = '#28a745';
+        }
+        
+        // Background loading: Update with all data after a short delay
+        setTimeout(() => {
+          try {
+            // Cache the complete data
+            const cachedData = {
+              data: allData,
+              timestamp: Date.now(),
+              expiry: Date.now() + (2 * 60 * 1000)
+            };
+            
+            try {
+              sessionStorage.setItem('bookingDataCache', JSON.stringify(cachedData));
+            } catch (e) {
+              console.warn('Could not cache data:', e);
+            }
+            
+            // Update with complete data
+            bookingData = allData;
+            populateCounsellorDropdown();
+            updateCounsellorInfo();
+            
+            if (statusElement) {
+              statusElement.textContent = `Complete data loaded (${allData.length} bookings)`;
+              setTimeout(() => {
+                statusElement.textContent = '';
+              }, 3000);
+            }
+          } catch (error) {
+            console.warn('Background processing failed:', error);
+          }
+        }, 100);
+        
+        return Promise.resolve();
+        
+      } catch (error) {
+        console.error('Error loading data:', error);
+        // Fall back to regular loading
+        return loadBookingData();
+      }
+    }
+
+    // Enhanced cache function with progressive loading fallback
+    async function loadBookingDataWithCache() {
+      const statusElement = document.getElementById('dataStatus');
+      
+      // Try to load from cache first
+      try {
+        const cached = sessionStorage.getItem('bookingDataCache');
+        if (cached) {
+          const cachedData = JSON.parse(cached);
+          if (cachedData.timestamp && Date.now() < cachedData.expiry) {
+            console.log('Loading data from cache');
+            if (statusElement) {
+              statusElement.textContent = 'Loading from cache...';
+              statusElement.style.color = '#28a745';
+            }
+            
+            bookingData = cachedData.data;
+            populateCounsellorDropdown();
+            updateCounsellorInfo();
+            
+            if (statusElement) {
+              statusElement.textContent = `Loaded ${cachedData.data.length} bookings (cached)`;
+              setTimeout(() => {
+                statusElement.textContent = '';
+              }, 2000);
+            }
+            
+            return Promise.resolve();
+          }
+        }
+      } catch (e) {
+        console.warn('Cache read error:', e);
+      }
+      
+      // If no valid cache, use progressive loading
+      return loadBookingDataProgressive();
+    }
+
+    function refreshData() {
+      console.log('Manual refresh triggered');
+      // Clear cache on manual refresh
+      try {
+        sessionStorage.removeItem('bookingDataCache');
+      } catch (e) {
+        console.warn('Could not clear cache:', e);
+      }
+      
+      loadBookingData().then(() => {
+        console.log('Refresh complete, repopulating calendar');
+        populateCalendar();
+      });
+    }
+
+    // Date selector handler
+    document.getElementById('dateSelector').addEventListener('change', function() {
+      currentDate = this.value;
+      populateCalendar();
+      updateURL();
+    });
+
+    // Initialize when DOM is ready
+    document.addEventListener('DOMContentLoaded', function() {
+      console.log('DOM loaded, initializing...');
+      
+      // Set up booking change form handler
+      const changeForm = document.getElementById('bookingChangeForm');
+      if (changeForm) {
+        changeForm.addEventListener('submit', function(e) {
+          e.preventDefault();
+          
+          const changeData = {
+            // Current booking info
+            originalBookingCode: document.getElementById('bookingCodeInput').value,
+            originalRoom: document.getElementById('currentRoomInput').value,
+            originalDate: document.getElementById('currentDateInput').value,
+            originalTime: document.getElementById('currentTimeInput').value,
+            
+            // Requested changes
+            newRoom: document.getElementById('newRoomInput').value,
+            newDate: document.getElementById('newDateInput').value,
+            newTime: document.getElementById('newTimeInput').value,
+            counsellorName: document.getElementById('counsellorNameInput').value
+          };
+          
+          // Validate that at least one change is requested
+          if (!changeData.newRoom && !changeData.newDate && !changeData.newTime) {
+            alert('Please specify what changes you would like to make.');
+            return;
+          }
+          
+          // Auto-filled counsellor name, but validate it exists
+          if (!changeData.counsellorName || changeData.counsellorName === 'Please select counsellor from dropdown above') {
+            alert('Please select a counsellor from the dropdown above first.');
+            return;
+          }
+          
+          submitBookingChange(changeData);
+        });
+      }
+      
+      // Small delay to ensure all elements are rendered
+      setTimeout(() => {
+        // Parse URL parameters first
+        parseURLParams();
+        
+        // Set initial view state with error checking
+        updateViewButtons();
+        updateControlsVisibility();
+        
+        // Set grid class and create grid
+        const grid = document.getElementById('calendarGrid');
+        if (grid) {
+          grid.className = `calendar-grid ${currentView}-view`;
+          createCalendarGrid();
+        } else {
+          console.error('Calendar grid element not found!');
+        }
+        
+        // Load data and populate calendar
+        initializeData();
+        
+        // Auto-refresh data every 5 minutes (but use cache if available)
+        setInterval(() => {
+          loadBookingDataWithCache().then(() => {
+            populateCalendar();
+          });
+        }, 5 * 60 * 1000);
+      }, 100); // 100ms delay to ensure DOM is fully ready
+    });
+
+    function updateViewButtons() {
+      const buttons = document.querySelectorAll('.view-btn');
+      if (buttons.length === 0) {
+        console.warn('No view buttons found');
+        return;
+      }
+      
+      buttons.forEach(btn => btn.classList.remove('active'));
+      
+      let activeButton;
+      if (currentView === 'day') {
+        activeButton = document.querySelector(`[onclick="switchView('day')"]`);
+      } else {
+        activeButton = document.querySelector(`[onclick="switchView('week')"]`);
+      }
+      
+      if (activeButton) {
+        activeButton.classList.add('active');
+      } else {
+        console.warn(`No button found for view: ${currentView}`);
+      }
+    }
+
+    function updateControlsVisibility() {
+      const dayControls = document.getElementById('dayControls');
+      const weekControls = document.getElementById('weekControls');
+      const counsellorFilter = document.getElementById('counsellorFilter');
+      
+      if (dayControls) dayControls.classList.toggle('hidden', currentView !== 'day');
+      if (weekControls) weekControls.classList.toggle('hidden', currentView !== 'week');
+      if (counsellorFilter) counsellorFilter.classList.toggle('hidden', currentView !== 'week');
+    }
+
+    async function initializeData() {
+      try {
+        await loadBookingDataWithCache();
+        
+        // Set up counsellor dropdown if in week view
+        if (currentView === 'week' && selectedCounsellor) {
+          const select = document.getElementById('counsellorSelect');
+          if (select) {
+            select.value = selectedCounsellor;
+          }
+          updateCounsellorInfo();
+        }
+        
+        // Always populate calendar after data loads
+        populateCalendar();
+        
+      } catch (error) {
+        console.error('Error during data initialization:', error);
+        // Show empty calendar even if data loading fails
+        populateCalendar();
+      }
+    }
+  </script>
+</body>
+</html>
