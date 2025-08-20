@@ -171,7 +171,7 @@
       <button class="view-btn active" onclick="switchView('day')">Day View</button>
       <button class="view-btn" onclick="switchView('week')">Week View</button>
     </div>
-    <div class="counsellor-filter">
+    <div class="counsellor-filter hidden" id="counsellorFilterContainer">
       <label>Counsellor:</label>
       <select id="counsellorSelect" onchange="filterByCounsellor()">
         <option value="">All Counsellors</option>
@@ -329,9 +329,10 @@
         currentView = view;
       }
       
-      // Only set counsellor for week view
-      if (counsellor && currentView === 'week') {
+      // Set counsellor from URL parameter (works for both day and week view)
+      if (counsellor) {
         selectedCounsellor = decodeURIComponent(counsellor);
+        console.log('Counsellor set from URL:', selectedCounsellor);
       }
       
       if (date) {
@@ -413,9 +414,6 @@
         formData.append('originalRoom', changeData.originalRoom);
         formData.append('originalDate', changeData.originalDate);
         formData.append('originalTime', changeData.originalTime);
-        formData.append('newRoom', changeData.newRoom || '');
-        formData.append('newDate', changeData.newDate || '');
-        formData.append('newTime', changeData.newTime || '');
         formData.append('counsellorName', changeData.counsellorName);
         
         // Column G: Requested start date/time (always filled)
@@ -428,6 +426,11 @@
         
         formData.append('requestedDateTime', requestedDateTime);
         formData.append('requestedRoom', requestedRoom);
+        
+        // Also send the individual changes for debugging (but won't be used in the sheet)
+        formData.append('newRoom', changeData.newRoom || '');
+        formData.append('newDate', changeData.newDate || '');
+        formData.append('newTime', changeData.newTime || '');
         
         console.log('Submitting form data:');
         console.log('  Original Booking Code:', changeData.originalBookingCode);
@@ -497,8 +500,8 @@
       const params = new URLSearchParams();
       params.set('view', currentView);
       
-      // Only include counsellor parameter for week view
-      if (currentView === 'week' && selectedCounsellor) {
+      // Always include counsellor parameter if set
+      if (selectedCounsellor) {
         params.set('counsellor', encodeURIComponent(selectedCounsellor));
       }
       
@@ -528,21 +531,15 @@
         }
       }
       
-      // Show/hide controls based on view
+      // Show/hide controls based on view - counsellor filter always hidden
       const dayControls = document.getElementById('dayControls');
       const weekControls = document.getElementById('weekControls');
-      const counsellorFilter = document.getElementById('counsellorFilter');
       
       if (dayControls) dayControls.classList.toggle('hidden', view !== 'day');
       if (weekControls) weekControls.classList.toggle('hidden', view !== 'week');
-      if (counsellorFilter) counsellorFilter.classList.toggle('hidden', view !== 'week');
       
-      // Reset counsellor filter for day view
-      if (view === 'day') {
-        selectedCounsellor = '';
-        const counsellorSelect = document.getElementById('counsellorSelect');
-        if (counsellorSelect) counsellorSelect.value = '';
-      }
+      // Note: selectedCounsellor is preserved when switching views
+      // This allows the counsellor to be remembered across view changes
       
       // Update grid class
       const grid = document.getElementById('calendarGrid');
@@ -572,24 +569,32 @@
       const summaryDiv = document.getElementById('counsellorSummary');
       
       if (currentView === 'day') {
-        // Day view - show all bookings, no counsellor filter
-        infoDiv.classList.add('hidden');
-        document.getElementById('pageTitle').textContent = 'Cherry Tree Centre - Admin Day View';
-      } else if (selectedCounsellor) {
-        // Week view with counsellor selected
-        const counsellorBookings = bookingData.filter(booking => 
-          booking.client.toLowerCase().includes(selectedCounsellor.toLowerCase())
-        );
-        
-        nameDiv.textContent = selectedCounsellor;
-        summaryDiv.textContent = `${counsellorBookings.length} bookings found`;
-        infoDiv.classList.remove('hidden');
-        
-        document.getElementById('pageTitle').textContent = `My Bookings - ${selectedCounsellor}`;
+        // Day view - show counsellor name if set, otherwise show admin view
+        if (selectedCounsellor) {
+          nameDiv.textContent = selectedCounsellor;
+          summaryDiv.textContent = 'Viewing all bookings (Day View)';
+          infoDiv.classList.remove('hidden');
+          document.getElementById('pageTitle').textContent = `${selectedCounsellor} - All Bookings (Day View)`;
+        } else {
+          infoDiv.classList.add('hidden');
+          document.getElementById('pageTitle').textContent = 'Cherry Tree Centre - Admin Day View';
+        }
       } else {
-        // Week view with no counsellor selected
-        infoDiv.classList.add('hidden');
-        document.getElementById('pageTitle').textContent = 'Select Your Name to View Your Bookings';
+        // Week view - always show counsellor info if counsellor is set
+        if (selectedCounsellor) {
+          const counsellorBookings = bookingData.filter(booking => 
+            booking.client.toLowerCase().includes(selectedCounsellor.toLowerCase())
+          );
+          
+          nameDiv.textContent = selectedCounsellor;
+          summaryDiv.textContent = `${counsellorBookings.length} bookings found`;
+          infoDiv.classList.remove('hidden');
+          
+          document.getElementById('pageTitle').textContent = `My Bookings - ${selectedCounsellor}`;
+        } else {
+          infoDiv.classList.add('hidden');
+          document.getElementById('pageTitle').textContent = 'Select Your Name to View Your Bookings';
+        }
       }
     }
 
@@ -795,7 +800,7 @@
     function populateDayView(filteredBookings) {
       const selectedDate = document.getElementById('dateSelector').value;
       
-      // Filter bookings for selected date (no counsellor filter in day view)
+      // In day view: show all bookings (no counsellor filter)
       const dayBookings = bookingData.filter(booking => booking.date === selectedDate);
       
       dayBookings.forEach(booking => {
@@ -1237,11 +1242,11 @@
     function updateControlsVisibility() {
       const dayControls = document.getElementById('dayControls');
       const weekControls = document.getElementById('weekControls');
-      const counsellorFilter = document.getElementById('counsellorFilter');
       
       if (dayControls) dayControls.classList.toggle('hidden', currentView !== 'day');
       if (weekControls) weekControls.classList.toggle('hidden', currentView !== 'week');
-      if (counsellorFilter) counsellorFilter.classList.toggle('hidden', currentView !== 'week');
+      
+      // Counsellor filter is always hidden now
     }
 
     async function initializeData() {
