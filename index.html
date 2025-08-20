@@ -418,23 +418,16 @@
         formData.append('newTime', changeData.newTime || '');
         formData.append('counsellorName', changeData.counsellorName);
         
-        // NEW: Add formatted datetime for SimplybookMe (Column G)
-        let simplybookMeDateTime = '';
-        if (changeData.newDate && changeData.newTime) {
-          // Both date and time are being changed
-          simplybookMeDateTime = formatDateTimeForSimplybookMe(changeData.newDate, changeData.newTime);
-        } else if (changeData.newDate && !changeData.newTime) {
-          // Only date is being changed, use original time
-          simplybookMeDateTime = formatDateTimeForSimplybookMe(changeData.newDate, changeData.originalTime);
-        } else if (!changeData.newDate && changeData.newTime) {
-          // Only time is being changed, use original date
-          simplybookMeDateTime = formatDateTimeForSimplybookMe(changeData.originalDate, changeData.newTime);
-        } else {
-          // No date/time changes, use original values
-          simplybookMeDateTime = formatDateTimeForSimplybookMe(changeData.originalDate, changeData.originalTime);
-        }
+        // Column G: Requested start date/time (always filled)
+        const requestedDate = changeData.newDate || changeData.originalDate;
+        const requestedTime = changeData.newTime || changeData.originalTime;
+        const requestedDateTime = formatDateTimeForSimplybookMe(requestedDate, requestedTime);
         
-        formData.append('simplybookMeDateTime', simplybookMeDateTime);
+        // Column I: Requested room (always filled)
+        const requestedRoom = changeData.newRoom || changeData.originalRoom;
+        
+        formData.append('requestedDateTime', requestedDateTime);
+        formData.append('requestedRoom', requestedRoom);
         
         console.log('Submitting form data:');
         console.log('  Original Booking Code:', changeData.originalBookingCode);
@@ -442,7 +435,19 @@
         console.log('  New Room:', changeData.newRoom);
         console.log('  New Date:', changeData.newDate);
         console.log('  New Time:', changeData.newTime);
-        console.log('  SimplybookMe DateTime (Column G):', simplybookMeDateTime);
+        
+        // Debug: Log what will be in each column
+        console.log('=== COLUMN MAPPING DEBUG ===');
+        console.log('Column A (Timestamp):', new Date().toISOString());
+        console.log('Column B (Counsellor):', changeData.counsellorName);
+        console.log('Column C (Booking Code):', changeData.originalBookingCode);
+        console.log('Column D (Original Room):', changeData.originalRoom);
+        console.log('Column E (Original Date):', changeData.originalDate);
+        console.log('Column F (Original Time):', changeData.originalTime);
+        console.log('Column G (Requested DateTime):', requestedDateTime);
+        console.log('Column H (Calculated - not filled)');
+        console.log('Column I (Requested Room):', requestedRoom);
+        console.log('=== END COLUMN DEBUG ===');
         
         // Submit to the dedicated change requests Google Sheet
         const CHANGE_REQUESTS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwVIQAryAHaD9HfEqAvaxXDo-nd1BSN664E4Kyg1tVWgmOsTfG6VS7JYgHohqN7HQiz/exec';
