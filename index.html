@@ -299,8 +299,12 @@
     // Set today's date as default
     document.getElementById('dateSelector').value = currentDate;
     
-    // Set current week
-    currentWeekStart.setDate(currentWeekStart.getDate() - currentWeekStart.getDay()); // Start of week (Sunday)
+    // Set current week to start on Monday
+    const today = new Date();
+    const dayOfWeek = today.getDay(); // 0 = Sunday, 1 = Monday, etc.
+    const daysToSubtract = dayOfWeek === 0 ? 6 : dayOfWeek - 1; // If Sunday, go back 6 days, otherwise go back to Monday
+    currentWeekStart.setDate(today.getDate() - daysToSubtract);
+    currentWeekStart.setHours(0, 0, 0, 0); // Set to start of day
 
     // Function to format date and time for SimplybookMe
     function formatDateTimeForSimplybookMe(date, time) {
@@ -338,8 +342,8 @@
       if (date) {
         currentDate = date;
         document.getElementById('dateSelector').value = currentDate;
-        currentWeekStart = new Date(date);
-        currentWeekStart.setDate(currentWeekStart.getDate() - currentWeekStart.getDay());
+        // Set week start based on the provided date
+        currentWeekStart = getWeekStartDate(new Date(date));
       }
     }
 
@@ -625,9 +629,9 @@
 
     function getWeekStartDate(date) {
       const result = new Date(date);
-      const day = result.getDay();
-      const diff = result.getDate() - day + (day === 0 ? -6 : 1); // Monday as start
-      result.setDate(diff);
+      const dayOfWeek = result.getDay(); // 0 = Sunday, 1 = Monday, etc.
+      const daysToSubtract = dayOfWeek === 0 ? 6 : dayOfWeek - 1; // If Sunday, go back 6 days, otherwise go back to Monday
+      result.setDate(result.getDate() - daysToSubtract);
       result.setHours(0, 0, 0, 0);
       return result;
     }
