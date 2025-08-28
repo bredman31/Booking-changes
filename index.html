@@ -162,6 +162,42 @@
     .hidden {
       display: none;
     }
+    .cancel-section {
+      margin-top: 20px;
+      padding: 15px;
+      background: #fff3cd;
+      border-radius: 4px;
+      border: 1px solid #ffeaa7;
+    }
+    .cancel-btn {
+      background: #dc3545;
+      color: white;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+      width: 100%;
+      margin-top: 10px;
+    }
+    .cancel-btn:hover {
+      background: #c82333;
+    }
+    .action-type-selector {
+      margin: 15px 0;
+      padding: 10px;
+      background: #e9ecef;
+      border-radius: 4px;
+    }
+    .action-radio {
+      margin: 8px 0;
+    }
+    .action-radio input[type="radio"] {
+      margin-right: 8px;
+    }
+    .action-radio label {
+      font-weight: bold;
+    }
   </style>
 </head>
 <body>
@@ -207,49 +243,71 @@
           <input type="hidden" id="currentTimeInput">
           <input type="hidden" id="counsellorNameInput">
           
-          <hr style="margin: 20px 0; border: 1px solid #ddd;">
-          <h4 style="margin-bottom: 15px; color: #007bff;">Requested Changes:</h4>
-          
-          <div style="margin-bottom: 15px;">
-            <label id="roomChangeLabel" style="display: block; font-weight: bold; margin-bottom: 5px;">New Room (if changing):</label>
-            <select id="newRoomInput" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px;">
-              <option value="">No change</option>
-              <option value="Room 1">Room 1</option>
-              <option value="Room 2">Room 2</option>
-              <option value="Room 4">Room 4</option>
-              <option value="Room 6">Room 6</option>
-              <option value="Room 7">Room 7</option>
-              <option value="Online">Online</option>
-            </select>
+          <!-- Action type selector -->
+          <div class="action-type-selector">
+            <div><strong>What would you like to do?</strong></div>
+            <div class="action-radio">
+              <input type="radio" id="actionModify" name="actionType" value="modify" checked>
+              <label for="actionModify">Modify this booking</label>
+            </div>
+            <div class="action-radio">
+              <input type="radio" id="actionCancel" name="actionType" value="cancel">
+              <label for="actionCancel">Cancel this booking</label>
+            </div>
           </div>
           
-          <div style="margin-bottom: 15px;">
-            <label style="display: block; font-weight: bold; margin-bottom: 5px;">New Date (if changing):</label>
-            <input type="date" id="newDateInput" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px;">
+          <div id="modifySection">
+            <hr style="margin: 20px 0; border: 1px solid #ddd;">
+            <h4 style="margin-bottom: 15px; color: #007bff;">Requested Changes:</h4>
+            
+            <div style="margin-bottom: 15px;">
+              <label id="roomChangeLabel" style="display: block; font-weight: bold; margin-bottom: 5px;">New Room (if changing):</label>
+              <select id="newRoomInput" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px;">
+                <option value="">No change</option>
+                <option value="Room 1">Room 1</option>
+                <option value="Room 2">Room 2</option>
+                <option value="Room 4">Room 4</option>
+                <option value="Room 6">Room 6</option>
+                <option value="Room 7">Room 7</option>
+                <option value="Online">Online</option>
+              </select>
+            </div>
+            
+            <div style="margin-bottom: 15px;">
+              <label style="display: block; font-weight: bold; margin-bottom: 5px;">New Date (if changing):</label>
+              <input type="date" id="newDateInput" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px;">
+            </div>
+            
+            <div style="margin-bottom: 20px;">
+              <label style="display: block; font-weight: bold; margin-bottom: 5px;">New Time (if changing):</label>
+              <select id="newTimeInput" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px;">
+                <option value="">No change</option>
+                <option value="08:00">08:00</option>
+                <option value="09:00">09:00</option>
+                <option value="10:00">10:00</option>
+                <option value="11:00">11:00</option>
+                <option value="12:00">12:00</option>
+                <option value="13:00">13:00</option>
+                <option value="14:00">14:00</option>
+                <option value="15:00">15:00</option>
+                <option value="16:00">16:00</option>
+                <option value="17:00">17:00</option>
+                <option value="18:00">18:00</option>
+                <option value="19:00">19:00</option>
+                <option value="20:00">20:00</option>
+              </select>
+            </div>
           </div>
           
-          <div style="margin-bottom: 20px;">
-            <label style="display: block; font-weight: bold; margin-bottom: 5px;">New Time (if changing):</label>
-            <select id="newTimeInput" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px;">
-              <option value="">No change</option>
-              <option value="08:00">08:00</option>
-              <option value="09:00">09:00</option>
-              <option value="10:00">10:00</option>
-              <option value="11:00">11:00</option>
-              <option value="12:00">12:00</option>
-              <option value="13:00">13:00</option>
-              <option value="14:00">14:00</option>
-              <option value="15:00">15:00</option>
-              <option value="16:00">16:00</option>
-              <option value="17:00">17:00</option>
-              <option value="18:00">18:00</option>
-              <option value="19:00">19:00</option>
-              <option value="20:00">20:00</option>
-            </select>
+          <div id="cancelSection" class="cancel-section" style="display: none;">
+            <h4 style="color: #dc3545; margin-bottom: 10px;">Cancel Booking</h4>
+            <p style="margin: 0; font-size: 14px; color: #666;">
+              This will request cancellation of your booking. Please confirm this action.
+            </p>
           </div>
           
           <button type="submit" style="background: #007bff; color: white; padding: 12px 24px; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; width: 100%; font-weight: bold;">
-            Submit Change Request
+            Submit Change or Cancellation
           </button>
         </form>
         
@@ -349,7 +407,7 @@
       return []; // No rooms for unknown location
     }
 
-    // Parse URL parameters - UPDATED to handle client URLs
+    // UPDATED Parse URL parameters to handle modify=true and auto-fill form
     function parseURLParams() {
       const params = new URLSearchParams(window.location.search);
       const view = params.get('view');
@@ -357,6 +415,10 @@
       const clientName = params.get('name');
       const clientId = params.get('clientId');
       const date = params.get('date');
+      const booking = params.get('booking');
+      const room = params.get('room');
+      const time = params.get('time');
+      const modify = params.get('modify');
       
       if (view && (view === 'day' || view === 'week')) {
         currentView = view;
@@ -386,6 +448,26 @@
         document.getElementById('dateSelector').value = currentDate;
         // Set week start based on the provided date
         currentWeekStart = getWeekStartDate(new Date(date));
+      }
+      
+      // AUTO-FILL FORM if modify=true and booking details are provided
+      if (modify === 'true' && booking && room && date && time) {
+        console.log('Auto-filling form from URL parameters:', {
+          booking: decodeURIComponent(booking),
+          room: decodeURIComponent(room),
+          date: date,
+          time: decodeURIComponent(time)
+        });
+        
+        // Set a timeout to ensure DOM is ready
+        setTimeout(() => {
+          prefillForm(
+            decodeURIComponent(booking),
+            decodeURIComponent(room),
+            date,
+            decodeURIComponent(time)
+          );
+        }, 500);
       }
     }
 
@@ -481,7 +563,31 @@
       console.log('  Counsellor:', selectedCounsellor || 'Not set');
     }
 
-    // UPDATED booking change submission with location-aware logic
+    // Add event listeners for action type radio buttons
+    function setupActionTypeListeners() {
+      const modifyRadio = document.getElementById('actionModify');
+      const cancelRadio = document.getElementById('actionCancel');
+      const modifySection = document.getElementById('modifySection');
+      const cancelSection = document.getElementById('cancelSection');
+      
+      if (modifyRadio && cancelRadio && modifySection && cancelSection) {
+        modifyRadio.addEventListener('change', function() {
+          if (this.checked) {
+            modifySection.style.display = 'block';
+            cancelSection.style.display = 'none';
+          }
+        });
+        
+        cancelRadio.addEventListener('change', function() {
+          if (this.checked) {
+            modifySection.style.display = 'none';
+            cancelSection.style.display = 'block';
+          }
+        });
+      }
+    }
+
+    // UPDATED booking change submission with cancellation support
     async function submitBookingChange(changeData) {
       const statusDiv = document.getElementById('submitStatus');
       
@@ -490,7 +596,12 @@
         statusDiv.style.background = '#fff3cd';
         statusDiv.style.color = '#856404';
         statusDiv.style.border = '1px solid #ffeaa7';
-        statusDiv.textContent = 'Submitting change request...';
+        
+        if (changeData.actionType === 'cancel') {
+          statusDiv.textContent = 'Submitting cancellation request...';
+        } else {
+          statusDiv.textContent = 'Submitting change request...';
+        }
         
         // Get counsellor ID - try URL first, then lookup if needed
         let counsellorId = window.clientId;
@@ -514,7 +625,22 @@
         };
         
         const originalRoomId = ROOM_MAPPING[changeData.originalRoom];
-        const requestedRoomId = ROOM_MAPPING[changeData.newRoom || changeData.originalRoom];
+        let requestedRoomId, requestedLocationId, requestedDateTime;
+        
+        if (changeData.actionType === 'cancel') {
+          // For cancellation, we don't need new room/location/time
+          requestedRoomId = originalRoomId;
+          requestedLocationId = getLocationIdFromRoom(changeData.originalRoom);
+          requestedDateTime = `${changeData.originalDate}T${changeData.originalTime}:00`;
+        } else {
+          // For modification
+          requestedRoomId = ROOM_MAPPING[changeData.newRoom || changeData.originalRoom];
+          requestedLocationId = getLocationIdFromRoom(changeData.newRoom || changeData.originalRoom);
+          requestedDateTime = formatDateTimeForSimplybookMe(
+            changeData.newDate || changeData.originalDate,
+            changeData.newTime || changeData.originalTime
+          );
+        }
         
         if (!originalRoomId || !requestedRoomId) {
           throw new Error(`Room mapping failed for "${changeData.originalRoom}" or "${changeData.newRoom || changeData.originalRoom}"`);
@@ -522,7 +648,6 @@
         
         // Get location IDs based on room names
         const originalLocationId = getLocationIdFromRoom(changeData.originalRoom);
-        const requestedLocationId = getLocationIdFromRoom(changeData.newRoom || changeData.originalRoom);
         
         console.log('Location mapping:', {
           originalRoom: changeData.originalRoom,
@@ -531,7 +656,7 @@
           requestedLocationId: requestedLocationId
         });
         
-        // Build webhook payload
+        // Build webhook payload with action type
         const webhookPayload = {
           timestamp: new Date().toISOString(),
           counsellor_id: counsellorId,
@@ -541,11 +666,9 @@
           original_datetime: `${changeData.originalDate}T${changeData.originalTime}:00`,
           requested_room_id: requestedRoomId,
           requested_location_id: requestedLocationId,
-          requested_datetime: formatDateTimeForSimplybookMe(
-            changeData.newDate || changeData.originalDate,
-            changeData.newTime || changeData.originalTime
-          ),
-          service_id: '2'
+          requested_datetime: requestedDateTime,
+          service_id: '2',
+          action_type: changeData.actionType // 'modify' or 'cancel'
         };
         
         console.log('Webhook payload:', webhookPayload);
@@ -567,19 +690,29 @@
         console.log('Make webhook success');
         
         // Log to Google Sheets
-        statusDiv.textContent = 'Logging change request...';
+        statusDiv.textContent = 'Logging request...';
         await logChangeToGoogleSheets(changeData, webhookPayload);
         
         // Success
         statusDiv.style.background = '#d4edda';
         statusDiv.style.color = '#155724';
         statusDiv.style.border = '1px solid #c3e6cb';
-        statusDiv.textContent = 'Change request submitted successfully!';
+        
+        if (changeData.actionType === 'cancel') {
+          statusDiv.textContent = 'Cancellation request submitted successfully!';
+        } else {
+          statusDiv.textContent = 'Change request submitted successfully!';
+        }
         
         // Clear form
         document.getElementById('newRoomInput').value = '';
         document.getElementById('newDateInput').value = '';
         document.getElementById('newTimeInput').value = '';
+        
+        // Reset to modify action
+        document.getElementById('actionModify').checked = true;
+        document.getElementById('modifySection').style.display = 'block';
+        document.getElementById('cancelSection').style.display = 'none';
         
         setTimeout(() => {
           statusDiv.style.display = 'none';
@@ -604,731 +737,3 @@
         };
         
         return COUNSELLOR_MAPPING[counsellorName] || null;
-        
-      } catch (error) {
-        console.error('Counsellor lookup error:', error);
-        return null;
-      }
-    }
-
-    // Log change to Google Sheets for audit trail
-    async function logChangeToGoogleSheets(changeData, webhookPayload) {
-      try {
-        const CHANGE_REQUESTS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwVIQAryAHaD9HfEqAvaxXDo-nd1BSN664E4Kyg1tVWgmOsTfG6VS7JYgHohqN7HQiz/exec';
-        
-        const formData = new FormData();
-        formData.append('action', 'submitBookingChange');
-        formData.append('timestamp', webhookPayload.timestamp);
-        formData.append('counsellorName', changeData.counsellorName);
-        formData.append('originalBookingCode', changeData.originalBookingCode);
-        formData.append('originalRoom', changeData.originalRoom);
-        formData.append('originalDate', changeData.originalDate);
-        formData.append('originalTime', changeData.originalTime);
-        
-        const requestedDate = changeData.newDate || changeData.originalDate;
-        const requestedTime = changeData.newTime || changeData.originalTime;
-        const requestedDateTime = formatDateTimeForSimplybookMe(requestedDate, requestedTime);
-        const requestedRoom = changeData.newRoom || changeData.originalRoom;
-        
-        formData.append('requestedDateTime', requestedDateTime);
-        formData.append('requestedRoom', requestedRoom);
-        formData.append('webhookSent', 'Yes');
-        formData.append('submissionMethod', 'Direct from HTML');
-        
-        const response = await fetch(CHANGE_REQUESTS_SCRIPT_URL, {
-          method: 'POST',
-          body: formData
-        });
-        
-        if (response.ok) {
-          console.log('Successfully logged to Google Sheets');
-        } else {
-          console.warn('Failed to log to Google Sheets, but webhook was sent');
-        }
-        
-      } catch (error) {
-        console.warn('Google Sheets logging failed:', error);
-        // Don't throw error here - the main webhook succeeded
-      }
-    }
-
-    function updateURL() {
-      const params = new URLSearchParams();
-      params.set('view', currentView);
-      
-      // Include client parameters if available
-      if (window.clientId && selectedCounsellor) {
-        params.set('clientId', window.clientId);
-        params.set('name', encodeURIComponent(selectedCounsellor));
-      } else if (selectedCounsellor) {
-        params.set('counsellor', encodeURIComponent(selectedCounsellor));
-      }
-      
-      if (currentView === 'day') {
-        params.set('date', document.getElementById('dateSelector').value);
-      } else {
-        params.set('date', formatDate(currentWeekStart));
-      }
-      
-      const newURL = window.location.pathname + '?' + params.toString();
-      window.history.replaceState({}, '', newURL);
-    }
-
-    function switchView(view) {
-      currentView = view;
-      
-      console.log('Switching to view:', view);
-      
-      // Update view buttons
-      const buttons = document.querySelectorAll('.view-btn');
-      if (buttons.length > 0) {
-        buttons.forEach(btn => btn.classList.remove('active'));
-        // Find the button that was clicked
-        const clickedButton = event ? event.target : document.querySelector(`[onclick="switchView('${view}')"]`);
-        if (clickedButton) {
-          clickedButton.classList.add('active');
-        }
-      }
-      
-      // Show/hide controls based on view
-      const dayControls = document.getElementById('dayControls');
-      const weekControls = document.getElementById('weekControls');
-      const counsellorContainer = document.getElementById('counsellorFilterContainer');
-      
-      if (dayControls) dayControls.classList.toggle('hidden', view !== 'day');
-      if (weekControls) weekControls.classList.toggle('hidden', view !== 'week');
-      
-      // Only show counsellor filter if not using client URL
-      if (counsellorContainer && !window.clientId) {
-        counsellorContainer.classList.toggle('hidden', false);
-      }
-      
-      // Update grid class
-      const grid = document.getElementById('calendarGrid');
-      if (grid) {
-        grid.className = `calendar-grid ${view}-view`;
-      }
-      
-      // Update page title and info
-      updateCounsellorInfo();
-      
-      // Recreate grid and populate
-      createCalendarGrid();
-      populateCalendar();
-      updateURL();
-    }
-
-    function filterByCounsellor() {
-      selectedCounsellor = document.getElementById('counsellorSelect').value;
-      updateCounsellorInfo();
-      populateCalendar();
-      updateURL();
-    }
-
-    // UPDATED to handle client access
-    function updateCounsellorInfo() {
-      const infoDiv = document.getElementById('counsellorInfo');
-      const nameDiv = document.getElementById('counsellorName');
-      const summaryDiv = document.getElementById('counsellorSummary');
-      
-      if (currentView === 'day') {
-        if (selectedCounsellor) {
-          nameDiv.textContent = selectedCounsellor;
-          summaryDiv.textContent = 'Viewing all bookings (Day View)';
-          infoDiv.classList.remove('hidden');
-          
-          // Different title based on access method
-          if (window.clientId) {
-            document.getElementById('pageTitle').textContent = `${selectedCounsellor} - Day View`;
-          } else {
-            document.getElementById('pageTitle').textContent = `${selectedCounsellor} - All Bookings (Day View)`;
-          }
-        } else {
-          infoDiv.classList.add('hidden');
-          document.getElementById('pageTitle').textContent = 'Cherry Tree Centre - Admin Day View';
-        }
-      } else {
-        if (selectedCounsellor) {
-          const counsellorBookings = bookingData.filter(booking => 
-            booking.client.toLowerCase().includes(selectedCounsellor.toLowerCase())
-          );
-          
-          nameDiv.textContent = selectedCounsellor;
-          summaryDiv.textContent = `${counsellorBookings.length} bookings found`;
-          infoDiv.classList.remove('hidden');
-          
-          // Personalized title for direct client access
-          if (window.clientId) {
-            document.getElementById('pageTitle').textContent = `My Bookings - ${selectedCounsellor}`;
-          } else {
-            document.getElementById('pageTitle').textContent = `Bookings - ${selectedCounsellor}`;
-          }
-        } else {
-          infoDiv.classList.add('hidden');
-          
-          if (window.clientId) {
-            document.getElementById('pageTitle').textContent = 'Please select your name to view bookings';
-          } else {
-            document.getElementById('pageTitle').textContent = 'Select Counsellor to View Bookings';
-          }
-        }
-      }
-    }
-
-    function populateCounsellorDropdown() {
-      const select = document.getElementById('counsellorSelect');
-      const counsellors = new Set();
-      
-      bookingData.forEach(booking => {
-        if (booking.client && booking.client.trim()) {
-          counsellors.add(booking.client.trim());
-        }
-      });
-      
-      // Clear existing options
-      select.innerHTML = '<option value="">Select Counsellor</option>';
-      
-      // Add counsellor options
-      Array.from(counsellors).sort().forEach(counsellor => {
-        const option = document.createElement('option');
-        option.value = counsellor;
-        option.textContent = counsellor;
-        if (counsellor === selectedCounsellor) {
-          option.selected = true;
-        }
-        select.appendChild(option);
-      });
-    }
-
-    function getWeekStartDate(date) {
-      const result = new Date(date);
-      const dayOfWeek = result.getDay(); // 0 = Sunday, 1 = Monday, etc.
-      const daysToSubtract = dayOfWeek === 0 ? 6 : dayOfWeek - 1; // If Sunday, go back 6 days, otherwise go back to Monday
-      result.setDate(result.getDate() - daysToSubtract);
-      result.setHours(0, 0, 0, 0);
-      return result;
-    }
-
-    function formatDate(date) {
-      return date.toISOString().split('T')[0];
-    }
-
-    function changeWeek(direction) {
-      currentWeekStart.setDate(currentWeekStart.getDate() + (direction * 7));
-      updateWeekDisplay();
-      populateCalendar();
-      updateURL();
-    }
-
-    function updateWeekDisplay() {
-      const weekEnd = new Date(currentWeekStart);
-      weekEnd.setDate(weekEnd.getDate() + 6);
-      
-      const startStr = currentWeekStart.toLocaleDateString();
-      const endStr = weekEnd.toLocaleDateString();
-      
-      document.getElementById('weekDisplay').textContent = `${startStr} - ${endStr}`;
-    }
-
-    function createCalendarGrid() {
-      console.log('Creating calendar grid for view:', currentView);
-      const grid = document.getElementById("calendarGrid");
-      
-      if (!grid) {
-        console.error('Could not find calendarGrid element!');
-        return;
-      }
-      
-      grid.innerHTML = '';
-      
-      if (currentView === 'day') {
-        createDayGrid(grid);
-      } else {
-        createWeekGrid(grid);
-      }
-      
-      console.log('Calendar grid created successfully!');
-    }
-
-    function createDayGrid(grid) {
-      console.log('Creating day grid...');
-      
-      // Empty top-left cell
-      const emptyCell = document.createElement("div");
-      emptyCell.className = "grid-header";
-      emptyCell.textContent = "Time";
-      grid.appendChild(emptyCell);
-      
-      // Header row with room names
-      rooms.forEach(room => {
-        const header = document.createElement("div");
-        header.className = "grid-header";
-        header.textContent = room;
-        grid.appendChild(header);
-      });
-      
-      console.log('Day grid headers added, adding time rows...');
-      
-      // Time rows
-      businessHours.forEach(time => {
-        // Time label
-        const timeCell = document.createElement("div");
-        timeCell.className = "time-header";
-        timeCell.textContent = time;
-        grid.appendChild(timeCell);
-        
-        // Room cells for this time
-        rooms.forEach((room) => {
-          const cell = document.createElement("div");
-          cell.className = "grid-cell";
-          
-          let roomId;
-          if (room === "Room 1") roomId = "1";
-          else if (room === "Room 2") roomId = "2";
-          else if (room === "Room 4") roomId = "4";
-          else if (room === "Room 6") roomId = "6";
-          else if (room === "Room 7") roomId = "7";
-          else if (room === "Online") roomId = "online";
-          
-          cell.id = `cell-${roomId}-${time}`;
-          grid.appendChild(cell);
-        });
-      });
-      
-      console.log('Day grid completed with', grid.children.length, 'cells');
-    }
-
-    function createWeekGrid(grid) {
-      console.log('Creating week grid...');
-      
-      // Empty top-left cell
-      const emptyCell = document.createElement("div");
-      emptyCell.className = "grid-header";
-      emptyCell.textContent = "Time";
-      grid.appendChild(emptyCell);
-      
-      // Header row with days
-      for (let i = 0; i < 7; i++) {
-        const date = new Date(currentWeekStart);
-        date.setDate(date.getDate() + i);
-        
-        const header = document.createElement("div");
-        header.className = "grid-header";
-        header.textContent = `${weekDays[i]} ${date.getDate()}/${date.getMonth() + 1}`;
-        grid.appendChild(header);
-      }
-      
-      console.log('Week grid headers added, adding time rows...');
-      
-      // Time rows
-      businessHours.forEach(time => {
-        // Time label
-        const timeCell = document.createElement("div");
-        timeCell.className = "time-header";
-        timeCell.textContent = time;
-        grid.appendChild(timeCell);
-        
-        // Day cells for this time
-        for (let day = 0; day < 7; day++) {
-          const cell = document.createElement("div");
-          cell.className = "grid-cell";
-          cell.id = `week-cell-${day}-${time}`;
-          grid.appendChild(cell);
-        }
-      });
-      
-      updateWeekDisplay();
-      console.log('Week grid completed with', grid.children.length, 'cells');
-    }
-
-    function populateCalendar() {
-      console.log('Populating calendar - View:', currentView, 'Selected counsellor:', selectedCounsellor, 'Booking data length:', bookingData.length);
-      
-      // Clear all cells first
-      const cells = document.querySelectorAll('.grid-cell');
-      console.log('Found', cells.length, 'grid cells to populate');
-      
-      cells.forEach(cell => {
-        cell.innerHTML = '';
-        cell.classList.remove('booked', 'room-1', 'room-2', 'room-4', 'room-6', 'room-7', 'online');
-      });
-
-      let filteredBookings = bookingData;
-      
-      // Filter by counsellor only in week view
-      if (currentView === 'week' && selectedCounsellor) {
-        filteredBookings = bookingData.filter(booking => 
-          booking.client && booking.client.toLowerCase().includes(selectedCounsellor.toLowerCase())
-        );
-        console.log('Filtered bookings for', selectedCounsellor, ':', filteredBookings.length);
-      } else if (currentView === 'day') {
-        console.log('Day view - showing all bookings:', bookingData.length);
-      }
-      
-      if (currentView === 'day') {
-        populateDayView(filteredBookings);
-      } else {
-        populateWeekView(filteredBookings);
-      }
-      
-      console.log('Calendar population complete');
-    }
-
-    function populateDayView(filteredBookings) {
-      const selectedDate = document.getElementById('dateSelector').value;
-      
-      // In day view: show all bookings (no counsellor filter)
-      const dayBookings = bookingData.filter(booking => booking.date === selectedDate);
-      
-      dayBookings.forEach(booking => {
-        const startHour = parseInt(booking.start.split(':')[0]);
-        const endHour = parseInt(booking.end.split(':')[0]);
-        
-        const {roomNumber, roomClass} = getRoomMapping(booking);
-        if (!roomNumber) return;
-        
-        // Fill cells for the duration of the booking
-        for (let hour = startHour; hour < endHour; hour++) {
-          if (hour >= 8 && hour <= 20) {
-            const timeString = `${String(hour).padStart(2, '0')}:00`;
-            const cellId = `cell-${roomNumber}-${timeString}`;
-            const cell = document.getElementById(cellId);
-            
-            if (cell) {
-              cell.classList.add('booked', roomClass);
-              // Day view: Show client name as main heading
-              cell.innerHTML = `
-                <div class="booking-info">${booking.client || ''}</div>
-                <div class="client-name">${booking.bookingId || booking.code || ''}</div>
-              `;
-            }
-          }
-        }
-      });
-    }
-
-    function populateWeekView(filteredBookings) {
-      // If no counsellor selected in week view, don't show any bookings
-      if (!selectedCounsellor) {
-        return;
-      }
-      
-      for (let day = 0; day < 7; day++) {
-        const date = new Date(currentWeekStart);
-        date.setDate(date.getDate() + day);
-        const dateStr = formatDate(date);
-        
-        const dayBookings = filteredBookings.filter(booking => booking.date === dateStr);
-        
-        dayBookings.forEach(booking => {
-          const startHour = parseInt(booking.start.split(':')[0]);
-          const endHour = parseInt(booking.end.split(':')[0]);
-          
-          for (let hour = startHour; hour < endHour; hour++) {
-            if (hour >= 8 && hour <= 20) {
-              const timeString = `${String(hour).padStart(2, '0')}:00`;
-              const cellId = `week-cell-${day}-${timeString}`;
-              const cell = document.getElementById(cellId);
-              
-              if (cell) {
-                const {roomClass} = getRoomMapping(booking);
-                const roomDisplayName = getRoomDisplayName(booking);
-                
-                cell.classList.add('booked', roomClass);
-                // Week view: Show room name as main heading
-                cell.innerHTML = `
-                  <div class="booking-info">${roomDisplayName}</div>
-                  <div class="client-name">${booking.bookingId || booking.code || ''}</div>
-                `;
-                
-                // Add click handler to populate form with booking data
-                cell.addEventListener('click', function() {
-                  console.log('=== BOOKING CLICK DEBUG ===');
-                  console.log('Full booking object:', booking);
-                  console.log('booking.bookingId:', booking.bookingId);
-                  console.log('booking.code:', booking.code);
-                  
-                  // Use bookingId field - this is the correct field name
-                  const bookingCode = booking.bookingId;
-                  const room = roomDisplayName;
-                  const date = dateStr;
-                  const time = booking.start;
-                  
-                  console.log('Final values being sent to form:');
-                  console.log('  bookingCode (bookingId):', bookingCode);
-                  console.log('  room:', room);
-                  console.log('  date:', date);
-                  console.log('  time:', time);
-                  console.log('=== END CLICK DEBUG ===');
-                  
-                  prefillForm(bookingCode, room, date, time);
-                  
-                  // Scroll to form for better UX
-                  const formContainer = document.querySelector('.form-container');
-                  if (formContainer) {
-                    formContainer.scrollIntoView({ behavior: 'smooth' });
-                  }
-                });
-              }
-            }
-          }
-        });
-      }
-    }
-
-    function getRoomDisplayName(booking) {
-      if (booking.room === 'Room_1' || booking.room === '1') return 'Room 1';
-      if (booking.room === 'Room_2' || booking.room === '2') return 'Room 2';
-      if (booking.room === 'Room_4' || booking.room === '4') return 'Room 4';
-      if (booking.room === 'Room_6' || booking.room === '6') return 'Room 6';
-      if (booking.room === 'Room_7' || booking.room === '7') return 'Room 7';
-      if (booking.location && booking.location.toLowerCase().includes('online')) return 'Online';
-      return booking.room || 'Unknown';
-    }
-
-    function getRoomMapping(booking) {
-      let roomNumber, roomClass;
-      
-      if (booking.room === 'Room_1' || booking.room === '1') {
-        roomNumber = '1'; roomClass = 'room-1';
-      } else if (booking.room === 'Room_2' || booking.room === '2') {
-        roomNumber = '2'; roomClass = 'room-2';
-      } else if (booking.room === 'Room_4' || booking.room === '4') {
-        roomNumber = '4'; roomClass = 'room-4';
-      } else if (booking.room === 'Room_6' || booking.room === '6') {
-        roomNumber = '6'; roomClass = 'room-6';
-      } else if (booking.room === 'Room_7' || booking.room === '7') {
-        roomNumber = '7'; roomClass = 'room-7';
-      } else if (booking.location && booking.location.toLowerCase().includes('online')) {
-        roomNumber = 'online'; roomClass = 'online';
-      }
-      
-      return {roomNumber, roomClass};
-    }
-
-    async function loadBookingData() {
-      const statusElement = document.getElementById('dataStatus');
-      
-      try {
-        if (statusElement) statusElement.textContent = 'Loading booking data...';
-        
-        const response = await fetch(SCRIPT_URL);
-        
-        if (!response.ok) {
-          throw new Error(`Failed to fetch data: ${response.statusText}`);
-        }
-        
-        const jsonData = await response.json();
-        
-        console.log('=== BOOKING DATA DEBUG ===');
-        console.log('Total bookings loaded:', jsonData.length);
-        if (jsonData.length > 0) {
-          console.log('Sample booking (first one):');
-          console.log('Full booking object:', jsonData[0]);
-          console.log('Available fields:', Object.keys(jsonData[0]));
-          console.log('bookingId field:', jsonData[0].bookingId);
-          console.log('code field:', jsonData[0].code);
-        }
-        console.log('=== END DEBUG ===');
-        
-        const cachedData = {
-          data: jsonData,
-          timestamp: Date.now(),
-          expiry: Date.now() + (2 * 60 * 1000)
-        };
-        
-        try {
-          sessionStorage.setItem('bookingDataCache', JSON.stringify(cachedData));
-        } catch (e) {
-          console.warn('Could not cache data in sessionStorage:', e);
-        }
-        
-        bookingData = jsonData;
-        populateCounsellorDropdown();
-        updateCounsellorInfo();
-        
-        if (statusElement) {
-          statusElement.textContent = `Loaded ${jsonData.length} bookings`;
-          statusElement.style.color = '#28a745';
-          
-          setTimeout(() => {
-            statusElement.textContent = '';
-          }, 3000);
-        }
-        
-        return Promise.resolve();
-        
-      } catch (error) {
-        console.error('Error loading booking data:', error);
-        if (statusElement) {
-          statusElement.textContent = 'Error loading data';
-          statusElement.style.color = '#dc3545';
-        }
-        
-        bookingData = [];
-        return Promise.resolve();
-      }
-    }
-
-    function refreshData() {
-      console.log('Manual refresh triggered');
-      try {
-        sessionStorage.removeItem('bookingDataCache');
-      } catch (e) {
-        console.warn('Could not clear cache:', e);
-      }
-      
-      loadBookingData().then(() => {
-        console.log('Refresh complete, repopulating calendar');
-        populateCalendar();
-      });
-    }
-
-    // Date selector handler
-    document.getElementById('dateSelector').addEventListener('change', function() {
-      currentDate = this.value;
-      populateCalendar();
-      updateURL();
-    });
-
-    // Initialize when DOM is ready
-    document.addEventListener('DOMContentLoaded', function() {
-      console.log('DOM loaded, initializing...');
-      
-      setTimeout(() => {
-        // Parse URL parameters first
-        parseURLParams();
-        
-        // Set initial view state
-        updateViewButtons();
-        updateControlsVisibility();
-        
-        // Set grid class and create grid
-        const grid = document.getElementById('calendarGrid');
-        if (grid) {
-          grid.className = `calendar-grid ${currentView}-view`;
-          createCalendarGrid();
-        } else {
-          console.error('Calendar grid element not found!');
-        }
-        
-        // Load data and populate calendar
-        initializeData();
-        
-        // Set up booking change form handler with location validation
-        const changeForm = document.getElementById('bookingChangeForm');
-        if (changeForm) {
-          changeForm.addEventListener('submit', function(e) {
-            e.preventDefault();
-            
-            const changeData = {
-              originalBookingCode: document.getElementById('bookingCodeInput').value,
-              originalRoom: document.getElementById('currentRoomInput').value,
-              originalDate: document.getElementById('currentDateInput').value,
-              originalTime: document.getElementById('currentTimeInput').value,
-              newRoom: document.getElementById('newRoomInput').value,
-              newDate: document.getElementById('newDateInput').value,
-              newTime: document.getElementById('newTimeInput').value,
-              counsellorName: selectedCounsellor
-            };
-            
-            if (!changeData.newRoom && !changeData.newDate && !changeData.newTime) {
-              alert('Please specify what changes you would like to make.');
-              return;
-            }
-            
-            if (!changeData.counsellorName) {
-              alert('Please select a counsellor first.');
-              return;
-            }
-            
-            // Validate location restriction
-            if (changeData.newRoom) {
-              const originalLocationId = getLocationIdFromRoom(changeData.originalRoom);
-              const requestedLocationId = getLocationIdFromRoom(changeData.newRoom);
-              
-              if (originalLocationId !== requestedLocationId) {
-                const originalLocation = originalLocationId === '1' ? 'Buckhurst Hill' : 'Henley';
-                const requestedLocation = requestedLocationId === '1' ? 'Buckhurst Hill' : 'Henley';
-                
-                alert(`Cannot change locations. Your current booking is in ${originalLocation}, but you selected a room in ${requestedLocation}. Please choose a room in the same location.`);
-                return;
-              }
-            }
-            
-            submitBookingChange(changeData);
-          });
-        }
-        
-        // Auto-refresh data every 5 minutes
-        setInterval(() => {
-          loadBookingData().then(() => {
-            populateCalendar();
-          });
-        }, 5 * 60 * 1000);
-        
-      }, 100);
-    });
-
-    function updateViewButtons() {
-      const buttons = document.querySelectorAll('.view-btn');
-      if (buttons.length === 0) {
-        console.warn('No view buttons found');
-        return;
-      }
-      
-      buttons.forEach(btn => btn.classList.remove('active'));
-      
-      let activeButton;
-      if (currentView === 'day') {
-        activeButton = document.querySelector(`[onclick="switchView('day')"]`);
-      } else {
-        activeButton = document.querySelector(`[onclick="switchView('week')"]`);
-      }
-      
-      if (activeButton) {
-        activeButton.classList.add('active');
-      } else {
-        console.warn(`No button found for view: ${currentView}`);
-      }
-    }
-
-    function updateControlsVisibility() {
-      const dayControls = document.getElementById('dayControls');
-      const weekControls = document.getElementById('weekControls');
-      const counsellorContainer = document.getElementById('counsellorFilterContainer');
-      
-      if (dayControls) dayControls.classList.toggle('hidden', currentView !== 'day');
-      if (weekControls) weekControls.classList.toggle('hidden', currentView !== 'week');
-      
-      // Only show counsellor filter if not using client URL
-      if (counsellorContainer && !window.clientId) {
-        counsellorContainer.classList.remove('hidden');
-      } else if (counsellorContainer) {
-        counsellorContainer.classList.add('hidden');
-      }
-    }
-
-    async function initializeData() {
-      try {
-        await loadBookingData();
-        
-        // Set up counsellor dropdown if needed
-        if (selectedCounsellor) {
-          const select = document.getElementById('counsellorSelect');
-          if (select) {
-            select.value = selectedCounsellor;
-          }
-          updateCounsellorInfo();
-        }
-        
-        populateCalendar();
-        
-      } catch (error) {
-        console.error('Error during data initialization:', error);
-        populateCalendar();
-      }
-    }
-  </script>
-</body>
-</html>
