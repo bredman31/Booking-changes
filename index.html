@@ -1069,14 +1069,15 @@
       emptyCell.textContent = "Time";
       grid.appendChild(emptyCell);
       
-      // Header row with days
+      // Header row with days (Monday to Sunday)
+      const weekDaysMonToSun = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
       for (let i = 0; i < 7; i++) {
         const date = new Date(currentWeekStart);
         date.setDate(date.getDate() + i);
         
         const header = document.createElement("div");
         header.className = "grid-header";
-        header.textContent = `${weekDays[i]} ${date.getDate()}/${date.getMonth() + 1}`;
+        header.textContent = `${weekDaysMonToSun[i]} ${date.getDate()}/${date.getMonth() + 1}`;
         grid.appendChild(header);
       }
       
