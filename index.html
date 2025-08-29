@@ -316,6 +316,7 @@
 
     // Global variable for client ID from URL
     window.clientId = null;
+    // Global variable for booking to modify from URL
     window.bookingToModify = null;
 
     // Set today's date as default
@@ -1310,26 +1311,6 @@
       }
     }
 
-// If there's a booking to modify from URL, prefill the form
-if (window.bookingToModify) {
-  console.log('Auto-filling form from URL parameters:', window.bookingToModify);
-  
-  prefillForm(
-    window.bookingToModify.bookingId,
-    window.bookingToModify.room,
-    window.bookingToModify.date,
-    window.bookingToModify.time
-  );
-  
-  // Scroll to form after a short delay to ensure everything is rendered
-  setTimeout(() => {
-    const formContainer = document.querySelector('.form-container');
-    if (formContainer) {
-      formContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }
-  }, 500);
-}
-    
     function getRoomDisplayName(booking) {
       if (booking.room === 'Room_1' || booking.room === '1') return 'Room 1';
       if (booking.room === 'Room_2' || booking.room === '2') return 'Room 2';
@@ -1514,4 +1495,77 @@ if (window.bookingToModify) {
           });
         }
         
-        // Auto-
+        // If there's a booking to modify from URL, prefill the form
+        if (window.bookingToModify) {
+          console.log('Auto-filling form from URL parameters:', window.bookingToModify);
+          
+          prefillForm(
+            window.bookingToModify.bookingId,
+            window.bookingToModify.room,
+            window.bookingToModify.date,
+            window.bookingToModify.time
+          );
+          
+          // Scroll to form after a short delay to ensure everything is rendered
+          setTimeout(() => {
+            const formContainer = document.querySelector('.form-container');
+            if (formContainer) {
+              formContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+          }, 500);
+        }
+      }, 100);
+    });
+
+    function updateViewButtons() {
+      const dayBtn = document.querySelector('[onclick="switchView(\'day\')"]');
+      const weekBtn = document.querySelector('[onclick="switchView(\'week\')"]');
+      
+      if (dayBtn && weekBtn) {
+        dayBtn.classList.toggle('active', currentView === 'day');
+        weekBtn.classList.toggle('active', currentView === 'week');
+      }
+    }
+
+    function updateControlsVisibility() {
+      const dayControls = document.getElementById('dayControls');
+      const weekControls = document.getElementById('weekControls');
+      const counsellorContainer = document.getElementById('counsellorFilterContainer');
+      
+      if (dayControls) dayControls.classList.toggle('hidden', currentView !== 'day');
+      if (weekControls) weekControls.classList.toggle('hidden', currentView !== 'week');
+      
+      // Only show counsellor filter if not using client URL
+      if (counsellorContainer && !window.clientId) {
+        counsellorContainer.classList.toggle('hidden', false);
+      } else if (counsellorContainer && window.clientId) {
+        counsellorContainer.classList.toggle('hidden', true);
+      }
+    }
+
+    function initializeData() {
+      // Try to load from cache first
+      try {
+        const cachedData = sessionStorage.getItem('bookingDataCache');
+        if (cachedData) {
+          const parsedData = JSON.parse(cachedData);
+          if (parsedData.expiry > Date.now()) {
+            bookingData = parsedData.data;
+            populateCounsellorDropdown();
+            updateCounsellorInfo();
+            populateCalendar();
+            return;
+          }
+        }
+      } catch (e) {
+        console.warn('Could not load cached data:', e);
+      }
+      
+      // Load fresh data if cache is not available or expired
+      loadBookingData().then(() => {
+        populateCalendar();
+      });
+    }
+  </script>
+</body>
+</html>
