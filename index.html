@@ -136,6 +136,15 @@
       background: #7dd87d;
       border-color: #6bc46b;
     }
+    .grid-cell.selected-booking {
+      box-shadow: 0 0 0 3px #ff6b6b inset, 0 0 8px rgba(255, 107, 107, 0.6);
+      animation: pulse 2s infinite;
+    }
+    @keyframes pulse {
+      0% { box-shadow: 0 0 0 3px #ff6b6b inset, 0 0 8px rgba(255, 107, 107, 0.6); }
+      50% { box-shadow: 0 0 0 3px #ff9999 inset, 0 0 12px rgba(255, 153, 153, 0.8); }
+      100% { box-shadow: 0 0 0 3px #ff6b6b inset, 0 0 8px rgba(255, 107, 107, 0.6); }
+    }
     .booking-info {
       font-weight: bold;
       color: #1976d2;
@@ -307,6 +316,7 @@
 
     // Global variable for client ID from URL
     window.clientId = null;
+    window.bookingToModify = null;
 
     // Set today's date as default
     document.getElementById('dateSelector').value = currentDate;
@@ -358,7 +368,7 @@
       return []; // No rooms for unknown location
     }
 
-    // Parse URL parameters - UPDATED to handle client URLs
+    // Parse URL parameters - UPDATED to handle client URLs and booking modification
     function parseURLParams() {
       const params = new URLSearchParams(window.location.search);
       const view = params.get('view');
@@ -366,6 +376,10 @@
       const clientName = params.get('name');
       const clientId = params.get('clientId');
       const date = params.get('date');
+      const bookingId = params.get('booking');
+      const room = params.get('room');
+      const time = params.get('time');
+      const modify = params.get('modify');
       
       if (view && (view === 'day' || view === 'week')) {
         currentView = view;
@@ -395,6 +409,17 @@
         document.getElementById('dateSelector').value = currentDate;
         // Set week start based on the provided date
         currentWeekStart = getWeekStartDate(new Date(date));
+      }
+      
+      // Handle booking modification parameters
+      if (modify === 'true' && bookingId && room && date && time) {
+        window.bookingToModify = {
+          bookingId: bookingId,
+          room: decodeURIComponent(room),
+          date: date,
+          time: decodeURIComponent(time)
+        };
+        console.log('Booking to modify from URL:', window.bookingToModify);
       }
     }
 
@@ -1113,7 +1138,7 @@
       
       cells.forEach(cell => {
         cell.innerHTML = '';
-        cell.classList.remove('booked', 'room-1', 'room-2', 'room-4', 'room-6', 'room-7', 'online');
+        cell.classList.remove('booked', 'room-1', 'room-2', 'room-4', 'room-6', 'room-7', 'online', 'selected-booking');
       });
 
       let filteredBookings = bookingData;
@@ -1159,11 +1184,42 @@
             
             if (cell) {
               cell.classList.add('booked', roomClass);
+              
+              // Check if this is the booking to highlight
+              if (window.bookingToModify && 
+                  (booking.bookingId === window.bookingToModify.bookingId || 
+                   booking.code === window.bookingToModify.bookingId) &&
+                  booking.date === window.bookingToModify.date &&
+                  booking.start === window.bookingToModify.time) {
+                cell.classList.add('selected-booking');
+              }
+              
               // Day view: Show client name as main heading
               cell.innerHTML = `
                 <div class="booking-info">${booking.client || ''}</div>
                 <div class="client-name">${booking.bookingId || booking.code || ''}</div>
               `;
+              
+              // Add click handler to populate form with booking data
+              cell.addEventListener('click', function() {
+                const bookingCode = booking.bookingId || booking.code;
+                const roomDisplayName = getRoomDisplayName(booking);
+                const date = booking.date;
+                const time = booking.start;
+                
+                prefillForm(bookingCode, roomDisplayName, date, time);
+                
+                // Remove selected-booking class from all cells
+                document.querySelectorAll('.selected-booking').forEach(c => c.classList.remove('selected-booking'));
+                // Add selected-booking class to clicked cell
+                cell.classList.add('selected-booking');
+                
+                // Scroll to form for better UX
+                const formContainer = document.querySelector('.form-container');
+                if (formContainer) {
+                  formContainer.scrollIntoView({ behavior: 'smooth' });
+                }
+              });
             }
           }
         }
@@ -1198,6 +1254,16 @@
                 const roomDisplayName = getRoomDisplayName(booking);
                 
                 cell.classList.add('booked', roomClass);
+                
+                // Check if this is the booking to highlight
+                if (window.bookingToModify && 
+                    (booking.bookingId === window.bookingToModify.bookingId || 
+                     booking.code === window.bookingToModify.bookingId) &&
+                    booking.date === window.bookingToModify.date &&
+                    booking.start === window.bookingToModify.time) {
+                  cell.classList.add('selected-booking');
+                }
+                
                 // Week view: Show room name as main heading
                 cell.innerHTML = `
                   <div class="booking-info">${roomDisplayName}</div>
@@ -1225,6 +1291,11 @@
                   console.log('=== END CLICK DEBUG ===');
                   
                   prefillForm(bookingCode, room, date, time);
+                  
+                  // Remove selected-booking class from all cells
+                  document.querySelectorAll('.selected-booking').forEach(c => c.classList.remove('selected-booking'));
+                  // Add selected-booking class to clicked cell
+                  cell.classList.add('selected-booking');
                   
                   // Scroll to form for better UX
                   const formContainer = document.querySelector('.form-container');
@@ -1423,75 +1494,4 @@
           });
         }
         
-        // Auto-refresh data every 5 minutes
-        setInterval(() => {
-          loadBookingData().then(() => {
-            populateCalendar();
-          });
-        }, 5 * 60 * 1000);
-        
-      }, 100);
-    });
-
-    function updateViewButtons() {
-      const buttons = document.querySelectorAll('.view-btn');
-      if (buttons.length === 0) {
-        console.warn('No view buttons found');
-        return;
-      }
-      
-      buttons.forEach(btn => btn.classList.remove('active'));
-      
-      let activeButton;
-      if (currentView === 'day') {
-        activeButton = document.querySelector(`[onclick="switchView('day')"]`);
-      } else {
-        activeButton = document.querySelector(`[onclick="switchView('week')"]`);
-      }
-      
-      if (activeButton) {
-        activeButton.classList.add('active');
-      } else {
-        console.warn(`No button found for view: ${currentView}`);
-      }
-    }
-
-    function updateControlsVisibility() {
-      const dayControls = document.getElementById('dayControls');
-      const weekControls = document.getElementById('weekControls');
-      const counsellorContainer = document.getElementById('counsellorFilterContainer');
-      
-      if (dayControls) dayControls.classList.toggle('hidden', currentView !== 'day');
-      if (weekControls) weekControls.classList.toggle('hidden', currentView !== 'week');
-      
-      // Only show counsellor filter if not using client URL
-      if (counsellorContainer && !window.clientId) {
-        counsellorContainer.classList.remove('hidden');
-      } else if (counsellorContainer) {
-        counsellorContainer.classList.add('hidden');
-      }
-    }
-
-    async function initializeData() {
-      try {
-        await loadBookingData();
-        
-        // Set up counsellor dropdown if needed
-        if (selectedCounsellor) {
-          const select = document.getElementById('counsellorSelect');
-          if (select) {
-            select.value = selectedCounsellor;
-          }
-          updateCounsellorInfo();
-        }
-        
-        populateCalendar();
-        
-      } catch (error) {
-        console.error('Error during data initialization:', error);
-        populateCalendar();
-      }
-    }
-  </script>
-</body>
-</html>
+        // Auto-
