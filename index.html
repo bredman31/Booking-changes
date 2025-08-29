@@ -1310,6 +1310,26 @@
       }
     }
 
+// If there's a booking to modify from URL, prefill the form
+if (window.bookingToModify) {
+  console.log('Auto-filling form from URL parameters:', window.bookingToModify);
+  
+  prefillForm(
+    window.bookingToModify.bookingId,
+    window.bookingToModify.room,
+    window.bookingToModify.date,
+    window.bookingToModify.time
+  );
+  
+  // Scroll to form after a short delay to ensure everything is rendered
+  setTimeout(() => {
+    const formContainer = document.querySelector('.form-container');
+    if (formContainer) {
+      formContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  }, 500);
+}
+    
     function getRoomDisplayName(booking) {
       if (booking.room === 'Room_1' || booking.room === '1') return 'Room 1';
       if (booking.room === 'Room_2' || booking.room === '2') return 'Room 2';
