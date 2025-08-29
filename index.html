@@ -162,42 +162,6 @@
     .hidden {
       display: none;
     }
-    .cancel-section {
-      margin-top: 20px;
-      padding: 15px;
-      background: #fff3cd;
-      border-radius: 4px;
-      border: 1px solid #ffeaa7;
-    }
-    .cancel-btn {
-      background: #dc3545;
-      color: white;
-      padding: 10px 20px;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-      font-size: 14px;
-      width: 100%;
-      margin-top: 10px;
-    }
-    .cancel-btn:hover {
-      background: #c82333;
-    }
-    .action-type-selector {
-      margin: 15px 0;
-      padding: 10px;
-      background: #e9ecef;
-      border-radius: 4px;
-    }
-    .action-radio {
-      margin: 8px 0;
-    }
-    .action-radio input[type="radio"] {
-      margin-right: 8px;
-    }
-    .action-radio label {
-      font-weight: bold;
-    }
   </style>
 </head>
 <body>
@@ -244,15 +208,15 @@
           <input type="hidden" id="counsellorNameInput">
           
           <!-- Action type selector -->
-          <div class="action-type-selector">
+          <div style="margin: 15px 0; padding: 10px; background: #e9ecef; border-radius: 4px;">
             <div><strong>What would you like to do?</strong></div>
-            <div class="action-radio">
-              <input type="radio" id="actionModify" name="actionType" value="modify" checked>
-              <label for="actionModify">Modify this booking</label>
+            <div style="margin: 8px 0;">
+              <input type="radio" id="actionModify" name="actionType" value="modify" checked style="margin-right: 8px;">
+              <label for="actionModify" style="font-weight: bold;">Modify this booking</label>
             </div>
-            <div class="action-radio">
-              <input type="radio" id="actionCancel" name="actionType" value="cancel">
-              <label for="actionCancel">Cancel this booking</label>
+            <div style="margin: 8px 0;">
+              <input type="radio" id="actionCancel" name="actionType" value="cancel" style="margin-right: 8px;">
+              <label for="actionCancel" style="font-weight: bold;">Cancel this booking</label>
             </div>
           </div>
           
@@ -299,7 +263,7 @@
             </div>
           </div>
           
-          <div id="cancelSection" class="cancel-section" style="display: none;">
+          <div id="cancelSection" style="display: none; margin-top: 20px; padding: 15px; background: #fff3cd; border-radius: 4px; border: 1px solid #ffeaa7;">
             <h4 style="color: #dc3545; margin-bottom: 10px;">Cancel Booking</h4>
             <p style="margin: 0; font-size: 14px; color: #666;">
               This will request cancellation of your booking. Please confirm this action.
@@ -407,7 +371,7 @@
       return []; // No rooms for unknown location
     }
 
-    // UPDATED Parse URL parameters to handle modify=true and auto-fill form
+    // UPDATED Parse URL parameters to handle client URLs and auto-fill
     function parseURLParams() {
       const params = new URLSearchParams(window.location.search);
       const view = params.get('view');
@@ -467,7 +431,7 @@
             date,
             decodeURIComponent(time)
           );
-        }, 500);
+        }, 1000);
       }
     }
 
@@ -570,18 +534,20 @@
       const modifySection = document.getElementById('modifySection');
       const cancelSection = document.getElementById('cancelSection');
       
-      if (modifyRadio && cancelRadio && modifySection && cancelSection) {
+      if (modifyRadio && modifySection) {
         modifyRadio.addEventListener('change', function() {
           if (this.checked) {
             modifySection.style.display = 'block';
-            cancelSection.style.display = 'none';
+            if (cancelSection) cancelSection.style.display = 'none';
           }
         });
-        
+      }
+      
+      if (cancelRadio && cancelSection) {
         cancelRadio.addEventListener('change', function() {
           if (this.checked) {
-            modifySection.style.display = 'none';
             cancelSection.style.display = 'block';
+            if (modifySection) modifySection.style.display = 'none';
           }
         });
       }
@@ -737,3 +703,17 @@
         };
         
         return COUNSELLOR_MAPPING[counsellorName] || null;
+        
+      } catch (error) {
+        console.error('Counsellor lookup error:', error);
+        return null;
+      }
+    }
+
+    // Log change to Google Sheets for audit trail
+    async function logChangeToGoogleSheets(changeData, webhookPayload) {
+      try {
+        const CHANGE_REQUESTS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwVIQAryAHaD9HfEqAvaxXDo-nd1BSN664E4Kyg1tVWgmOsTfG6VS7JYgHohqN7HQiz/exec';
+        
+        const formData = new FormData();
+        formData.append('action', 'submitBookingChange');
