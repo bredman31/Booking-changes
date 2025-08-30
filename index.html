@@ -348,7 +348,7 @@
     // Function to get location ID from room name
     function getLocationIdFromRoom(roomName) {
       // Location 2 (Henley) rooms
-      const henleyRooms = ['Room_1', 'Room 1', 'Room_2', 'Room 2', 'Room 4', 'Room 4', 'Room_6', 'Room 6', 'Room_7', 'Room 7', 'Car Park'];
+      const henleyRooms = ['Room_1', 'Room 1', 'Room_2', 'Room 2', 'Room_4', 'Room 4', 'Room_6', 'Room 6', 'Room_7', 'Room 7', 'Car Park'];
       
       if (henleyRooms.includes(roomName)) {
         return '2'; // Henley
@@ -529,7 +529,7 @@
         
         // Success
         cancelStatusDiv.style.background = '#d4edda';
-        cancelStatusDiv.style.color = '##155724';
+        cancelStatusDiv.style.color = '#155724';
         cancelStatusDiv.style.border = '1px solid #c3e6cb';
         cancelStatusDiv.textContent = 'Appointment cancelled successfully!';
         
@@ -1087,7 +1087,7 @@
     }
 
     function createWeekGrid(grid) {
-      console.log('Creating week grid...';
+      console.log('Creating week grid...');
       
       // Empty top-left cell
       const emptyCell = document.createElement("div");
@@ -1426,47 +1426,6 @@
       updateURL();
     });
 
-    async function initializeData() {
-      try {
-        await loadBookingData();
-        
-        // Set up counsellor dropdown if needed
-        if (selectedCounsellor) {
-          const select = document.getElementById('counsellorSelect');
-          if (select) {
-            select.value = selectedCounsellor;
-          }
-          updateCounsellorInfo();
-        }
-        
-        populateCalendar();
-        
-        // If there's a booking to modify from URL, prefill the form
-        if (window.bookingToModify) {
-          console.log('Auto-filling form from URL parameters:', window.bookingToModify);
-          
-          prefillForm(
-            window.bookingToModify.bookingId,
-            window.bookingToModify.room,
-            window.bookingToModify.date,
-            window.bookingToModify.time
-          );
-          
-          // Scroll to form after a short delay to ensure everything is rendered
-          setTimeout(() => {
-            const formContainer = document.querySelector('.form-container');
-            if (formContainer) {
-              formContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
-            }
-          }, 500);
-        }
-        
-      } catch (error) {
-        console.error('Error during data initialization:', error);
-        populateCalendar();
-      }
-    }
-
     // Initialize when DOM is ready
     document.addEventListener('DOMContentLoaded', function() {
       console.log('DOM loaded, initializing...');
@@ -1535,6 +1494,26 @@
             submitBookingChange(changeData);
           });
         }
+        
+        // If there's a booking to modify from URL, prefill the form
+        if (window.bookingToModify) {
+          console.log('Auto-filling form from URL parameters:', window.bookingToModify);
+          
+          prefillForm(
+            window.bookingToModify.bookingId,
+            window.bookingToModify.room,
+            window.bookingToModify.date,
+            window.bookingToModify.time
+          );
+          
+          // Scroll to form after a short delay to ensure everything is rendered
+          setTimeout(() => {
+            const formContainer = document.querySelector('.form-container');
+            if (formContainer) {
+              formContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+          }, 500);
+        }
       }, 100);
     });
 
@@ -1562,6 +1541,30 @@
       } else if (counsellorContainer && window.clientId) {
         counsellorContainer.classList.toggle('hidden', true);
       }
+    }
+
+    function initializeData() {
+      // Try to load from cache first
+      try {
+        const cachedData = sessionStorage.getItem('bookingDataCache');
+        if (cachedData) {
+          const parsedData = JSON.parse(cachedData);
+          if (parsedData.expiry > Date.now()) {
+            bookingData = parsedData.data;
+            populateCounsellorDropdown();
+            updateCounsellorInfo();
+            populateCalendar();
+            return;
+          }
+        }
+      } catch (e) {
+        console.warn('Could not load cached data:', e);
+      }
+      
+      // Load fresh data if cache is not available or expired
+      loadBookingData().then(() => {
+        populateCalendar();
+      });
     }
   </script>
 </body>
