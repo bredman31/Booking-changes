@@ -788,12 +788,25 @@
         statusDiv.textContent = `Error: ${error.message}`;
       }
     }
+
+
+    
 //END SECTION 3
+//SECTION 4
+    
+
 //SECTION 4
     // Fallback counsellor ID lookup for old URL format
     async function lookupCounsellorId(counsellorName) {
       try {
-        // Hardcoded mapping - update with real IDs from your Clients sheet
+        // First, check if we can find the ID in the loaded booking data
+        const booking = bookingData.find(b => b.client === counsellorName && b.clientId);
+        if (booking && booking.clientId) {
+          console.log(`Found counsellor ID ${booking.clientId} for ${counsellorName} in booking data`);
+          return booking.clientId;
+        }
+        
+        // Fallback to hardcoded mapping if needed
         const COUNSELLOR_MAPPING = {
           'Barry Redman': '6', // Updated to correct ID
           // Add other counsellors as needed
@@ -1236,7 +1249,12 @@
     }
 
 //END SECTION 4
+
+    
+//END SECTION 4
 //SECTION 5
+
+
 
     
     function populateWeekView(filteredBookings) {
