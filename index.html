@@ -1347,6 +1347,10 @@
 //END SECTION 4
 //SECTION 5
 
+
+
+
+
 //SECTION 5
 
     function populateWeekView(filteredBookings) {
@@ -1358,10 +1362,14 @@
       // The grid is Monday-Sunday (0-6 in our grid)
       for (let day = 0; day < 7; day++) {
         const date = new Date(currentWeekStart);
-        date.setDate(date.getDate() + day);  // This correctly adds days from Monday
+        date.setDate(date.getDate() + day);  // This adds days from Monday
         const dateStr = formatDate(date);
         
-        console.log(`Day ${day} (${['Mon','Tue','Wed','Thu','Fri','Sat','Sun'][day]}): ${dateStr}`);
+        // Debug: Verify the day mapping
+        const actualDayOfWeek = date.getDay(); // 0=Sun, 1=Mon, etc.
+        const gridDayName = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'][day];
+        const actualDayName = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][actualDayOfWeek];
+        console.log(`Grid position ${day} (${gridDayName}) = ${dateStr} (Actually ${actualDayName})`);
         
         const dayBookings = filteredBookings.filter(booking => booking.date === dateStr);
         
@@ -1398,23 +1406,10 @@
                 
                 // Add click handler to populate form with booking data
                 cell.addEventListener('click', function() {
-                  console.log('=== BOOKING CLICK DEBUG ===');
-                  console.log('Full booking object:', booking);
-                  console.log('booking.bookingId:', booking.bookingId);
-                  console.log('booking.code:', booking.code);
-                  
-                  // Use bookingId field - this is the correct field name
                   const bookingCode = booking.bookingId;
                   const room = roomDisplayName;
                   const date = dateStr;
                   const time = booking.start;
-                  
-                  console.log('Final values being sent to form:');
-                  console.log('  bookingCode (bookingId):', bookingCode);
-                  console.log('  room:', room);
-                  console.log('  date:', date);
-                  console.log('  time:', time);
-                  console.log('=== END CLICK DEBUG ===');
                   
                   prefillForm(bookingCode, room, date, time);
                   
@@ -1486,10 +1481,12 @@
           console.log('Sample booking (first one):');
           console.log('Full booking object:', jsonData[0]);
           console.log('Available fields:', Object.keys(jsonData[0]));
-          console.log('bookingId field:', jsonData[0].bookingId);
-          console.log('code field:', jsonData[0].code);
-          console.log('clientId field:', jsonData[0].clientId);
-          console.log('comments field:', jsonData[0].comments);
+          
+          // Check the date format
+          console.log('First booking date:', jsonData[0].date);
+          const testDate = new Date(jsonData[0].date + 'T12:00:00');
+          console.log('Parsed as:', testDate.toString());
+          console.log('Day of week:', testDate.getDay(), '(0=Sun, 1=Mon, etc.)');
         }
         console.log('=== END DEBUG ===');
         
@@ -1547,6 +1544,8 @@
     }
 
 //END SECTION 5
+
+    
 
 //END SECTION 5
 //SECTION 6
