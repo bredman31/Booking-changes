@@ -308,9 +308,11 @@
 
   
   
+//SECTION 2
+  
   <script>
     // Your Google Apps Script configuration
- const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxaMATLZvtAxJULI2l3teqb0u6FkBiP8LBuGMV7VrcU2NxMEbH92aj8Q4YI6aZ1GLUm4Q/exec';
+    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxaMATLZvtAxJULI2l3teqb0u6FkBiP8LBuGMV7VrcU2NxMEbH92aj8Q4YI6aZ1GLUm4Q/exec';
     
     const rooms = ["Room 1", "Room 2", "Room 4", "Room 6", "Room 7", "Online"];
     const businessHours = Array.from({length: 13}, (_, i) => `${String(i + 8).padStart(2, '0')}:00`);
@@ -467,7 +469,7 @@
       console.log(`Populated room dropdown for ${locationName} (location ${currentLocationId}):`, availableRooms);
     }
 
-    // Function to handle booking cancellation
+    // Function to handle booking cancellation - UPDATED to include comments
     async function cancelBooking() {
       const bookingCode = document.getElementById('bookingCodeInput').value;
       const room = document.getElementById('currentRoomInput').value;
@@ -479,6 +481,13 @@
         alert('Please select a booking first by clicking on it in the calendar.');
         return;
       }
+      
+      // Find the booking in bookingData to get comments
+      const booking = bookingData.find(b => 
+        (b.bookingId === bookingCode || b.code === bookingCode) &&
+        b.date === date &&
+        b.start === time
+      );
       
       // Confirmation dialog
       if (!confirm(`Are you sure you want to cancel this appointment?\n\nDate: ${date}\nTime: ${time}\nRoom: ${room}\n\nThis action cannot be undone.`)) {
@@ -504,7 +513,7 @@
           }
         }
         
-        // Build cancellation payload
+        // Build cancellation payload with comments
         const cancellationPayload = {
           timestamp: new Date().toISOString(),
           action: 'cancel',
@@ -512,7 +521,8 @@
           booking_code: bookingCode,
           original_datetime: `${date}T${time}:00`,
           original_room: room,
-          service_id: '2'
+          service_id: '2',
+          comments: booking ? (booking.comments || '') : ''  // ADDED: Include comments from booking data
         };
         
         console.log('Cancellation payload:', cancellationPayload);
@@ -594,12 +604,12 @@
     }
 
 //END SECTION 2
+//END SECTION 2
 //SECTION 3
 
     
  
-
-
+//SECTION 3
 
     
     // Function to clear the booking form
@@ -686,7 +696,7 @@
       console.log('  Counsellor:', selectedCounsellor || 'Not set');
     }
 
-    // UPDATED booking change submission with action field
+    // UPDATED booking change submission with action field and comments
     async function submitBookingChange(changeData) {
       const statusDiv = document.getElementById('submitStatus');
       
@@ -706,6 +716,13 @@
             throw new Error(`Counsellor "${changeData.counsellorName}" not found. Please contact support.`);
           }
         }
+        
+        // Find the booking in bookingData to get comments
+        const booking = bookingData.find(b => 
+          (b.bookingId === changeData.originalBookingCode || b.code === changeData.originalBookingCode) &&
+          b.date === changeData.originalDate &&
+          b.start === changeData.originalTime
+        );
         
         // Transform room names to IDs
         const ROOM_MAPPING = {
@@ -736,10 +753,10 @@
           requestedLocationId: requestedLocationId
         });
         
-        // Build webhook payload WITH ACTION FIELD
+        // Build webhook payload WITH ACTION FIELD and COMMENTS
         const webhookPayload = {
           timestamp: new Date().toISOString(),
-          action: 'modify',  // ADDED: Clear action identifier for modifications
+          action: 'modify',  // Clear action identifier for modifications
           counsellor_id: counsellorId,
           original_booking_code: changeData.originalBookingCode,
           original_room_id: originalRoomId,
@@ -751,7 +768,8 @@
             changeData.newDate || changeData.originalDate,
             changeData.newTime || changeData.originalTime
           ),
-          service_id: '2'
+          service_id: '2',
+          comments: booking ? (booking.comments || '') : ''  // ADDED: Include comments from booking data
         };
         
         console.log('Webhook payload:', webhookPayload);
@@ -801,7 +819,8 @@
     }
 
 
-
+    
+//END SECTION 3
 
     
 //END SECTION 3
@@ -1038,7 +1057,11 @@
     function changeWeek(direction) {
       currentWeekStart.setDate(currentWeekStart.getDate() + (direction * 7));
       updateWeekDisplay();
+      
+      // UPDATED: Recreate the grid to update the date headers
+      createCalendarGrid();
       populateCalendar();
+      
       updateURL();
     }
 
@@ -1046,8 +1069,16 @@
       const weekEnd = new Date(currentWeekStart);
       weekEnd.setDate(weekEnd.getDate() + 6);
       
-      const startStr = currentWeekStart.toLocaleDateString();
-      const endStr = weekEnd.toLocaleDateString();
+      const startStr = currentWeekStart.toLocaleDateString('en-GB', {
+        day: '2-digit',
+        month: '2-digit', 
+        year: 'numeric'
+      });
+      const endStr = weekEnd.toLocaleDateString('en-GB', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric'
+      });
       
       document.getElementById('weekDisplay').textContent = `${startStr} - ${endStr}`;
     }
@@ -1131,13 +1162,21 @@
       
       // Header row with days (Monday to Sunday)
       const weekDaysMonToSun = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+      
+      // UPDATED: Calculate and display actual dates for each day
       for (let i = 0; i < 7; i++) {
         const date = new Date(currentWeekStart);
         date.setDate(date.getDate() + i);
         
         const header = document.createElement("div");
         header.className = "grid-header";
-        header.textContent = `${weekDaysMonToSun[i]} ${date.getDate()}/${date.getMonth() + 1}`;
+        
+        // Format: "Monday 09/01"
+        const dayName = weekDaysMonToSun[i];
+        const dayNum = String(date.getDate()).padStart(2, '0');
+        const monthNum = String(date.getMonth() + 1).padStart(2, '0');
+        
+        header.textContent = `${dayName} ${dayNum}/${monthNum}`;
         grid.appendChild(header);
       }
       
@@ -1262,7 +1301,6 @@
     }
 
 //END SECTION 4
-
     
 //END SECTION 4
 //SECTION 5
