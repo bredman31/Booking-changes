@@ -1305,19 +1305,21 @@
 //END SECTION 4
 //SECTION 5
 
+//SECTION 5
 
-
-    
     function populateWeekView(filteredBookings) {
       // If no counsellor selected in week view, don't show any bookings
       if (!selectedCounsellor) {
         return;
       }
       
+      // The grid is Monday-Sunday (0-6 in our grid)
       for (let day = 0; day < 7; day++) {
         const date = new Date(currentWeekStart);
-        date.setDate(date.getDate() + day);
+        date.setDate(date.getDate() + day);  // This correctly adds days from Monday
         const dateStr = formatDate(date);
+        
+        console.log(`Day ${day} (${['Mon','Tue','Wed','Thu','Fri','Sat','Sun'][day]}): ${dateStr}`);
         
         const dayBookings = filteredBookings.filter(booking => booking.date === dateStr);
         
@@ -1328,7 +1330,7 @@
           for (let hour = startHour; hour < endHour; hour++) {
             if (hour >= 8 && hour <= 20) {
               const timeString = `${String(hour).padStart(2, '0')}:00`;
-              const cellId = `week-cell-${day}-${timeString}`;
+              const cellId = `week-cell-${day}-${timeString}`;  // day 0 = Monday, day 6 = Sunday
               const cell = document.getElementById(cellId);
               
               if (cell) {
@@ -1444,6 +1446,8 @@
           console.log('Available fields:', Object.keys(jsonData[0]));
           console.log('bookingId field:', jsonData[0].bookingId);
           console.log('code field:', jsonData[0].code);
+          console.log('clientId field:', jsonData[0].clientId);
+          console.log('comments field:', jsonData[0].comments);
         }
         console.log('=== END DEBUG ===');
         
@@ -1499,6 +1503,8 @@
         populateCalendar();
       });
     }
+
+//END SECTION 5
 
 //END SECTION 5
 //SECTION 6
