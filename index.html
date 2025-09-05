@@ -633,6 +633,15 @@
       }
     }
 
+    // Function to convert room display name to underscore format for webhook
+    function convertRoomNameToUnderscore(roomName) {
+      // Convert "Room 1" to "Room_1", etc.
+      if (roomName && roomName.startsWith('Room ')) {
+        return roomName.replace('Room ', 'Room_');
+      }
+      return roomName; // Return as-is for Online, Car Park, etc.
+    }
+
     // Updated prefillForm function to restrict room options by location
     function prefillForm(bookingCode, room, date, time) {
       // Update the visible display spans
@@ -724,44 +733,50 @@
           b.start === changeData.originalTime
         );
         
-        // Transform room names to IDs
+        // Convert room names to underscore format for webhook
+        const originalRoomUnderscore = convertRoomNameToUnderscore(changeData.originalRoom);
+        const newRoomUnderscore = changeData.newRoom ? convertRoomNameToUnderscore(changeData.newRoom) : originalRoomUnderscore;
+        
+        // Transform room names to IDs (using underscore format)
         const ROOM_MAPPING = {
-          'Room 1': '3', 'Room_1': '3',
-          'Room 2': '7', 'Room_2': '7',
-          'Room 4': '8', 'Room_4': '8',
-          'Room 6': '9', 'Room_6': '9',
-          'Room 7': '10', 'Room_7': '10',
+          'Room_1': '3',
+          'Room_2': '7',
+          'Room_4': '8',
+          'Room_6': '9',
+          'Room_7': '10',
           'Car Park': '12',
           'Online': '11', 'Online Counselling': '11'
         };
         
-        const originalRoomId = ROOM_MAPPING[changeData.originalRoom];
-        const requestedRoomId = ROOM_MAPPING[changeData.newRoom || changeData.originalRoom];
+        const originalRoomId = ROOM_MAPPING[originalRoomUnderscore];
+        const requestedRoomId = ROOM_MAPPING[newRoomUnderscore];
         
         if (!originalRoomId || !requestedRoomId) {
-          throw new Error(`Room mapping failed for "${changeData.originalRoom}" or "${changeData.newRoom || changeData.originalRoom}"`);
+          throw new Error(`Room mapping failed for "${originalRoomUnderscore}" or "${newRoomUnderscore}"`);
         }
         
-        // Get location IDs based on room names
-        const originalLocationId = getLocationIdFromRoom(changeData.originalRoom);
-        const requestedLocationId = getLocationIdFromRoom(changeData.newRoom || changeData.originalRoom);
+        // Get location IDs based on room names (using underscore format)
+        const originalLocationId = getLocationIdFromRoom(originalRoomUnderscore);
+        const requestedLocationId = getLocationIdFromRoom(newRoomUnderscore);
         
         console.log('Location mapping:', {
-          originalRoom: changeData.originalRoom,
+          originalRoom: originalRoomUnderscore,
           originalLocationId: originalLocationId,
-          requestedRoom: changeData.newRoom || changeData.originalRoom,
+          requestedRoom: newRoomUnderscore,
           requestedLocationId: requestedLocationId
         });
         
-        // Build webhook payload WITH ACTION FIELD and COMMENTS
+        // Build webhook payload WITH ACTION FIELD, COMMENTS, and UNDERSCORE ROOM NAMES
         const webhookPayload = {
           timestamp: new Date().toISOString(),
           action: 'modify',  // Clear action identifier for modifications
           counsellor_id: counsellorId,
           original_booking_code: changeData.originalBookingCode,
+          original_room: originalRoomUnderscore,  // UPDATED: Use underscore format
           original_room_id: originalRoomId,
           original_location_id: originalLocationId,
           original_datetime: `${changeData.originalDate}T${changeData.originalTime}:00`,
+          requested_room: newRoomUnderscore,  // ADDED: Include the requested room name in underscore format
           requested_room_id: requestedRoomId,
           requested_location_id: requestedLocationId,
           requested_datetime: formatDateTimeForSimplybookMe(
@@ -769,7 +784,7 @@
             changeData.newTime || changeData.originalTime
           ),
           service_id: '2',
-          comments: booking ? (booking.comments || '') : ''  // ADDED: Include comments from booking data
+          comments: booking ? (booking.comments || '') : ''  // Include comments from booking data
         };
         
         console.log('Webhook payload:', webhookPayload);
@@ -821,7 +836,6 @@
 
     
 //END SECTION 3
-
     
 //END SECTION 3
 //SECTION 4
