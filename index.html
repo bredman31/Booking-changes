@@ -358,15 +358,6 @@
       return `${date}T${formattedTime}`;
     }
 
-    // Function to convert room display name to underscore format for webhook
-    function convertRoomNameToUnderscore(roomName) {
-      // Convert "Room 1" to "Room_1", etc.
-      if (roomName && roomName.startsWith('Room ')) {
-        return roomName.replace('Room ', 'Room_');
-      }
-      return roomName; // Return as-is for Online, Car Park, etc.
-    }
-
     // Function to get location ID from room name
     function getLocationIdFromRoom(roomName) {
       // Location 2 (Henley) rooms
@@ -525,8 +516,11 @@
           }
         }
         
-        // Convert room name to underscore format
-        const roomUnderscore = convertRoomNameToUnderscore(room);
+        // Convert room name to underscore format if needed
+        let roomForWebhook = room;
+        if (room && room.startsWith('Room ')) {
+          roomForWebhook = room.replace('Room ', 'Room_');
+        }
         
         // Build cancellation payload with comments and underscore room name
         const cancellationPayload = {
@@ -535,7 +529,7 @@
           counsellor_id: counsellorId,
           booking_code: bookingCode,
           original_datetime: `${date}T${time}:00`,
-          original_room: roomUnderscore,  // UPDATED: Use underscore format
+          original_room: roomForWebhook,  // Use underscore format
           service_id: '2',
           comments: booking ? (booking.comments || '') : ''  // Include comments from booking data
         };
@@ -619,7 +613,6 @@
     }
 
 //END SECTION 2
-
 
   
   
