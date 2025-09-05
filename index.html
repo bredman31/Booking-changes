@@ -304,10 +304,13 @@
 
   
 //END SECTION 1
+
+//#########################################################################################################################
+  
 //SECTION 2
 
-  
-  
+
+
 //SECTION 2
   
   <script>
@@ -353,6 +356,15 @@
       
       // Return in ISO 8601 format: YYYY-MM-DDTHH:MM:SS
       return `${date}T${formattedTime}`;
+    }
+
+    // Function to convert room display name to underscore format for webhook
+    function convertRoomNameToUnderscore(roomName) {
+      // Convert "Room 1" to "Room_1", etc.
+      if (roomName && roomName.startsWith('Room ')) {
+        return roomName.replace('Room ', 'Room_');
+      }
+      return roomName; // Return as-is for Online, Car Park, etc.
     }
 
     // Function to get location ID from room name
@@ -469,7 +481,7 @@
       console.log(`Populated room dropdown for ${locationName} (location ${currentLocationId}):`, availableRooms);
     }
 
-    // Function to handle booking cancellation - UPDATED to include comments
+    // Function to handle booking cancellation - UPDATED to include comments and underscore format
     async function cancelBooking() {
       const bookingCode = document.getElementById('bookingCodeInput').value;
       const room = document.getElementById('currentRoomInput').value;
@@ -513,16 +525,19 @@
           }
         }
         
-        // Build cancellation payload with comments
+        // Convert room name to underscore format
+        const roomUnderscore = convertRoomNameToUnderscore(room);
+        
+        // Build cancellation payload with comments and underscore room name
         const cancellationPayload = {
           timestamp: new Date().toISOString(),
           action: 'cancel',
           counsellor_id: counsellorId,
           booking_code: bookingCode,
           original_datetime: `${date}T${time}:00`,
-          original_room: room,
+          original_room: roomUnderscore,  // UPDATED: Use underscore format
           service_id: '2',
-          comments: booking ? (booking.comments || '') : ''  // ADDED: Include comments from booking data
+          comments: booking ? (booking.comments || '') : ''  // Include comments from booking data
         };
         
         console.log('Cancellation payload:', cancellationPayload);
@@ -604,8 +619,22 @@
     }
 
 //END SECTION 2
+
+
+  
+  
+
+
+
+    
+    //#########################################################################################################################
 //END SECTION 2
 //SECTION 3
+
+
+
+
+
 
     
  
@@ -836,6 +865,12 @@
 
     
 //END SECTION 3
+
+
+
+
+
+
     
 //END SECTION 3
 //SECTION 4
