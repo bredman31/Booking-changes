@@ -597,6 +597,11 @@
 //SECTION 3
 
     
+ 
+
+
+
+    
     // Function to clear the booking form
     function clearBookingForm() {
       document.getElementById('currentRoomDisplay').textContent = '';
@@ -681,7 +686,7 @@
       console.log('  Counsellor:', selectedCounsellor || 'Not set');
     }
 
-    // UPDATED booking change submission with location-aware logic
+    // UPDATED booking change submission with action field
     async function submitBookingChange(changeData) {
       const statusDiv = document.getElementById('submitStatus');
       
@@ -731,9 +736,10 @@
           requestedLocationId: requestedLocationId
         });
         
-        // Build webhook payload
+        // Build webhook payload WITH ACTION FIELD
         const webhookPayload = {
           timestamp: new Date().toISOString(),
+          action: 'modify',  // ADDED: Clear action identifier for modifications
           counsellor_id: counsellorId,
           original_booking_code: changeData.originalBookingCode,
           original_room_id: originalRoomId,
@@ -793,6 +799,8 @@
         statusDiv.textContent = `Error: ${error.message}`;
       }
     }
+
+
 
 
     
