@@ -1,5 +1,4 @@
 <!DOCTYPE html>
-//Section 1
 <html>
 <head>
   <meta charset="UTF-8">
@@ -172,6 +171,22 @@
     .hidden {
       display: none;
     }
+    /* NEW: 24-hour restriction styles */
+    .grid-cell.past-booking {
+      opacity: 0.5;
+      cursor: not-allowed;
+      background-color: #f5f5f5 !important;
+      color: #999;
+    }
+    .past-booking-notice {
+      background: #f8d7da;
+      color: #721c24;
+      padding: 8px;
+      border-radius: 4px;
+      margin-top: 10px;
+      font-size: 12px;
+      text-align: center;
+    }
   </style>
 </head>
 <body>
@@ -216,6 +231,11 @@
           <input type="hidden" id="currentDateInput">
           <input type="hidden" id="currentTimeInput">
           <input type="hidden" id="counsellorNameInput">
+          
+          <!-- NEW: Past booking notice -->
+          <div id="pastBookingNotice" class="past-booking-notice hidden">
+            This booking is within 24 hours and cannot be modified or cancelled online. Please contact the centre directly.
+          </div>
           
           <div style="margin: 20px 0; text-align: center;">
             <button type="button" id="cancelBookingBtn" onclick="cancelBooking()" 
@@ -267,7 +287,7 @@
             </select>
           </div>
           
-          <button type="submit" style="background: #007bff; color: white; padding: 12px 24px; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; width: 100%; font-weight: bold;">
+          <button type="submit" id="submitChangeBtn" style="background: #007bff; color: white; padding: 12px 24px; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; width: 100%; font-weight: bold;">
             Submit Change Request
           </button>
         </form>
@@ -301,18 +321,6 @@
     </div>
   </div>
 
-
-  
-//END SECTION 1
-
-//#########################################################################################################################
-  
-//SECTION 2
-
-
-
-//SECTION 2
-  
   <script>
     // Your Google Apps Script configuration
     const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxaMATLZvtAxJULI2l3teqb0u6FkBiP8LBuGMV7VrcU2NxMEbH92aj8Q4YI6aZ1GLUm4Q/exec';
@@ -335,25 +343,32 @@
     // Set today's date as default
     document.getElementById('dateSelector').value = currentDate;
     
+    // Set current week to start on Monday
+    const today = new Date();
+    const dayOfWeek = today.getDay(); // 0 = Sunday, 1 = Monday, etc.
 
-// Set current week to start on Monday
-const today = new Date();
-const dayOfWeek = today.getDay(); // 0 = Sunday, 1 = Monday, etc.
+    // Fix the calculation
+    let daysToSubtract;
+    if (dayOfWeek === 0) {
+      daysToSubtract = 6; // Sunday: go back 6 days
+    } else {
+      daysToSubtract = dayOfWeek - 1; // Other days: go back to Monday
+    }
 
-// Fix the calculation
-let daysToSubtract;
-if (dayOfWeek === 0) {
-  daysToSubtract = 6; // Sunday: go back 6 days
-} else {
-  daysToSubtract = dayOfWeek - 1; // Other days: go back to Monday
-}
+    currentWeekStart = new Date(today);
+    currentWeekStart.setDate(today.getDate() - daysToSubtract);
+    currentWeekStart.setHours(0, 0, 0, 0);
 
-currentWeekStart = new Date(today);
-currentWeekStart.setDate(today.getDate() - daysToSubtract);
-currentWeekStart.setHours(0, 0, 0, 0);
+    console.log(`Today is ${today.toDateString()} (day ${dayOfWeek}), week starts ${currentWeekStart.toDateString()} (day ${currentWeekStart.getDay()})`);
 
-console.log(`Today is ${today.toDateString()} (day ${dayOfWeek}), week starts ${currentWeekStart.toDateString()} (day ${currentWeekStart.getDay()})`);
-
+    // NEW: 24-hour check function
+    function isBookingWithin24Hours(bookingDate, bookingTime) {
+      const now = new Date();
+      const bookingDateTime = new Date(`${bookingDate}T${bookingTime}:00`);
+      const timeDiff = bookingDateTime.getTime() - now.getTime();
+      const hoursDiff = timeDiff / (1000 * 60 * 60);
+      return hoursDiff < 24;
+    }
     
     // Function to format date and time for SimplybookMe
     function formatDateTimeForSimplybookMe(date, time) {
@@ -395,62 +410,62 @@ console.log(`Today is ${today.toDateString()} (day ${dayOfWeek}), week starts ${
       return []; // No rooms for unknown location
     }
 
-// Parse URL parameters - UPDATED to handle client URLs and booking modification
-function parseURLParams() {
-  const params = new URLSearchParams(window.location.search);
-  const view = params.get('view');
-  const counsellor = params.get('counsellor');
-  const clientName = params.get('name');
-  const clientId = params.get('clientId');
-  const date = params.get('date');
-  const bookingId = params.get('booking');
-  const room = params.get('room');
-  const time = params.get('time');
-  const modify = params.get('modify');
-  
-  if (view && (view === 'day' || view === 'week')) {
-    currentView = view;
-  }
-  
-  // New format: clientId + name parameters (preferred for client access)
-  if (clientId && clientName) {
-    selectedCounsellor = decodeURIComponent(clientName);
-    window.clientId = clientId; // Store globally for form submission
-    console.log('Client session from URL:', { id: clientId, name: selectedCounsellor });
-    
-    // Hide counsellor dropdown for direct client access
-    const counsellorContainer = document.getElementById('counsellorFilterContainer');
-    if (counsellorContainer) {
-      counsellorContainer.style.display = 'none';
+    // Parse URL parameters - UPDATED to handle client URLs and booking modification
+    function parseURLParams() {
+      const params = new URLSearchParams(window.location.search);
+      const view = params.get('view');
+      const counsellor = params.get('counsellor');
+      const clientName = params.get('name');
+      const clientId = params.get('clientId');
+      const date = params.get('date');
+      const bookingId = params.get('booking');
+      const room = params.get('room');
+      const time = params.get('time');
+      const modify = params.get('modify');
+      
+      if (view && (view === 'day' || view === 'week')) {
+        currentView = view;
+      }
+      
+      // New format: clientId + name parameters (preferred for client access)
+      if (clientId && clientName) {
+        selectedCounsellor = decodeURIComponent(clientName);
+        window.clientId = clientId; // Store globally for form submission
+        console.log('Client session from URL:', { id: clientId, name: selectedCounsellor });
+        
+        // Hide counsellor dropdown for direct client access
+        const counsellorContainer = document.getElementById('counsellorFilterContainer');
+        if (counsellorContainer) {
+          counsellorContainer.style.display = 'none';
+        }
+      }
+      // Old format: just counsellor name (fallback for admin use)
+      else if (counsellor) {
+        selectedCounsellor = decodeURIComponent(counsellor);
+        window.clientId = null; // Will need lookup for form submission
+        console.log('Counsellor set from URL (old format):', selectedCounsellor);
+      }
+      
+      if (date) {
+        currentDate = date;
+        document.getElementById('dateSelector').value = currentDate;
+        // FIX: Create date properly to avoid timezone issues
+        // Add 12:00 to avoid date shifting due to timezone
+        const dateObj = new Date(date + 'T12:00:00');
+        currentWeekStart = getWeekStartDate(dateObj);
+      }
+      
+      // Handle booking modification parameters
+      if (modify === 'true' && bookingId && room && date && time) {
+        window.bookingToModify = {
+          bookingId: bookingId,
+          room: decodeURIComponent(room),
+          date: date,
+          time: decodeURIComponent(time)
+        };
+        console.log('Booking to modify from URL:', window.bookingToModify);
+      }
     }
-  }
-  // Old format: just counsellor name (fallback for admin use)
-  else if (counsellor) {
-    selectedCounsellor = decodeURIComponent(counsellor);
-    window.clientId = null; // Will need lookup for form submission
-    console.log('Counsellor set from URL (old format):', selectedCounsellor);
-  }
-  
-  if (date) {
-    currentDate = date;
-    document.getElementById('dateSelector').value = currentDate;
-    // FIX: Create date properly to avoid timezone issues
-    // Add 12:00 to avoid date shifting due to timezone
-    const dateObj = new Date(date + 'T12:00:00');
-    currentWeekStart = getWeekStartDate(dateObj);
-  }
-  
-  // Handle booking modification parameters
-  if (modify === 'true' && bookingId && room && date && time) {
-    window.bookingToModify = {
-      bookingId: bookingId,
-      room: decodeURIComponent(room),
-      date: date,
-      time: decodeURIComponent(time)
-    };
-    console.log('Booking to modify from URL:', window.bookingToModify);
-  }
-}
 
     // New function to populate room dropdown based on current booking's location
     function populateRoomDropdown(currentRoom) {
@@ -487,7 +502,7 @@ function parseURLParams() {
       console.log(`Populated room dropdown for ${locationName} (location ${currentLocationId}):`, availableRooms);
     }
 
-    // Function to handle booking cancellation - UPDATED to include comments and underscore format
+    // Function to handle booking cancellation
     async function cancelBooking() {
       const bookingCode = document.getElementById('bookingCodeInput').value;
       const room = document.getElementById('currentRoomInput').value;
@@ -497,6 +512,12 @@ function parseURLParams() {
       
       if (!bookingCode || !counsellorName) {
         alert('Please select a booking first by clicking on it in the calendar.');
+        return;
+      }
+      
+      // NEW: Check 24-hour restriction
+      if (isBookingWithin24Hours(date, time)) {
+        alert('This booking is within 24 hours and cannot be cancelled online. Please contact the centre directly.');
         return;
       }
       
@@ -627,28 +648,6 @@ function parseURLParams() {
       }
     }
 
-//END SECTION 2
-
-  
-  
-
-
-
-    
-    //#########################################################################################################################
-//END SECTION 2
-//SECTION 3
-
-
-
-
-
-
-    
- 
-//SECTION 3
-
-    
     // Function to clear the booking form
     function clearBookingForm() {
       document.getElementById('currentRoomDisplay').textContent = '';
@@ -668,6 +667,12 @@ function parseURLParams() {
       if (cancelBtn) {
         cancelBtn.disabled = true;
       }
+      
+      // Hide notice
+      const pastNotice = document.getElementById('pastBookingNotice');
+      if (pastNotice) {
+        pastNotice.classList.add('hidden');
+      }
     }
 
     // Function to convert room display name to underscore format for webhook
@@ -679,7 +684,7 @@ function parseURLParams() {
       return roomName; // Return as-is for Online, Car Park, etc.
     }
 
-    // Updated prefillForm function to restrict room options by location
+    // UPDATED: prefillForm function with 24-hour check
     function prefillForm(bookingCode, room, date, time) {
       // Update the visible display spans
       const roomDisplay = document.getElementById('currentRoomDisplay');
@@ -692,6 +697,14 @@ function parseURLParams() {
       const currentDateInput = document.getElementById('currentDateInput');
       const currentTimeInput = document.getElementById('currentTimeInput');
       const counsellorNameInput = document.getElementById('counsellorNameInput');
+      
+      // Elements for 24-hour restriction
+      const pastNotice = document.getElementById('pastBookingNotice');
+      const cancelBtn = document.getElementById('cancelBookingBtn');
+      const submitBtn = document.getElementById('submitChangeBtn');
+      const newRoomInput = document.getElementById('newRoomInput');
+      const newDateInput = document.getElementById('newDateInput');
+      const newTimeInput = document.getElementById('newTimeInput');
       
       if (!roomDisplay || !dateDisplay || !timeDisplay) {
         console.warn('Display elements not found, cannot pre-fill form');
@@ -716,20 +729,31 @@ function parseURLParams() {
         counsellorNameInput.value = 'Please select counsellor from dropdown above';
       }
       
-      // Populate room dropdown based on current booking's location
-      populateRoomDropdown(room);
+      // NEW: Check 24-hour restriction
+      const isWithin24Hours = isBookingWithin24Hours(date, time);
       
-      // Enable cancel button now that a booking is selected
-      const cancelBtn = document.getElementById('cancelBookingBtn');
-      if (cancelBtn) {
-        cancelBtn.disabled = false;
+      if (isWithin24Hours) {
+        // Show notice and disable controls
+        if (pastNotice) pastNotice.classList.remove('hidden');
+        if (cancelBtn) cancelBtn.disabled = true;
+        if (submitBtn) submitBtn.disabled = true;
+        if (newRoomInput) newRoomInput.disabled = true;
+        if (newDateInput) newDateInput.disabled = true;
+        if (newTimeInput) newTimeInput.disabled = true;
+      } else {
+        // Hide notice and enable controls
+        if (pastNotice) pastNotice.classList.add('hidden');
+        if (cancelBtn) cancelBtn.disabled = false;
+        if (submitBtn) submitBtn.disabled = false;
+        if (newRoomInput) newRoomInput.disabled = false;
+        if (newDateInput) newDateInput.disabled = false;
+        if (newTimeInput) newTimeInput.disabled = false;
+        
+        // Populate room dropdown based on current booking's location
+        populateRoomDropdown(room);
       }
       
       // Clear any previous new values
-      const newRoomInput = document.getElementById('newRoomInput');
-      const newDateInput = document.getElementById('newDateInput');
-      const newTimeInput = document.getElementById('newTimeInput');
-      
       if (newRoomInput) newRoomInput.value = '';
       if (newDateInput) newDateInput.value = '';
       if (newTimeInput) newTimeInput.value = '';
@@ -740,6 +764,7 @@ function parseURLParams() {
       console.log('  Date:', date);
       console.log('  Time:', time);
       console.log('  Counsellor:', selectedCounsellor || 'Not set');
+      console.log('  Within 24 hours:', isWithin24Hours);
     }
 
     // UPDATED booking change submission with action field and comments
@@ -870,23 +895,6 @@ function parseURLParams() {
       }
     }
 
-
-    
-//END SECTION 3
-
-
-
-
-
-
-    
-//END SECTION 3
-    //##########################################################################################################################
-//SECTION 4
-
-
-    
-//SECTION 4
     // Fallback counsellor ID lookup for old URL format
     async function lookupCounsellorId(counsellorName) {
       try {
@@ -1100,27 +1108,27 @@ function parseURLParams() {
       });
     }
 
-function getWeekStartDate(date) {
-  const result = new Date(date);
-  const day = result.getDay();
-  
-  // Calculate how many days to subtract to get to Monday
-  let daysToSubtract;
-  if (day === 0) {
-    // Sunday: go back 6 days to get to previous Monday
-    daysToSubtract = 6;
-  } else {
-    // Any other day: go back (day - 1) days to get to Monday
-    daysToSubtract = day - 1;
-  }
-  
-  result.setDate(result.getDate() - daysToSubtract);
-  result.setHours(0, 0, 0, 0);
-  
-  console.log(`getWeekStartDate: input day=${day}, subtracting ${daysToSubtract} days, result day=${result.getDay()}`);
-  
-  return result;
-}
+    function getWeekStartDate(date) {
+      const result = new Date(date);
+      const day = result.getDay();
+      
+      // Calculate how many days to subtract to get to Monday
+      let daysToSubtract;
+      if (day === 0) {
+        // Sunday: go back 6 days to get to previous Monday
+        daysToSubtract = 6;
+      } else {
+        // Any other day: go back (day - 1) days to get to Monday
+        daysToSubtract = day - 1;
+      }
+      
+      result.setDate(result.getDate() - daysToSubtract);
+      result.setHours(0, 0, 0, 0);
+      
+      console.log(`getWeekStartDate: input day=${day}, subtracting ${daysToSubtract} days, result day=${result.getDay()}`);
+      
+      return result;
+    }
 
     function formatDate(date) {
       const year = date.getFullYear();
@@ -1280,7 +1288,7 @@ function getWeekStartDate(date) {
       
       cells.forEach(cell => {
         cell.innerHTML = '';
-        cell.classList.remove('booked', 'room-1', 'room-2', 'room-4', 'room-6', 'room-7', 'online', 'selected-booking');
+        cell.classList.remove('booked', 'room-1', 'room-2', 'room-4', 'room-6', 'room-7', 'online', 'selected-booking', 'past-booking');
       });
 
       let filteredBookings = bookingData;
@@ -1304,6 +1312,7 @@ function getWeekStartDate(date) {
       console.log('Calendar population complete');
     }
 
+    // UPDATED: populateDayView with 24-hour check
     function populateDayView(filteredBookings) {
       const selectedDate = document.getElementById('dateSelector').value;
       
@@ -1317,6 +1326,9 @@ function getWeekStartDate(date) {
         const {roomNumber, roomClass} = getRoomMapping(booking);
         if (!roomNumber) return;
         
+        // NEW: Check if booking is within 24 hours
+        const isWithin24Hours = isBookingWithin24Hours(booking.date, booking.start);
+        
         // Fill cells for the duration of the booking
         for (let hour = startHour; hour < endHour; hour++) {
           if (hour >= 8 && hour <= 20) {
@@ -1326,6 +1338,11 @@ function getWeekStartDate(date) {
             
             if (cell) {
               cell.classList.add('booked', roomClass);
+              
+              // NEW: Add past booking styling
+              if (isWithin24Hours) {
+                cell.classList.add('past-booking');
+              }
               
               // Check if this is the booking to highlight
               if (window.bookingToModify && 
@@ -1342,44 +1359,35 @@ function getWeekStartDate(date) {
                 <div class="client-name">${booking.bookingId || booking.code || ''}</div>
               `;
               
-              // Add click handler to populate form with booking data
-              cell.addEventListener('click', function() {
-                const bookingCode = booking.bookingId || booking.code;
-                const roomDisplayName = getRoomDisplayName(booking);
-                const date = booking.date;
-                const time = booking.start;
-                
-                prefillForm(bookingCode, roomDisplayName, date, time);
-                
-                // Remove selected-booking class from all cells
-                document.querySelectorAll('.selected-booking').forEach(c => c.classList.remove('selected-booking'));
-                // Add selected-booking class to clicked cell
-                cell.classList.add('selected-booking');
-                
-                // Scroll to form for better UX
-                const formContainer = document.querySelector('.form-container');
-                if (formContainer) {
-                  formContainer.scrollIntoView({ behavior: 'smooth' });
-                }
-              });
+              // Add click handler only if not within 24 hours
+              if (!isWithin24Hours) {
+                cell.addEventListener('click', function() {
+                  const bookingCode = booking.bookingId || booking.code;
+                  const roomDisplayName = getRoomDisplayName(booking);
+                  const date = booking.date;
+                  const time = booking.start;
+                  
+                  prefillForm(bookingCode, roomDisplayName, date, time);
+                  
+                  // Remove selected-booking class from all cells
+                  document.querySelectorAll('.selected-booking').forEach(c => c.classList.remove('selected-booking'));
+                  // Add selected-booking class to clicked cell
+                  cell.classList.add('selected-booking');
+                  
+                  // Scroll to form for better UX
+                  const formContainer = document.querySelector('.form-container');
+                  if (formContainer) {
+                    formContainer.scrollIntoView({ behavior: 'smooth' });
+                  }
+                });
+              }
             }
           }
         }
       });
     }
 
-//END SECTION 4
-
-//END SECTION 4
-
-//################################################################################################################
-
-    
-//SECTION 5
-
-
-//SECTION 5
-
+    // UPDATED: populateWeekView with 24-hour check
     function populateWeekView(filteredBookings) {
       // If no counsellor selected in week view, don't show any bookings
       if (!selectedCounsellor) {
@@ -1409,6 +1417,9 @@ function getWeekStartDate(date) {
           const startHour = parseInt(booking.start.split(':')[0]);
           const endHour = parseInt(booking.end.split(':')[0]);
           
+          // NEW: Check if booking is within 24 hours
+          const isWithin24Hours = isBookingWithin24Hours(booking.date, booking.start);
+          
           for (let hour = startHour; hour < endHour; hour++) {
             if (hour >= 8 && hour <= 20) {
               const timeString = `${String(hour).padStart(2, '0')}:00`;
@@ -1420,6 +1431,11 @@ function getWeekStartDate(date) {
                 const roomDisplayName = getRoomDisplayName(booking);
                 
                 cell.classList.add('booked', roomClass);
+                
+                // NEW: Add past booking styling
+                if (isWithin24Hours) {
+                  cell.classList.add('past-booking');
+                }
                 
                 // Check if this is the booking to highlight
                 if (window.bookingToModify && 
@@ -1436,26 +1452,28 @@ function getWeekStartDate(date) {
                   <div class="client-name">${booking.bookingId || booking.code || ''}</div>
                 `;
                 
-                // Add click handler to populate form with booking data
-                cell.addEventListener('click', function() {
-                  const bookingCode = booking.bookingId;
-                  const room = roomDisplayName;
-                  const date = booking.date;
-                  const time = booking.start;
-                  
-                  prefillForm(bookingCode, room, date, time);
-                  
-                  // Remove selected-booking class from all cells
-                  document.querySelectorAll('.selected-booking').forEach(c => c.classList.remove('selected-booking'));
-                  // Add selected-booking class to clicked cell
-                  cell.classList.add('selected-booking');
-                  
-                  // Scroll to form for better UX
-                  const formContainer = document.querySelector('.form-container');
-                  if (formContainer) {
-                    formContainer.scrollIntoView({ behavior: 'smooth' });
-                  }
-                });
+                // Add click handler only if not within 24 hours
+                if (!isWithin24Hours) {
+                  cell.addEventListener('click', function() {
+                    const bookingCode = booking.bookingId;
+                    const room = roomDisplayName;
+                    const date = booking.date;
+                    const time = booking.start;
+                    
+                    prefillForm(bookingCode, room, date, time);
+                    
+                    // Remove selected-booking class from all cells
+                    document.querySelectorAll('.selected-booking').forEach(c => c.classList.remove('selected-booking'));
+                    // Add selected-booking class to clicked cell
+                    cell.classList.add('selected-booking');
+                    
+                    // Scroll to form for better UX
+                    const formContainer = document.querySelector('.form-container');
+                    if (formContainer) {
+                      formContainer.scrollIntoView({ behavior: 'smooth' });
+                    }
+                  });
+                }
               }
             }
           }
@@ -1493,13 +1511,26 @@ function getWeekStartDate(date) {
       return {roomNumber, roomClass};
     }
 
+    // UPDATED: loadBookingData with priority loading
     async function loadBookingData() {
+      // Use priority loading if a counsellor is selected
+      const priorityCounsellor = selectedCounsellor || null;
+      return loadBookingDataWithPriority(priorityCounsellor);
+    }
+
+    async function loadBookingDataWithPriority(priorityCounsellor = null) {
       const statusElement = document.getElementById('dataStatus');
       
       try {
         if (statusElement) statusElement.textContent = 'Loading booking data...';
         
-        const response = await fetch(SCRIPT_URL);
+        let url = SCRIPT_URL;
+        if (priorityCounsellor) {
+          url += `?priority_counsellor=${encodeURIComponent(priorityCounsellor)}`;
+          if (statusElement) statusElement.textContent = `Loading ${priorityCounsellor}'s bookings first...`;
+        }
+        
+        const response = await fetch(url);
         
         if (!response.ok) {
           throw new Error(`Failed to fetch data: ${response.statusText}`);
@@ -1509,6 +1540,10 @@ function getWeekStartDate(date) {
         
         console.log('=== BOOKING DATA DEBUG ===');
         console.log('Total bookings loaded:', jsonData.length);
+        if (priorityCounsellor) {
+          const priorityBookings = jsonData.filter(b => b.client === priorityCounsellor);
+          console.log(`Priority bookings for ${priorityCounsellor}:`, priorityBookings.length);
+        }
         if (jsonData.length > 0) {
           console.log('Sample booking (first one):');
           console.log('Full booking object:', jsonData[0]);
@@ -1539,7 +1574,12 @@ function getWeekStartDate(date) {
         updateCounsellorInfo();
         
         if (statusElement) {
-          statusElement.textContent = `Loaded ${jsonData.length} bookings`;
+          let statusText = `Loaded ${jsonData.length} bookings`;
+          if (priorityCounsellor) {
+            const priorityCount = jsonData.filter(b => b.client === priorityCounsellor).length;
+            statusText += ` (${priorityCount} for ${priorityCounsellor} loaded first)`;
+          }
+          statusElement.textContent = statusText;
           statusElement.style.color = '#28a745';
           
           setTimeout(() => {
@@ -1561,6 +1601,7 @@ function getWeekStartDate(date) {
       }
     }
 
+    // UPDATED: refreshData with priority loading
     function refreshData() {
       console.log('Manual refresh triggered');
       try {
@@ -1569,22 +1610,14 @@ function getWeekStartDate(date) {
         console.warn('Could not clear cache:', e);
       }
       
-      loadBookingData().then(() => {
+      // Use priority loading if a counsellor is selected
+      const priorityCounsellor = selectedCounsellor || null;
+      loadBookingDataWithPriority(priorityCounsellor).then(() => {
         console.log('Refresh complete, repopulating calendar');
         populateCalendar();
       });
     }
 
-//END SECTION 5
-
-
-
-
-    
-
-//END SECTION 5
-//SECTION 6
-    
     // Date selector handler
     document.getElementById('dateSelector').addEventListener('change', function() {
       currentDate = this.value;
@@ -1640,6 +1673,12 @@ function getWeekStartDate(date) {
             
             if (!changeData.counsellorName) {
               alert('Please select a counsellor first.');
+              return;
+            }
+            
+            // NEW: Check 24-hour restriction
+            if (isBookingWithin24Hours(changeData.originalDate, changeData.originalTime)) {
+              alert('This booking is within 24 hours and cannot be modified online. Please contact the centre directly.');
               return;
             }
             
@@ -1727,8 +1766,9 @@ function getWeekStartDate(date) {
         console.warn('Could not load cached data:', e);
       }
       
-      // Load fresh data if cache is not available or expired
-      loadBookingData().then(() => {
+      // Load fresh data with priority if counsellor is already selected
+      const priorityCounsellor = selectedCounsellor || null;
+      loadBookingDataWithPriority(priorityCounsellor).then(() => {
         populateCalendar();
       });
     }
