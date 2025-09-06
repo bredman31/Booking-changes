@@ -3,7 +3,12 @@
 <head>
   <meta charset="UTF-8">
   <title>Cherry Tree Centre - Room Booking Calendar</title>
+  
+  <!-- ================================ -->
+  <!-- SECTION 1: STYLES AND CSS -->
+  <!-- ================================ -->
   <style>
+    /* General styles */
     body {
       display: flex;
       margin: 0;
@@ -65,6 +70,8 @@
       gap: 10px;
       flex-wrap: wrap;
     }
+    
+    /* Calendar grid styles */
     .calendar-grid {
       display: grid;
       border: 1px solid #ccc;
@@ -154,6 +161,8 @@
       color: #666;
       font-size: 0.7em;
     }
+    
+    /* Form and info styles */
     .date-selector {
       font-weight: bold;
     }
@@ -171,7 +180,8 @@
     .hidden {
       display: none;
     }
-    /* NEW: 24-hour restriction styles */
+    
+    /* 24-hour restriction styles */
     .grid-cell.past-booking {
       opacity: 0.5;
       cursor: not-allowed;
@@ -189,7 +199,11 @@
     }
   </style>
 </head>
+
 <body>
+  <!-- ================================ -->
+  <!-- SECTION 2: HTML STRUCTURE -->
+  <!-- ================================ -->
   <div class="header">
     <h2 id="pageTitle">Cherry Tree Centre - Room Booking Calendar</h2>
     <div class="view-selector">
@@ -205,6 +219,7 @@
   </div>
 
   <div class="main-container">
+    <!-- Left panel: Form for modifying bookings -->
     <div class="form-container">
       <div id="counsellorInfo" class="counsellor-info hidden">
         <h3 id="counsellorName"></h3>
@@ -232,7 +247,7 @@
           <input type="hidden" id="currentTimeInput">
           <input type="hidden" id="counsellorNameInput">
           
-          <!-- NEW: Past booking notice -->
+          <!-- Past booking notice -->
           <div id="pastBookingNotice" class="past-booking-notice hidden">
             This booking is within 24 hours and cannot be modified or cancelled online. Please contact the centre directly.
           </div>
@@ -296,6 +311,7 @@
       </div>
     </div>
     
+    <!-- Right panel: Calendar display -->
     <div class="calendar-container">
       <div class="controls">
         <div id="dayControls">
@@ -321,14 +337,19 @@
     </div>
   </div>
 
+  <!-- ================================ -->
+  <!-- SECTION 3: GLOBAL CONFIGURATION -->
+  <!-- ================================ -->
   <script>
-    // Your Google Apps Script configuration
+    // Google Apps Script configuration
     const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxaMATLZvtAxJULI2l3teqb0u6FkBiP8LBuGMV7VrcU2NxMEbH92aj8Q4YI6aZ1GLUm4Q/exec';
     
+    // Constants for rooms and business hours
     const rooms = ["Room 1", "Room 2", "Room 4", "Room 6", "Room 7", "Online"];
     const businessHours = Array.from({length: 13}, (_, i) => `${String(i + 8).padStart(2, '0')}:00`);
     const weekDays = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
     
+    // Global state variables
     let bookingData = [];
     let currentView = 'day';
     let currentDate = new Date().toISOString().split('T')[0];
@@ -360,8 +381,13 @@
     currentWeekStart.setHours(0, 0, 0, 0);
 
     console.log(`Today is ${today.toDateString()} (day ${dayOfWeek}), week starts ${currentWeekStart.toDateString()} (day ${currentWeekStart.getDay()})`);
+  </script>
 
-    // NEW: 24-hour check function
+  <!-- ================================ -->
+  <!-- SECTION 4: UTILITY FUNCTIONS -->
+  <!-- ================================ -->
+  <script>
+    // 24-hour check function
     function isBookingWithin24Hours(bookingDate, bookingTime) {
       const now = new Date();
       const bookingDateTime = new Date(`${bookingDate}T${bookingTime}:00`);
@@ -370,7 +396,7 @@
       return hoursDiff < 24;
     }
     
-    // Function to format date and time for SimplybookMe
+    // Format date and time for SimplybookMe
     function formatDateTimeForSimplybookMe(date, time) {
       if (!date || !time) {
         return '';
@@ -386,7 +412,7 @@
       return `${date}T${formattedTime}`;
     }
 
-    // Function to get location ID from room name
+    // Get location ID from room name
     function getLocationIdFromRoom(roomName) {
       // Location 2 (Henley) rooms
       const henleyRooms = ['Room_1', 'Room 1', 'Room_2', 'Room 2', 'Room_4', 'Room 4', 'Room_6', 'Room 6', 'Room_7', 'Room 7', 'Car Park'];
@@ -398,7 +424,7 @@
       }
     }
 
-    // Function to get available rooms for a specific location
+    // Get available rooms for a specific location
     function getRoomsForLocation(locationId) {
       if (locationId === '1') {
         // Buckhurst Hill rooms
@@ -410,7 +436,7 @@
       return []; // No rooms for unknown location
     }
 
-    // Parse URL parameters - UPDATED to handle client URLs and booking modification
+    // Parse URL parameters
     function parseURLParams() {
       const params = new URLSearchParams(window.location.search);
       const view = params.get('view');
@@ -467,7 +493,7 @@
       }
     }
 
-    // New function to populate room dropdown based on current booking's location
+    // Populate room dropdown based on current booking's location
     function populateRoomDropdown(currentRoom) {
       const newRoomInput = document.getElementById('newRoomInput');
       const roomLabel = document.getElementById('roomChangeLabel');
@@ -502,7 +528,194 @@
       console.log(`Populated room dropdown for ${locationName} (location ${currentLocationId}):`, availableRooms);
     }
 
-    // Function to handle booking cancellation
+    // Convert room display name to underscore format for webhook
+    function convertRoomNameToUnderscore(roomName) {
+      // Convert "Room 1" to "Room_1", etc.
+      if (roomName && roomName.startsWith('Room ')) {
+        return roomName.replace('Room ', 'Room_');
+      }
+      return roomName; // Return as-is for Online, Car Park, etc.
+    }
+
+    // Get week start date (Monday)
+    function getWeekStartDate(date) {
+      const result = new Date(date);
+      const day = result.getDay();
+      
+      // Calculate how many days to subtract to get to Monday
+      let daysToSubtract;
+      if (day === 0) {
+        // Sunday: go back 6 days to get to previous Monday
+        daysToSubtract = 6;
+      } else {
+        // Any other day: go back (day - 1) days to get to Monday
+        daysToSubtract = day - 1;
+      }
+      
+      result.setDate(result.getDate() - daysToSubtract);
+      result.setHours(0, 0, 0, 0);
+      
+      console.log(`getWeekStartDate: input day=${day}, subtracting ${daysToSubtract} days, result day=${result.getDay()}`);
+      
+      return result;
+    }
+
+    // Format date as YYYY-MM-DD
+    function formatDate(date) {
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    }
+
+    // Get room display name from booking data
+    function getRoomDisplayName(booking) {
+      if (booking.room === 'Room_1' || booking.room === '1') return 'Room 1';
+      if (booking.room === 'Room_2' || booking.room === '2') return 'Room 2';
+      if (booking.room === 'Room_4' || booking.room === '4') return 'Room 4';
+      if (booking.room === 'Room_6' || booking.room === '6') return 'Room 6';
+      if (booking.room === 'Room_7' || booking.room === '7') return 'Room 7';
+      if (booking.location && booking.location.toLowerCase().includes('online')) return 'Online';
+      return booking.room || 'Unknown';
+    }
+
+    // Get room mapping for CSS classes
+    function getRoomMapping(booking) {
+      let roomNumber, roomClass;
+      
+      if (booking.room === 'Room_1' || booking.room === '1') {
+        roomNumber = '1'; roomClass = 'room-1';
+      } else if (booking.room === 'Room_2' || booking.room === '2') {
+        roomNumber = '2'; roomClass = 'room-2';
+      } else if (booking.room === 'Room_4' || booking.room === '4') {
+        roomNumber = '4'; roomClass = 'room-4';
+      } else if (booking.room === 'Room_6' || booking.room === '6') {
+        roomNumber = '6'; roomClass = 'room-6';
+      } else if (booking.room === 'Room_7' || booking.room === '7') {
+        roomNumber = '7'; roomClass = 'room-7';
+      } else if (booking.location && booking.location.toLowerCase().includes('online')) {
+        roomNumber = 'online'; roomClass = 'online';
+      }
+      
+      return {roomNumber, roomClass};
+    }
+  </script>
+
+  <!-- ================================ -->
+  <!-- SECTION 5: BOOKING FORM FUNCTIONS -->
+  <!-- ================================ -->
+  <script>
+    // Prefill the booking form with selected booking details
+    function prefillForm(bookingCode, room, date, time) {
+      // Update the visible display spans
+      const roomDisplay = document.getElementById('currentRoomDisplay');
+      const dateDisplay = document.getElementById('currentDateDisplay');
+      const timeDisplay = document.getElementById('currentTimeDisplay');
+      
+      // Update the hidden form inputs for submission
+      const bookingCodeInput = document.getElementById('bookingCodeInput');
+      const currentRoomInput = document.getElementById('currentRoomInput');
+      const currentDateInput = document.getElementById('currentDateInput');
+      const currentTimeInput = document.getElementById('currentTimeInput');
+      const counsellorNameInput = document.getElementById('counsellorNameInput');
+      
+      // Elements for 24-hour restriction
+      const pastNotice = document.getElementById('pastBookingNotice');
+      const cancelBtn = document.getElementById('cancelBookingBtn');
+      const submitBtn = document.getElementById('submitChangeBtn');
+      const newRoomInput = document.getElementById('newRoomInput');
+      const newDateInput = document.getElementById('newDateInput');
+      const newTimeInput = document.getElementById('newTimeInput');
+      
+      if (!roomDisplay || !dateDisplay || !timeDisplay) {
+        console.warn('Display elements not found, cannot pre-fill form');
+        return;
+      }
+      
+      // Update visible displays
+      roomDisplay.textContent = room || '';
+      dateDisplay.textContent = date || '';
+      timeDisplay.textContent = time || '';
+      
+      // Update hidden inputs for form submission
+      if (bookingCodeInput) bookingCodeInput.value = bookingCode || '';
+      if (currentRoomInput) currentRoomInput.value = room || '';
+      if (currentDateInput) currentDateInput.value = date || '';
+      if (currentTimeInput) currentTimeInput.value = time || '';
+      
+      // Auto-fill counsellor name
+      if (selectedCounsellor && counsellorNameInput) {
+        counsellorNameInput.value = selectedCounsellor;
+      } else if (counsellorNameInput) {
+        counsellorNameInput.value = 'Please select counsellor from dropdown above';
+      }
+      
+      // Check 24-hour restriction
+      const isWithin24Hours = isBookingWithin24Hours(date, time);
+      
+      if (isWithin24Hours) {
+        // Show notice and disable controls
+        if (pastNotice) pastNotice.classList.remove('hidden');
+        if (cancelBtn) cancelBtn.disabled = true;
+        if (submitBtn) submitBtn.disabled = true;
+        if (newRoomInput) newRoomInput.disabled = true;
+        if (newDateInput) newDateInput.disabled = true;
+        if (newTimeInput) newTimeInput.disabled = true;
+      } else {
+        // Hide notice and enable controls
+        if (pastNotice) pastNotice.classList.add('hidden');
+        if (cancelBtn) cancelBtn.disabled = false;
+        if (submitBtn) submitBtn.disabled = false;
+        if (newRoomInput) newRoomInput.disabled = false;
+        if (newDateInput) newDateInput.disabled = false;
+        if (newTimeInput) newTimeInput.disabled = false;
+        
+        // Populate room dropdown based on current booking's location
+        populateRoomDropdown(room);
+      }
+      
+      // Clear any previous new values
+      if (newRoomInput) newRoomInput.value = '';
+      if (newDateInput) newDateInput.value = '';
+      if (newTimeInput) newTimeInput.value = '';
+      
+      console.log('Pre-filled form with:');
+      console.log('  Booking Code:', bookingCode);
+      console.log('  Room:', room);
+      console.log('  Date:', date);
+      console.log('  Time:', time);
+      console.log('  Counsellor:', selectedCounsellor || 'Not set');
+      console.log('  Within 24 hours:', isWithin24Hours);
+    }
+
+    // Clear the booking form
+    function clearBookingForm() {
+      document.getElementById('currentRoomDisplay').textContent = '';
+      document.getElementById('currentDateDisplay').textContent = '';
+      document.getElementById('currentTimeDisplay').textContent = '';
+      document.getElementById('bookingCodeInput').value = '';
+      document.getElementById('currentRoomInput').value = '';
+      document.getElementById('currentDateInput').value = '';
+      document.getElementById('currentTimeInput').value = '';
+      document.getElementById('counsellorNameInput').value = '';
+      document.getElementById('newRoomInput').value = '';
+      document.getElementById('newDateInput').value = '';
+      document.getElementById('newTimeInput').value = '';
+      
+      // Disable cancel button
+      const cancelBtn = document.getElementById('cancelBookingBtn');
+      if (cancelBtn) {
+        cancelBtn.disabled = true;
+      }
+      
+      // Hide notice
+      const pastNotice = document.getElementById('pastBookingNotice');
+      if (pastNotice) {
+        pastNotice.classList.add('hidden');
+      }
+    }
+
+    // Handle booking cancellation
     async function cancelBooking() {
       const bookingCode = document.getElementById('bookingCodeInput').value;
       const room = document.getElementById('currentRoomInput').value;
@@ -515,7 +728,7 @@
         return;
       }
       
-      // NEW: Check 24-hour restriction
+      // Check 24-hour restriction
       if (isBookingWithin24Hours(date, time)) {
         alert('This booking is within 24 hours and cannot be cancelled online. Please contact the centre directly.');
         return;
@@ -614,7 +827,7 @@
       }
     }
     
-    // Function to log cancellation to Google Sheets
+    // Log cancellation to Google Sheets
     async function logCancellationToGoogleSheets(bookingCode, counsellorName, room, date, time, payload) {
       try {
         const CHANGE_REQUESTS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwVIQAryAHaD9HfEqAvaxXDo-nd1BSN664E4Kyg1tVWgmOsTfG6VS7JYgHohqN7HQiz/exec';
@@ -648,126 +861,7 @@
       }
     }
 
-    // Function to clear the booking form
-    function clearBookingForm() {
-      document.getElementById('currentRoomDisplay').textContent = '';
-      document.getElementById('currentDateDisplay').textContent = '';
-      document.getElementById('currentTimeDisplay').textContent = '';
-      document.getElementById('bookingCodeInput').value = '';
-      document.getElementById('currentRoomInput').value = '';
-      document.getElementById('currentDateInput').value = '';
-      document.getElementById('currentTimeInput').value = '';
-      document.getElementById('counsellorNameInput').value = '';
-      document.getElementById('newRoomInput').value = '';
-      document.getElementById('newDateInput').value = '';
-      document.getElementById('newTimeInput').value = '';
-      
-      // Disable cancel button
-      const cancelBtn = document.getElementById('cancelBookingBtn');
-      if (cancelBtn) {
-        cancelBtn.disabled = true;
-      }
-      
-      // Hide notice
-      const pastNotice = document.getElementById('pastBookingNotice');
-      if (pastNotice) {
-        pastNotice.classList.add('hidden');
-      }
-    }
-
-    // Function to convert room display name to underscore format for webhook
-    function convertRoomNameToUnderscore(roomName) {
-      // Convert "Room 1" to "Room_1", etc.
-      if (roomName && roomName.startsWith('Room ')) {
-        return roomName.replace('Room ', 'Room_');
-      }
-      return roomName; // Return as-is for Online, Car Park, etc.
-    }
-
-    // UPDATED: prefillForm function with 24-hour check
-    function prefillForm(bookingCode, room, date, time) {
-      // Update the visible display spans
-      const roomDisplay = document.getElementById('currentRoomDisplay');
-      const dateDisplay = document.getElementById('currentDateDisplay');
-      const timeDisplay = document.getElementById('currentTimeDisplay');
-      
-      // Update the hidden form inputs for submission
-      const bookingCodeInput = document.getElementById('bookingCodeInput');
-      const currentRoomInput = document.getElementById('currentRoomInput');
-      const currentDateInput = document.getElementById('currentDateInput');
-      const currentTimeInput = document.getElementById('currentTimeInput');
-      const counsellorNameInput = document.getElementById('counsellorNameInput');
-      
-      // Elements for 24-hour restriction
-      const pastNotice = document.getElementById('pastBookingNotice');
-      const cancelBtn = document.getElementById('cancelBookingBtn');
-      const submitBtn = document.getElementById('submitChangeBtn');
-      const newRoomInput = document.getElementById('newRoomInput');
-      const newDateInput = document.getElementById('newDateInput');
-      const newTimeInput = document.getElementById('newTimeInput');
-      
-      if (!roomDisplay || !dateDisplay || !timeDisplay) {
-        console.warn('Display elements not found, cannot pre-fill form');
-        return;
-      }
-      
-      // Update visible displays
-      roomDisplay.textContent = room || '';
-      dateDisplay.textContent = date || '';
-      timeDisplay.textContent = time || '';
-      
-      // Update hidden inputs for form submission
-      if (bookingCodeInput) bookingCodeInput.value = bookingCode || '';
-      if (currentRoomInput) currentRoomInput.value = room || '';
-      if (currentDateInput) currentDateInput.value = date || '';
-      if (currentTimeInput) currentTimeInput.value = time || '';
-      
-      // Auto-fill counsellor name
-      if (selectedCounsellor && counsellorNameInput) {
-        counsellorNameInput.value = selectedCounsellor;
-      } else if (counsellorNameInput) {
-        counsellorNameInput.value = 'Please select counsellor from dropdown above';
-      }
-      
-      // NEW: Check 24-hour restriction
-      const isWithin24Hours = isBookingWithin24Hours(date, time);
-      
-      if (isWithin24Hours) {
-        // Show notice and disable controls
-        if (pastNotice) pastNotice.classList.remove('hidden');
-        if (cancelBtn) cancelBtn.disabled = true;
-        if (submitBtn) submitBtn.disabled = true;
-        if (newRoomInput) newRoomInput.disabled = true;
-        if (newDateInput) newDateInput.disabled = true;
-        if (newTimeInput) newTimeInput.disabled = true;
-      } else {
-        // Hide notice and enable controls
-        if (pastNotice) pastNotice.classList.add('hidden');
-        if (cancelBtn) cancelBtn.disabled = false;
-        if (submitBtn) submitBtn.disabled = false;
-        if (newRoomInput) newRoomInput.disabled = false;
-        if (newDateInput) newDateInput.disabled = false;
-        if (newTimeInput) newTimeInput.disabled = false;
-        
-        // Populate room dropdown based on current booking's location
-        populateRoomDropdown(room);
-      }
-      
-      // Clear any previous new values
-      if (newRoomInput) newRoomInput.value = '';
-      if (newDateInput) newDateInput.value = '';
-      if (newTimeInput) newTimeInput.value = '';
-      
-      console.log('Pre-filled form with:');
-      console.log('  Booking Code:', bookingCode);
-      console.log('  Room:', room);
-      console.log('  Date:', date);
-      console.log('  Time:', time);
-      console.log('  Counsellor:', selectedCounsellor || 'Not set');
-      console.log('  Within 24 hours:', isWithin24Hours);
-    }
-
-    // UPDATED booking change submission with action field and comments
+    // Submit booking change request
     async function submitBookingChange(changeData) {
       const statusDiv = document.getElementById('submitStatus');
       
@@ -959,29 +1053,13 @@
         // Don't throw error here - the main webhook succeeded
       }
     }
+  </script>
 
-    function updateURL() {
-      const params = new URLSearchParams();
-      params.set('view', currentView);
-      
-      // Include client parameters if available
-      if (window.clientId && selectedCounsellor) {
-        params.set('clientId', window.clientId);
-        params.set('name', encodeURIComponent(selectedCounsellor));
-      } else if (selectedCounsellor) {
-        params.set('counsellor', encodeURIComponent(selectedCounsellor));
-      }
-      
-      if (currentView === 'day') {
-        params.set('date', document.getElementById('dateSelector').value);
-      } else {
-        params.set('date', formatDate(currentWeekStart));
-      }
-      
-      const newURL = window.location.pathname + '?' + params.toString();
-      window.history.replaceState({}, '', newURL);
-    }
-
+  <!-- ================================ -->
+  <!-- SECTION 6: CALENDAR FUNCTIONS -->
+  <!-- ================================ -->
+  <script>
+    // Switch between day and week views
     function switchView(view) {
       currentView = view;
       
@@ -1026,6 +1104,7 @@
       updateURL();
     }
 
+    // Filter by counsellor
     function filterByCounsellor() {
       selectedCounsellor = document.getElementById('counsellorSelect').value;
       updateCounsellorInfo();
@@ -1033,7 +1112,7 @@
       updateURL();
     }
 
-    // UPDATED to handle client access
+    // Update counsellor info display
     function updateCounsellorInfo() {
       const infoDiv = document.getElementById('counsellorInfo');
       const nameDiv = document.getElementById('counsellorName');
@@ -1083,6 +1162,7 @@
       }
     }
 
+    // Populate counsellor dropdown
     function populateCounsellorDropdown() {
       const select = document.getElementById('counsellorSelect');
       const counsellors = new Set();
@@ -1108,35 +1188,7 @@
       });
     }
 
-    function getWeekStartDate(date) {
-      const result = new Date(date);
-      const day = result.getDay();
-      
-      // Calculate how many days to subtract to get to Monday
-      let daysToSubtract;
-      if (day === 0) {
-        // Sunday: go back 6 days to get to previous Monday
-        daysToSubtract = 6;
-      } else {
-        // Any other day: go back (day - 1) days to get to Monday
-        daysToSubtract = day - 1;
-      }
-      
-      result.setDate(result.getDate() - daysToSubtract);
-      result.setHours(0, 0, 0, 0);
-      
-      console.log(`getWeekStartDate: input day=${day}, subtracting ${daysToSubtract} days, result day=${result.getDay()}`);
-      
-      return result;
-    }
-
-    function formatDate(date) {
-      const year = date.getFullYear();
-      const month = String(date.getMonth() + 1).padStart(2, '0');
-      const day = String(date.getDate()).padStart(2, '0');
-      return `${year}-${month}-${day}`;
-    }
-
+    // Change week navigation
     function changeWeek(direction) {
       currentWeekStart.setDate(currentWeekStart.getDate() + (direction * 7));
       updateWeekDisplay();
@@ -1145,6 +1197,7 @@
       updateURL();
     }
 
+    // Update week display text
     function updateWeekDisplay() {
       const weekEnd = new Date(currentWeekStart);
       weekEnd.setDate(weekEnd.getDate() + 6);
@@ -1163,6 +1216,7 @@
       document.getElementById('weekDisplay').textContent = `${startStr} - ${endStr}`;
     }
 
+    // Create calendar grid based on current view
     function createCalendarGrid() {
       console.log('Creating calendar grid for view:', currentView);
       const grid = document.getElementById("calendarGrid");
@@ -1183,6 +1237,7 @@
       console.log('Calendar grid created successfully!');
     }
 
+    // Create day view grid
     function createDayGrid(grid) {
       console.log('Creating day grid...');
       
@@ -1231,6 +1286,7 @@
       console.log('Day grid completed with', grid.children.length, 'cells');
     }
 
+    // Create week view grid
     function createWeekGrid(grid) {
       console.log('Creating week grid...');
       console.log('Week starts on:', formatDate(currentWeekStart), 'Day:', currentWeekStart.getDay());
@@ -1279,6 +1335,7 @@
       console.log('Week grid completed with', grid.children.length, 'cells');
     }
 
+    // Populate calendar with booking data
     function populateCalendar() {
       console.log('Populating calendar - View:', currentView, 'Selected counsellor:', selectedCounsellor, 'Booking data length:', bookingData.length);
       
@@ -1312,7 +1369,7 @@
       console.log('Calendar population complete');
     }
 
-    // UPDATED: populateDayView with 24-hour check
+    // Populate day view with bookings
     function populateDayView(filteredBookings) {
       const selectedDate = document.getElementById('dateSelector').value;
       
@@ -1326,7 +1383,7 @@
         const {roomNumber, roomClass} = getRoomMapping(booking);
         if (!roomNumber) return;
         
-        // NEW: Check if booking is within 24 hours
+        // Check if booking is within 24 hours
         const isWithin24Hours = isBookingWithin24Hours(booking.date, booking.start);
         
         // Fill cells for the duration of the booking
@@ -1339,7 +1396,7 @@
             if (cell) {
               cell.classList.add('booked', roomClass);
               
-              // NEW: Add past booking styling
+              // Add past booking styling
               if (isWithin24Hours) {
                 cell.classList.add('past-booking');
               }
@@ -1387,7 +1444,7 @@
       });
     }
 
-    // UPDATED: populateWeekView with 24-hour check
+    // Populate week view with bookings
     function populateWeekView(filteredBookings) {
       // If no counsellor selected in week view, don't show any bookings
       if (!selectedCounsellor) {
@@ -1417,7 +1474,7 @@
           const startHour = parseInt(booking.start.split(':')[0]);
           const endHour = parseInt(booking.end.split(':')[0]);
           
-          // NEW: Check if booking is within 24 hours
+          // Check if booking is within 24 hours
           const isWithin24Hours = isBookingWithin24Hours(booking.date, booking.start);
           
           for (let hour = startHour; hour < endHour; hour++) {
@@ -1432,7 +1489,7 @@
                 
                 cell.classList.add('booked', roomClass);
                 
-                // NEW: Add past booking styling
+                // Add past booking styling
                 if (isWithin24Hours) {
                   cell.classList.add('past-booking');
                 }
@@ -1480,44 +1537,13 @@
         }
       });
     }
+  </script>
 
-    function getRoomDisplayName(booking) {
-      if (booking.room === 'Room_1' || booking.room === '1') return 'Room 1';
-      if (booking.room === 'Room_2' || booking.room === '2') return 'Room 2';
-      if (booking.room === 'Room_4' || booking.room === '4') return 'Room 4';
-      if (booking.room === 'Room_6' || booking.room === '6') return 'Room 6';
-      if (booking.room === 'Room_7' || booking.room === '7') return 'Room 7';
-      if (booking.location && booking.location.toLowerCase().includes('online')) return 'Online';
-      return booking.room || 'Unknown';
-    }
-
-    function getRoomMapping(booking) {
-      let roomNumber, roomClass;
-      
-      if (booking.room === 'Room_1' || booking.room === '1') {
-        roomNumber = '1'; roomClass = 'room-1';
-      } else if (booking.room === 'Room_2' || booking.room === '2') {
-        roomNumber = '2'; roomClass = 'room-2';
-      } else if (booking.room === 'Room_4' || booking.room === '4') {
-        roomNumber = '4'; roomClass = 'room-4';
-      } else if (booking.room === 'Room_6' || booking.room === '6') {
-        roomNumber = '6'; roomClass = 'room-6';
-      } else if (booking.room === 'Room_7' || booking.room === '7') {
-        roomNumber = '7'; roomClass = 'room-7';
-      } else if (booking.location && booking.location.toLowerCase().includes('online')) {
-        roomNumber = 'online'; roomClass = 'online';
-      }
-      
-      return {roomNumber, roomClass};
-    }
-
-    // UPDATED: loadBookingData with priority loading
-    async function loadBookingData() {
-      // Use priority loading if a counsellor is selected
-      const priorityCounsellor = selectedCounsellor || null;
-      return loadBookingDataWithPriority(priorityCounsellor);
-    }
-
+  <!-- ================================ -->
+  <!-- SECTION 7: DATA MANAGEMENT FUNCTIONS -->
+  <!-- ================================ -->
+  <script>
+    // Load booking data with priority for specific counsellor
     async function loadBookingDataWithPriority(priorityCounsellor = null) {
       const statusElement = document.getElementById('dataStatus');
       
@@ -1601,7 +1627,14 @@
       }
     }
 
-    // UPDATED: refreshData with priority loading
+    // Load booking data
+    async function loadBookingData() {
+      // Use priority loading if a counsellor is selected
+      const priorityCounsellor = selectedCounsellor || null;
+      return loadBookingDataWithPriority(priorityCounsellor);
+    }
+
+    // Refresh data manually
     function refreshData() {
       console.log('Manual refresh triggered');
       try {
@@ -1618,12 +1651,82 @@
       });
     }
 
-    // Date selector handler
-    document.getElementById('dateSelector').addEventListener('change', function() {
-      currentDate = this.value;
-      populateCalendar();
-      updateURL();
-    });
+    // Update URL with current parameters
+    function updateURL() {
+      const params = new URLSearchParams();
+      params.set('view', currentView);
+      
+      // Include client parameters if available
+      if (window.clientId && selectedCounsellor) {
+        params.set('clientId', window.clientId);
+        params.set('name', encodeURIComponent(selectedCounsellor));
+      } else if (selectedCounsellor) {
+        params.set('counsellor', encodeURIComponent(selectedCounsellor));
+      }
+      
+      if (currentView === 'day') {
+        params.set('date', document.getElementById('dateSelector').value);
+      } else {
+        params.set('date', formatDate(currentWeekStart));
+      }
+      
+      const newURL = window.location.pathname + '?' + params.toString();
+      window.history.replaceState({}, '', newURL);
+    }
+
+    // Initialize view buttons
+    function updateViewButtons() {
+      const dayBtn = document.querySelector('[onclick="switchView(\'day\')"]');
+      const weekBtn = document.querySelector('[onclick="switchView(\'week\')"]');
+      
+      if (dayBtn && weekBtn) {
+        dayBtn.classList.toggle('active', currentView === 'day');
+        weekBtn.classList.toggle('active', currentView === 'week');
+      }
+    }
+
+    // Update controls visibility based on view
+    function updateControlsVisibility() {
+      const dayControls = document.getElementById('dayControls');
+      const weekControls = document.getElementById('weekControls');
+      const counsellorContainer = document.getElementById('counsellorFilterContainer');
+      
+      if (dayControls) dayControls.classList.toggle('hidden', currentView !== 'day');
+      if (weekControls) weekControls.classList.toggle('hidden', currentView !== 'week');
+      
+      // Only show counsellor filter if not using client URL
+      if (counsellorContainer && !window.clientId) {
+        counsellorContainer.classList.toggle('hidden', false);
+      } else if (counsellorContainer && window.clientId) {
+        counsellorContainer.classList.toggle('hidden', true);
+      }
+    }
+
+    // Initialize data
+    function initializeData() {
+      // Try to load from cache first
+      try {
+        const cachedData = sessionStorage.getItem('bookingDataCache');
+        if (cachedData) {
+          const parsedData = JSON.parse(cachedData);
+          if (parsedData.expiry > Date.now()) {
+            bookingData = parsedData.data;
+            populateCounsellorDropdown();
+            updateCounsellorInfo();
+            populateCalendar();
+            return;
+          }
+        }
+      } catch (e) {
+        console.warn('Could not load cached data:', e);
+      }
+      
+      // Load fresh data with priority if counsellor is already selected
+      const priorityCounsellor = selectedCounsellor || null;
+      loadBookingDataWithPriority(priorityCounsellor).then(() => {
+        populateCalendar();
+      });
+    }
 
     // Initialize when DOM is ready
     document.addEventListener('DOMContentLoaded', function() {
@@ -1676,7 +1779,7 @@
               return;
             }
             
-            // NEW: Check 24-hour restriction
+            // Check 24-hour restriction
             if (isBookingWithin24Hours(changeData.originalDate, changeData.originalTime)) {
               alert('This booking is within 24 hours and cannot be modified online. Please contact the centre directly.');
               return;
@@ -1721,57 +1824,6 @@
         }
       }, 100);
     });
-
-    function updateViewButtons() {
-      const dayBtn = document.querySelector('[onclick="switchView(\'day\')"]');
-      const weekBtn = document.querySelector('[onclick="switchView(\'week\')"]');
-      
-      if (dayBtn && weekBtn) {
-        dayBtn.classList.toggle('active', currentView === 'day');
-        weekBtn.classList.toggle('active', currentView === 'week');
-      }
-    }
-
-    function updateControlsVisibility() {
-      const dayControls = document.getElementById('dayControls');
-      const weekControls = document.getElementById('weekControls');
-      const counsellorContainer = document.getElementById('counsellorFilterContainer');
-      
-      if (dayControls) dayControls.classList.toggle('hidden', currentView !== 'day');
-      if (weekControls) weekControls.classList.toggle('hidden', currentView !== 'week');
-      
-      // Only show counsellor filter if not using client URL
-      if (counsellorContainer && !window.clientId) {
-        counsellorContainer.classList.toggle('hidden', false);
-      } else if (counsellorContainer && window.clientId) {
-        counsellorContainer.classList.toggle('hidden', true);
-      }
-    }
-
-    function initializeData() {
-      // Try to load from cache first
-      try {
-        const cachedData = sessionStorage.getItem('bookingDataCache');
-        if (cachedData) {
-          const parsedData = JSON.parse(cachedData);
-          if (parsedData.expiry > Date.now()) {
-            bookingData = parsedData.data;
-            populateCounsellorDropdown();
-            updateCounsellorInfo();
-            populateCalendar();
-            return;
-          }
-        }
-      } catch (e) {
-        console.warn('Could not load cached data:', e);
-      }
-      
-      // Load fresh data with priority if counsellor is already selected
-      const priorityCounsellor = selectedCounsellor || null;
-      loadBookingDataWithPriority(priorityCounsellor).then(() => {
-        populateCalendar();
-      });
-    }
   </script>
 </body>
 </html>
