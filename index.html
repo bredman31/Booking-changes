@@ -1100,16 +1100,27 @@ function parseURLParams() {
       });
     }
 
-    function getWeekStartDate(date) {
-      const result = new Date(date);
-      const day = result.getDay();
-      // If Sunday (0), go back 6 days to get Monday
-      // Otherwise go back (day - 1) days to get Monday
-      const diff = day === 0 ? -6 : 1 - day;
-      result.setDate(result.getDate() + diff);
-      result.setHours(0, 0, 0, 0);
-      return result;
-    }
+function getWeekStartDate(date) {
+  const result = new Date(date);
+  const day = result.getDay();
+  
+  // Calculate how many days to subtract to get to Monday
+  let daysToSubtract;
+  if (day === 0) {
+    // Sunday: go back 6 days to get to previous Monday
+    daysToSubtract = 6;
+  } else {
+    // Any other day: go back (day - 1) days to get to Monday
+    daysToSubtract = day - 1;
+  }
+  
+  result.setDate(result.getDate() - daysToSubtract);
+  result.setHours(0, 0, 0, 0);
+  
+  console.log(`getWeekStartDate: input day=${day}, subtracting ${daysToSubtract} days, result day=${result.getDay()}`);
+  
+  return result;
+}
 
     function formatDate(date) {
       const year = date.getFullYear();
