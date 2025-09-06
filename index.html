@@ -1390,11 +1390,19 @@ function getWeekStartDate(date) {
       
       // For each booking, calculate which day column it belongs in
       filteredBookings.forEach(booking => {
-        const bookingDate = new Date(booking.date + 'T12:00:00'); // Add time to avoid timezone issues
+        // Parse the booking date
+        const bookingDate = new Date(booking.date + 'T12:00:00');
         
-        // Calculate days from week start (Monday)
+        // Create a date for the week start at noon to match
+        const weekStartNoon = new Date(currentWeekStart);
+        weekStartNoon.setHours(12, 0, 0, 0);
+        
+        // Calculate days from week start
         const msPerDay = 24 * 60 * 60 * 1000;
-        const daysDiff = Math.round((bookingDate - currentWeekStart) / msPerDay);
+        const timeDiff = bookingDate.getTime() - weekStartNoon.getTime();
+        const daysDiff = Math.round(timeDiff / msPerDay);
+        
+        console.log(`Booking on ${booking.date}: daysDiff=${daysDiff}, client=${booking.client}`);
         
         // Only show bookings within this week (0=Mon through 6=Sun)
         if (daysDiff >= 0 && daysDiff <= 6) {
