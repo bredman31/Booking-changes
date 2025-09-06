@@ -1058,342 +1058,466 @@
   <!-- ================================ -->
   <!-- SECTION 6: CALENDAR FUNCTIONS -->
   <!-- ================================ -->
-  <script>
-    // Switch between day and week views
-    function switchView(view) {
-      currentView = view;
-      
-      console.log('Switching to view:', view);
-      
-      // Update view buttons
-      const buttons = document.querySelectorAll('.view-btn');
-      if (buttons.length > 0) {
-        buttons.forEach(btn => btn.classList.remove('active'));
-        // Find the button that was clicked
-        const clickedButton = event ? event.target : document.querySelector(`[onclick="switchView('${view}')"]`);
-        if (clickedButton) {
-          clickedButton.classList.add('active');
-        }
-      }
-      
-      // Show/hide controls based on view
-      const dayControls = document.getElementById('dayControls');
-      const weekControls = document.getElementById('weekControls');
-      const counsellorContainer = document.getElementById('counsellorFilterContainer');
-      
-      if (dayControls) dayControls.classList.toggle('hidden', view !== 'day');
-      if (weekControls) weekControls.classList.toggle('hidden', view !== 'week');
-      
-      // Only show counsellor filter if not using client URL
-      if (counsellorContainer && !window.clientId) {
-        counsellorContainer.classList.toggle('hidden', false);
-      }
-      
-      // Update grid class
-      const grid = document.getElementById('calendarGrid');
-      if (grid) {
-        grid.className = `calendar-grid ${view}-view`;
-      }
-      
-      // Update page title and info
-      updateCounsellorInfo();
-      
-      // Recreate grid and populate
-      createCalendarGrid();
-      populateCalendar();
-      updateURL();
-    }
 
-    // Filter by counsellor
-    function filterByCounsellor() {
-      selectedCounsellor = document.getElementById('counsellorSelect').value;
-      updateCounsellorInfo();
-      populateCalendar();
-      updateURL();
-    }
 
-    // Update counsellor info display
-    function updateCounsellorInfo() {
-      const infoDiv = document.getElementById('counsellorInfo');
-      const nameDiv = document.getElementById('counsellorName');
-      const summaryDiv = document.getElementById('counsellorSummary');
-      
-      if (currentView === 'day') {
-        if (selectedCounsellor) {
-          nameDiv.textContent = selectedCounsellor;
-          summaryDiv.textContent = 'Viewing all bookings (Day View)';
-          infoDiv.classList.remove('hidden');
-          
-          // Different title based on access method
-          if (window.clientId) {
-            document.getElementById('pageTitle').textContent = `${selectedCounsellor} - Day View`;
-          } else {
-            document.getElementById('pageTitle').textContent = `${selectedCounsellor} - All Bookings (Day View)`;
-          }
+
+<!-- ================================ -->
+<!-- SECTION 6: CALENDAR FUNCTIONS -->
+<!-- ================================ -->
+<script>
+  // Switch between day and week views
+  function switchView(view) {
+    currentView = view;
+    
+    console.log('Switching to view:', view);
+    
+    // Update view buttons
+    const buttons = document.querySelectorAll('.view-btn');
+    if (buttons.length > 0) {
+      buttons.forEach(btn => btn.classList.remove('active'));
+      // Find the button that was clicked
+      const clickedButton = event ? event.target : document.querySelector(`[onclick="switchView('${view}')"]`);
+      if (clickedButton) {
+        clickedButton.classList.add('active');
+      }
+    }
+    
+    // Show/hide controls based on view
+    const dayControls = document.getElementById('dayControls');
+    const weekControls = document.getElementById('weekControls');
+    const counsellorContainer = document.getElementById('counsellorFilterContainer');
+    
+    if (dayControls) dayControls.classList.toggle('hidden', view !== 'day');
+    if (weekControls) weekControls.classList.toggle('hidden', view !== 'week');
+    
+    // Only show counsellor filter if not using client URL
+    if (counsellorContainer && !window.clientId) {
+      counsellorContainer.classList.toggle('hidden', false);
+    }
+    
+    // Update grid class
+    const grid = document.getElementById('calendarGrid');
+    if (grid) {
+      grid.className = `calendar-grid ${view}-view`;
+    }
+    
+    // Update page title and info
+    updateCounsellorInfo();
+    
+    // Recreate grid and populate
+    createCalendarGrid();
+    populateCalendar();
+    updateURL();
+  }
+
+  // Filter by counsellor
+  function filterByCounsellor() {
+    selectedCounsellor = document.getElementById('counsellorSelect').value;
+    updateCounsellorInfo();
+    populateCalendar();
+    updateURL();
+  }
+
+  // Update counsellor info display
+  function updateCounsellorInfo() {
+    const infoDiv = document.getElementById('counsellorInfo');
+    const nameDiv = document.getElementById('counsellorName');
+    const summaryDiv = document.getElementById('counsellorSummary');
+    
+    if (currentView === 'day') {
+      if (selectedCounsellor) {
+        nameDiv.textContent = selectedCounsellor;
+        summaryDiv.textContent = `Viewing your bookings (Day View) - Only your bookings are modifiable`;
+        infoDiv.classList.remove('hidden');
+        
+        // Different title based on access method
+        if (window.clientId) {
+          document.getElementById('pageTitle').textContent = `${selectedCounsellor} - Day View`;
         } else {
-          infoDiv.classList.add('hidden');
-          document.getElementById('pageTitle').textContent = 'Cherry Tree Centre - Admin Day View';
+          document.getElementById('pageTitle').textContent = `${selectedCounsellor} - Your Bookings (Day View)`;
         }
       } else {
-        if (selectedCounsellor) {
-          const counsellorBookings = bookingData.filter(booking => 
-            booking.client.toLowerCase().includes(selectedCounsellor.toLowerCase())
-          );
-          
-          nameDiv.textContent = selectedCounsellor;
-          summaryDiv.textContent = `${counsellorBookings.length} bookings found`;
-          infoDiv.classList.remove('hidden');
-          
-          // Personalized title for direct client access
-          if (window.clientId) {
-            document.getElementById('pageTitle').textContent = `My Bookings - ${selectedCounsellor}`;
-          } else {
-            document.getElementById('pageTitle').textContent = `Bookings - ${selectedCounsellor}`;
-          }
-        } else {
-          infoDiv.classList.add('hidden');
-          
-          if (window.clientId) {
-            document.getElementById('pageTitle').textContent = 'Please select your name to view bookings';
-          } else {
-            document.getElementById('pageTitle').textContent = 'Select Counsellor to View Bookings';
-          }
-        }
+        infoDiv.classList.add('hidden');
+        document.getElementById('pageTitle').textContent = 'Cherry Tree Centre - Select Counsellor for Day View';
       }
-    }
-
-    // Populate counsellor dropdown
-    function populateCounsellorDropdown() {
-      const select = document.getElementById('counsellorSelect');
-      const counsellors = new Set();
-      
-      bookingData.forEach(booking => {
-        if (booking.client && booking.client.trim()) {
-          counsellors.add(booking.client.trim());
-        }
-      });
-      
-      // Clear existing options
-      select.innerHTML = '<option value="">Select Counsellor</option>';
-      
-      // Add counsellor options
-      Array.from(counsellors).sort().forEach(counsellor => {
-        const option = document.createElement('option');
-        option.value = counsellor;
-        option.textContent = counsellor;
-        if (counsellor === selectedCounsellor) {
-          option.selected = true;
-        }
-        select.appendChild(option);
-      });
-    }
-
-    // Change week navigation
-    function changeWeek(direction) {
-      currentWeekStart.setDate(currentWeekStart.getDate() + (direction * 7));
-      updateWeekDisplay();
-      createCalendarGrid();
-      populateCalendar();
-      updateURL();
-    }
-
-    // Update week display text
-    function updateWeekDisplay() {
-      const weekEnd = new Date(currentWeekStart);
-      weekEnd.setDate(weekEnd.getDate() + 6);
-      
-      const startStr = currentWeekStart.toLocaleDateString('en-GB', {
-        day: '2-digit',
-        month: '2-digit', 
-        year: 'numeric'
-      });
-      const endStr = weekEnd.toLocaleDateString('en-GB', {
-        day: '2-digit',
-        month: '2-digit',
-        year: 'numeric'
-      });
-      
-      document.getElementById('weekDisplay').textContent = `${startStr} - ${endStr}`;
-    }
-
-    // Create calendar grid based on current view
-    function createCalendarGrid() {
-      console.log('Creating calendar grid for view:', currentView);
-      const grid = document.getElementById("calendarGrid");
-      
-      if (!grid) {
-        console.error('Could not find calendarGrid element!');
-        return;
-      }
-      
-      grid.innerHTML = '';
-      
-      if (currentView === 'day') {
-        createDayGrid(grid);
-      } else {
-        createWeekGrid(grid);
-      }
-      
-      console.log('Calendar grid created successfully!');
-    }
-
-    // Create day view grid
-    function createDayGrid(grid) {
-      console.log('Creating day grid...');
-      
-      // Empty top-left cell
-      const emptyCell = document.createElement("div");
-      emptyCell.className = "grid-header";
-      emptyCell.textContent = "Time";
-      grid.appendChild(emptyCell);
-      
-      // Header row with room names
-      rooms.forEach(room => {
-        const header = document.createElement("div");
-        header.className = "grid-header";
-        header.textContent = room;
-        grid.appendChild(header);
-      });
-      
-      console.log('Day grid headers added, adding time rows...');
-      
-      // Time rows
-      businessHours.forEach(time => {
-        // Time label
-        const timeCell = document.createElement("div");
-        timeCell.className = "time-header";
-        timeCell.textContent = time;
-        grid.appendChild(timeCell);
-        
-        // Room cells for this time
-        rooms.forEach((room) => {
-          const cell = document.createElement("div");
-          cell.className = "grid-cell";
-          
-          let roomId;
-          if (room === "Room 1") roomId = "1";
-          else if (room === "Room 2") roomId = "2";
-          else if (room === "Room 4") roomId = "4";
-          else if (room === "Room 6") roomId = "6";
-          else if (room === "Room 7") roomId = "7";
-          else if (room === "Online") roomId = "online";
-          
-          cell.id = `cell-${roomId}-${time}`;
-          grid.appendChild(cell);
-        });
-      });
-      
-      console.log('Day grid completed with', grid.children.length, 'cells');
-    }
-
-    // Create week view grid
-    function createWeekGrid(grid) {
-      console.log('Creating week grid...');
-      console.log('Week starts on:', formatDate(currentWeekStart), 'Day:', currentWeekStart.getDay());
-      
-      // Empty top-left cell
-      const emptyCell = document.createElement("div");
-      emptyCell.className = "grid-header";
-      emptyCell.textContent = "Time";
-      grid.appendChild(emptyCell);
-      
-      // Create headers for Monday-Sunday
-      const weekDays = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
-      
-      for (let i = 0; i < 7; i++) {
-        const cellDate = new Date(currentWeekStart);
-        cellDate.setDate(currentWeekStart.getDate() + i);
-        
-        const header = document.createElement("div");
-        header.className = "grid-header";
-        const dayNum = String(cellDate.getDate()).padStart(2, '0');
-        const monthNum = String(cellDate.getMonth() + 1).padStart(2, '0');
-        header.textContent = `${weekDays[i]} ${dayNum}/${monthNum}`;
-        grid.appendChild(header);
-      }
-      
-      console.log('Week grid headers added, adding time rows...');
-      
-      // Time rows
-      businessHours.forEach(time => {
-        // Time header
-        const timeCell = document.createElement("div");
-        timeCell.className = "time-header";
-        timeCell.textContent = time;
-        grid.appendChild(timeCell);
-        
-        // Create 7 cells for each time slot
-        for (let day = 0; day < 7; day++) {
-          const cell = document.createElement("div");
-          cell.className = "grid-cell";
-          cell.id = `week-cell-${day}-${time}`;
-          grid.appendChild(cell);
-        }
-      });
-      
-      updateWeekDisplay();
-      console.log('Week grid completed with', grid.children.length, 'cells');
-    }
-
-    // Populate calendar with booking data
-    function populateCalendar() {
-      console.log('Populating calendar - View:', currentView, 'Selected counsellor:', selectedCounsellor, 'Booking data length:', bookingData.length);
-      
-      // Clear all cells first
-      const cells = document.querySelectorAll('.grid-cell');
-      console.log('Found', cells.length, 'grid cells to populate');
-      
-      cells.forEach(cell => {
-        cell.innerHTML = '';
-        cell.classList.remove('booked', 'room-1', 'room-2', 'room-4', 'room-6', 'room-7', 'online', 'selected-booking', 'past-booking');
-      });
-
-      let filteredBookings = bookingData;
-      
-      // Filter by counsellor only in week view
-      if (currentView === 'week' && selectedCounsellor) {
-        filteredBookings = bookingData.filter(booking => 
-          booking.client && booking.client.toLowerCase().includes(selectedCounsellor.toLowerCase())
+    } else {
+      if (selectedCounsellor) {
+        const counsellorBookings = bookingData.filter(booking => 
+          booking.client.toLowerCase().includes(selectedCounsellor.toLowerCase())
         );
-        console.log('Filtered bookings for', selectedCounsellor, ':', filteredBookings.length);
-      } else if (currentView === 'day') {
-        console.log('Day view - showing all bookings:', bookingData.length);
-      }
-      
-      if (currentView === 'day') {
-        populateDayView(filteredBookings);
+        
+        nameDiv.textContent = selectedCounsellor;
+        summaryDiv.textContent = `${counsellorBookings.length} bookings found`;
+        infoDiv.classList.remove('hidden');
+        
+        // Personalized title for direct client access
+        if (window.clientId) {
+          document.getElementById('pageTitle').textContent = `My Bookings - ${selectedCounsellor}`;
+        } else {
+          document.getElementById('pageTitle').textContent = `Bookings - ${selectedCounsellor}`;
+        }
       } else {
-        populateWeekView(filteredBookings);
+        infoDiv.classList.add('hidden');
+        
+        if (window.clientId) {
+          document.getElementById('pageTitle').textContent = 'Please select your name to view bookings';
+        } else {
+          document.getElementById('pageTitle').textContent = 'Select Counsellor to View Bookings';
+        }
       }
-      
-      console.log('Calendar population complete');
     }
+  }
 
-    // Populate day view with bookings
-    function populateDayView(filteredBookings) {
-      const selectedDate = document.getElementById('dateSelector').value;
+  // Populate counsellor dropdown
+  function populateCounsellorDropdown() {
+    const select = document.getElementById('counsellorSelect');
+    const counsellors = new Set();
+    
+    bookingData.forEach(booking => {
+      if (booking.client && booking.client.trim()) {
+        counsellors.add(booking.client.trim());
+      }
+    });
+    
+    // Clear existing options
+    select.innerHTML = '<option value="">Select Counsellor</option>';
+    
+    // Add counsellor options
+    Array.from(counsellors).sort().forEach(counsellor => {
+      const option = document.createElement('option');
+      option.value = counsellor;
+      option.textContent = counsellor;
+      if (counsellor === selectedCounsellor) {
+        option.selected = true;
+      }
+      select.appendChild(option);
+    });
+  }
+
+  // Change week navigation
+  function changeWeek(direction) {
+    currentWeekStart.setDate(currentWeekStart.getDate() + (direction * 7));
+    updateWeekDisplay();
+    createCalendarGrid();
+    populateCalendar();
+    updateURL();
+  }
+
+  // Update week display text
+  function updateWeekDisplay() {
+    const weekEnd = new Date(currentWeekStart);
+    weekEnd.setDate(weekEnd.getDate() + 6);
+    
+    const startStr = currentWeekStart.toLocaleDateString('en-GB', {
+      day: '2-digit',
+      month: '2-digit', 
+      year: 'numeric'
+    });
+    const endStr = weekEnd.toLocaleDateString('en-GB', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric'
+    });
+    
+    document.getElementById('weekDisplay').textContent = `${startStr} - ${endStr}`;
+  }
+
+  // Create calendar grid based on current view
+  function createCalendarGrid() {
+    console.log('Creating calendar grid for view:', currentView);
+    const grid = document.getElementById("calendarGrid");
+    
+    if (!grid) {
+      console.error('Could not find calendarGrid element!');
+      return;
+    }
+    
+    grid.innerHTML = '';
+    
+    if (currentView === 'day') {
+      createDayGrid(grid);
+    } else {
+      createWeekGrid(grid);
+    }
+    
+    console.log('Calendar grid created successfully!');
+  }
+
+  // Create day view grid
+  function createDayGrid(grid) {
+    console.log('Creating day grid...');
+    
+    // Empty top-left cell
+    const emptyCell = document.createElement("div");
+    emptyCell.className = "grid-header";
+    emptyCell.textContent = "Time";
+    grid.appendChild(emptyCell);
+    
+    // Header row with room names
+    rooms.forEach(room => {
+      const header = document.createElement("div");
+      header.className = "grid-header";
+      header.textContent = room;
+      grid.appendChild(header);
+    });
+    
+    console.log('Day grid headers added, adding time rows...');
+    
+    // Time rows
+    businessHours.forEach(time => {
+      // Time label
+      const timeCell = document.createElement("div");
+      timeCell.className = "time-header";
+      timeCell.textContent = time;
+      grid.appendChild(timeCell);
       
-      // In day view: show all bookings (no counsellor filter)
-      const dayBookings = bookingData.filter(booking => booking.date === selectedDate);
+      // Room cells for this time
+      rooms.forEach((room) => {
+        const cell = document.createElement("div");
+        cell.className = "grid-cell";
+        
+        let roomId;
+        if (room === "Room 1") roomId = "1";
+        else if (room === "Room 2") roomId = "2";
+        else if (room === "Room 4") roomId = "4";
+        else if (room === "Room 6") roomId = "6";
+        else if (room === "Room 7") roomId = "7";
+        else if (room === "Online") roomId = "online";
+        
+        cell.id = `cell-${roomId}-${time}`;
+        grid.appendChild(cell);
+      });
+    });
+    
+    console.log('Day grid completed with', grid.children.length, 'cells');
+  }
+
+  // Create week view grid
+  function createWeekGrid(grid) {
+    console.log('Creating week grid...');
+    console.log('Week starts on:', formatDate(currentWeekStart), 'Day:', currentWeekStart.getDay());
+    
+    // Empty top-left cell
+    const emptyCell = document.createElement("div");
+    emptyCell.className = "grid-header";
+    emptyCell.textContent = "Time";
+    grid.appendChild(emptyCell);
+    
+    // Create headers for Monday-Sunday
+    const weekDays = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+    
+    for (let i = 0; i < 7; i++) {
+      const cellDate = new Date(currentWeekStart);
+      cellDate.setDate(currentWeekStart.getDate() + i);
       
-      dayBookings.forEach(booking => {
+      const header = document.createElement("div");
+      header.className = "grid-header";
+      const dayNum = String(cellDate.getDate()).padStart(2, '0');
+      const monthNum = String(cellDate.getMonth() + 1).padStart(2, '0');
+      header.textContent = `${weekDays[i]} ${dayNum}/${monthNum}`;
+      grid.appendChild(header);
+    }
+    
+    console.log('Week grid headers added, adding time rows...');
+    
+    // Time rows
+    businessHours.forEach(time => {
+      // Time header
+      const timeCell = document.createElement("div");
+      timeCell.className = "time-header";
+      timeCell.textContent = time;
+      grid.appendChild(timeCell);
+      
+      // Create 7 cells for each time slot
+      for (let day = 0; day < 7; day++) {
+        const cell = document.createElement("div");
+        cell.className = "grid-cell";
+        cell.id = `week-cell-${day}-${time}`;
+        grid.appendChild(cell);
+      }
+    });
+    
+    updateWeekDisplay();
+    console.log('Week grid completed with', grid.children.length, 'cells');
+  }
+
+  // Populate calendar with booking data
+  function populateCalendar() {
+    console.log('Populating calendar - View:', currentView, 'Selected counsellor:', selectedCounsellor, 'Booking data length:', bookingData.length);
+    
+    // Clear all cells first
+    const cells = document.querySelectorAll('.grid-cell');
+    console.log('Found', cells.length, 'grid cells to populate');
+    
+    cells.forEach(cell => {
+      cell.innerHTML = '';
+      cell.classList.remove('booked', 'room-1', 'room-2', 'room-4', 'room-6', 'room-7', 'online', 'selected-booking', 'past-booking');
+    });
+
+    let filteredBookings = bookingData;
+    
+    // Filter by counsellor only in week view
+    if (currentView === 'week' && selectedCounsellor) {
+      filteredBookings = bookingData.filter(booking => 
+        booking.client && booking.client.toLowerCase().includes(selectedCounsellor.toLowerCase())
+      );
+      console.log('Filtered bookings for', selectedCounsellor, ':', filteredBookings.length);
+    } else if (currentView === 'day') {
+      console.log('Day view - showing all bookings:', bookingData.length);
+    }
+    
+    if (currentView === 'day') {
+      populateDayView(filteredBookings);
+    } else {
+      populateWeekView(filteredBookings);
+    }
+    
+    console.log('Calendar population complete');
+  }
+
+  // UPDATED: Populate day view with selective clickability
+  function populateDayView(filteredBookings) {
+    const selectedDate = document.getElementById('dateSelector').value;
+    
+    // In day view: show all bookings but only make own bookings clickable
+    const dayBookings = bookingData.filter(booking => booking.date === selectedDate);
+    
+    dayBookings.forEach(booking => {
+      const startHour = parseInt(booking.start.split(':')[0]);
+      const endHour = parseInt(booking.end.split(':')[0]);
+      
+      const {roomNumber, roomClass} = getRoomMapping(booking);
+      if (!roomNumber) return;
+      
+      // Check if booking is within 24 hours
+      const isWithin24Hours = isBookingWithin24Hours(booking.date, booking.start);
+      
+      // Check if this booking belongs to the selected counsellor
+      const isOwnBooking = selectedCounsellor && 
+        booking.client && 
+        booking.client.toLowerCase().includes(selectedCounsellor.toLowerCase());
+      
+      // Fill cells for the duration of the booking
+      for (let hour = startHour; hour < endHour; hour++) {
+        if (hour >= 8 && hour <= 20) {
+          const timeString = `${String(hour).padStart(2, '0')}:00`;
+          const cellId = `cell-${roomNumber}-${timeString}`;
+          const cell = document.getElementById(cellId);
+          
+          if (cell) {
+            cell.classList.add('booked', roomClass);
+            
+            // Add past booking styling
+            if (isWithin24Hours) {
+              cell.classList.add('past-booking');
+            }
+            
+            // Check if this is the booking to highlight
+            if (window.bookingToModify && 
+                (booking.bookingId === window.bookingToModify.bookingId || 
+                 booking.code === window.bookingToModify.bookingId) &&
+                booking.date === window.bookingToModify.date &&
+                booking.start === window.bookingToModify.time) {
+              cell.classList.add('selected-booking');
+            }
+            
+            // Day view: Show client name as main heading
+            cell.innerHTML = `
+              <div class="booking-info">${booking.client || ''}</div>
+              <div class="client-name">${booking.bookingId || booking.code || ''}</div>
+            `;
+            
+            // UPDATED: Only add click handler if it's the counsellor's own booking AND not within 24 hours
+            if (isOwnBooking && !isWithin24Hours) {
+              cell.style.cursor = 'pointer';
+              cell.addEventListener('click', function() {
+                const bookingCode = booking.bookingId || booking.code;
+                const roomDisplayName = getRoomDisplayName(booking);
+                const date = booking.date;
+                const time = booking.start;
+                
+                prefillForm(bookingCode, roomDisplayName, date, time);
+                
+                // Remove selected-booking class from all cells
+                document.querySelectorAll('.selected-booking').forEach(c => c.classList.remove('selected-booking'));
+                // Add selected-booking class to clicked cell
+                cell.classList.add('selected-booking');
+                
+                // Scroll to form for better UX
+                const formContainer = document.querySelector('.form-container');
+                if (formContainer) {
+                  formContainer.scrollIntoView({ behavior: 'smooth' });
+                }
+              });
+            } else {
+              // Not own booking or within 24 hours - make it clear it's not clickable
+              cell.style.cursor = 'default';
+              if (!isOwnBooking) {
+                cell.style.opacity = '0.7';
+              }
+            }
+          }
+        }
+      }
+    });
+    
+    // Show message if no counsellor selected in day view
+    if (!selectedCounsellor) {
+      const messageDiv = document.createElement('div');
+      messageDiv.style.cssText = 'position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #f8f9fa; padding: 20px; border-radius: 8px; text-align: center; border: 2px solid #dee2e6;';
+      messageDiv.innerHTML = '<h3>Please select a counsellor to modify bookings</h3><p>Day view shows all bookings, but you can only modify your own.</p>';
+      
+      const calendarContainer = document.querySelector('.calendar-container');
+      if (calendarContainer) {
+        calendarContainer.style.position = 'relative';
+        calendarContainer.appendChild(messageDiv);
+      }
+    }
+  }
+
+  // Populate week view with bookings (unchanged)
+  function populateWeekView(filteredBookings) {
+    // If no counsellor selected in week view, don't show any bookings
+    if (!selectedCounsellor) {
+      return;
+    }
+    
+    console.log('Populating week view, week starts:', formatDate(currentWeekStart));
+    
+    // For each booking, calculate which day column it belongs in
+    filteredBookings.forEach(booking => {
+      // Parse the booking date
+      const bookingDate = new Date(booking.date + 'T12:00:00');
+      
+      // Create a date for the week start at noon to match
+      const weekStartNoon = new Date(currentWeekStart);
+      weekStartNoon.setHours(12, 0, 0, 0);
+      
+      // Calculate days from week start
+      const msPerDay = 24 * 60 * 60 * 1000;
+      const timeDiff = bookingDate.getTime() - weekStartNoon.getTime();
+      const daysDiff = Math.round(timeDiff / msPerDay);
+      
+      console.log(`Booking on ${booking.date}: daysDiff=${daysDiff}, client=${booking.client}`);
+      
+      // Only show bookings within this week (0=Mon through 6=Sun)
+      if (daysDiff >= 0 && daysDiff <= 6) {
         const startHour = parseInt(booking.start.split(':')[0]);
         const endHour = parseInt(booking.end.split(':')[0]);
-        
-        const {roomNumber, roomClass} = getRoomMapping(booking);
-        if (!roomNumber) return;
         
         // Check if booking is within 24 hours
         const isWithin24Hours = isBookingWithin24Hours(booking.date, booking.start);
         
-        // Fill cells for the duration of the booking
         for (let hour = startHour; hour < endHour; hour++) {
           if (hour >= 8 && hour <= 20) {
             const timeString = `${String(hour).padStart(2, '0')}:00`;
-            const cellId = `cell-${roomNumber}-${timeString}`;
+            const cellId = `week-cell-${daysDiff}-${timeString}`;
             const cell = document.getElementById(cellId);
             
             if (cell) {
+              const {roomClass} = getRoomMapping(booking);
+              const roomDisplayName = getRoomDisplayName(booking);
+              
               cell.classList.add('booked', roomClass);
               
               // Add past booking styling
@@ -1410,21 +1534,21 @@
                 cell.classList.add('selected-booking');
               }
               
-              // Day view: Show client name as main heading
+              // Week view: Show room name as main heading
               cell.innerHTML = `
-                <div class="booking-info">${booking.client || ''}</div>
+                <div class="booking-info">${roomDisplayName}</div>
                 <div class="client-name">${booking.bookingId || booking.code || ''}</div>
               `;
               
               // Add click handler only if not within 24 hours
               if (!isWithin24Hours) {
                 cell.addEventListener('click', function() {
-                  const bookingCode = booking.bookingId || booking.code;
-                  const roomDisplayName = getRoomDisplayName(booking);
+                  const bookingCode = booking.bookingId;
+                  const room = roomDisplayName;
                   const date = booking.date;
                   const time = booking.start;
                   
-                  prefillForm(bookingCode, roomDisplayName, date, time);
+                  prefillForm(bookingCode, room, date, time);
                   
                   // Remove selected-booking class from all cells
                   document.querySelectorAll('.selected-booking').forEach(c => c.classList.remove('selected-booking'));
@@ -1441,103 +1565,12 @@
             }
           }
         }
-      });
-    }
-
-    // Populate week view with bookings
-    function populateWeekView(filteredBookings) {
-      // If no counsellor selected in week view, don't show any bookings
-      if (!selectedCounsellor) {
-        return;
       }
-      
-      console.log('Populating week view, week starts:', formatDate(currentWeekStart));
-      
-      // For each booking, calculate which day column it belongs in
-      filteredBookings.forEach(booking => {
-        // Parse the booking date
-        const bookingDate = new Date(booking.date + 'T12:00:00');
-        
-        // Create a date for the week start at noon to match
-        const weekStartNoon = new Date(currentWeekStart);
-        weekStartNoon.setHours(12, 0, 0, 0);
-        
-        // Calculate days from week start
-        const msPerDay = 24 * 60 * 60 * 1000;
-        const timeDiff = bookingDate.getTime() - weekStartNoon.getTime();
-        const daysDiff = Math.round(timeDiff / msPerDay);
-        
-        console.log(`Booking on ${booking.date}: daysDiff=${daysDiff}, client=${booking.client}`);
-        
-        // Only show bookings within this week (0=Mon through 6=Sun)
-        if (daysDiff >= 0 && daysDiff <= 6) {
-          const startHour = parseInt(booking.start.split(':')[0]);
-          const endHour = parseInt(booking.end.split(':')[0]);
-          
-          // Check if booking is within 24 hours
-          const isWithin24Hours = isBookingWithin24Hours(booking.date, booking.start);
-          
-          for (let hour = startHour; hour < endHour; hour++) {
-            if (hour >= 8 && hour <= 20) {
-              const timeString = `${String(hour).padStart(2, '0')}:00`;
-              const cellId = `week-cell-${daysDiff}-${timeString}`;
-              const cell = document.getElementById(cellId);
-              
-              if (cell) {
-                const {roomClass} = getRoomMapping(booking);
-                const roomDisplayName = getRoomDisplayName(booking);
-                
-                cell.classList.add('booked', roomClass);
-                
-                // Add past booking styling
-                if (isWithin24Hours) {
-                  cell.classList.add('past-booking');
-                }
-                
-                // Check if this is the booking to highlight
-                if (window.bookingToModify && 
-                    (booking.bookingId === window.bookingToModify.bookingId || 
-                     booking.code === window.bookingToModify.bookingId) &&
-                    booking.date === window.bookingToModify.date &&
-                    booking.start === window.bookingToModify.time) {
-                  cell.classList.add('selected-booking');
-                }
-                
-                // Week view: Show room name as main heading
-                cell.innerHTML = `
-                  <div class="booking-info">${roomDisplayName}</div>
-                  <div class="client-name">${booking.bookingId || booking.code || ''}</div>
-                `;
-                
-                // Add click handler only if not within 24 hours
-                if (!isWithin24Hours) {
-                  cell.addEventListener('click', function() {
-                    const bookingCode = booking.bookingId;
-                    const room = roomDisplayName;
-                    const date = booking.date;
-                    const time = booking.start;
-                    
-                    prefillForm(bookingCode, room, date, time);
-                    
-                    // Remove selected-booking class from all cells
-                    document.querySelectorAll('.selected-booking').forEach(c => c.classList.remove('selected-booking'));
-                    // Add selected-booking class to clicked cell
-                    cell.classList.add('selected-booking');
-                    
-                    // Scroll to form for better UX
-                    const formContainer = document.querySelector('.form-container');
-                    if (formContainer) {
-                      formContainer.scrollIntoView({ behavior: 'smooth' });
-                    }
-                  });
-                }
-              }
-            }
-          }
-        }
-      });
-    }
-  </script>
+    });
+  }
+</script>
+
+  
 
   <!-- ================================ -->
   <!-- SECTION 7: DATA MANAGEMENT FUNCTIONS -->
