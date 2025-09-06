@@ -335,13 +335,26 @@
     // Set today's date as default
     document.getElementById('dateSelector').value = currentDate;
     
-    // Set current week to start on Monday
-    const today = new Date();
-    const dayOfWeek = today.getDay(); // 0 = Sunday, 1 = Monday, etc.
-    const daysToSubtract = dayOfWeek === 0 ? 6 : dayOfWeek - 1; // If Sunday, go back 6 days, otherwise go back to Monday
-    currentWeekStart.setDate(today.getDate() - daysToSubtract);
-    currentWeekStart.setHours(0, 0, 0, 0); // Set to start of day
 
+// Set current week to start on Monday
+const today = new Date();
+const dayOfWeek = today.getDay(); // 0 = Sunday, 1 = Monday, etc.
+
+// Fix the calculation
+let daysToSubtract;
+if (dayOfWeek === 0) {
+  daysToSubtract = 6; // Sunday: go back 6 days
+} else {
+  daysToSubtract = dayOfWeek - 1; // Other days: go back to Monday
+}
+
+currentWeekStart = new Date(today);
+currentWeekStart.setDate(today.getDate() - daysToSubtract);
+currentWeekStart.setHours(0, 0, 0, 0);
+
+console.log(`Today is ${today.toDateString()} (day ${dayOfWeek}), week starts ${currentWeekStart.toDateString()} (day ${currentWeekStart.getDay()})`);
+
+    
     // Function to format date and time for SimplybookMe
     function formatDateTimeForSimplybookMe(date, time) {
       if (!date || !time) {
@@ -1083,14 +1096,28 @@
       });
     }
 
-    function getWeekStartDate(date) {
-      const result = new Date(date);
-      const dayOfWeek = result.getDay(); // 0 = Sunday, 1 = Monday, etc.
-      const daysToSubtract = dayOfWeek === 0 ? 6 : dayOfWeek - 1; // If Sunday, go back 6 days, otherwise go back to Monday
-      result.setDate(result.getDate() - daysToSubtract);
-      result.setHours(0, 0, 0, 0);
-      return result;
-    }
+function getWeekStartDate(date) {
+  const result = new Date(date);
+  const dayOfWeek = result.getDay(); // 0 = Sunday, 1 = Monday, etc.
+  
+  // Fix: Properly calculate days to subtract to get to Monday
+  let daysToSubtract;
+  if (dayOfWeek === 0) {
+    // Sunday: go back 6 days to get to Monday
+    daysToSubtract = 6;
+  } else {
+    // Any other day: go back (dayOfWeek - 1) days
+    daysToSubtract = dayOfWeek - 1;
+  }
+  
+  result.setDate(result.getDate() - daysToSubtract);
+  result.setHours(0, 0, 0, 0);
+  
+  // Verify we got Monday
+  console.log(`getWeekStartDate: Input ${date.toDateString()}, dayOfWeek=${dayOfWeek}, subtracting ${daysToSubtract} days, result=${result.toDateString()} (day ${result.getDay()})`);
+  
+  return result;
+}
 
     function formatDate(date) {
       return date.toISOString().split('T')[0];
