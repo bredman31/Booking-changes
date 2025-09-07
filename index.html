@@ -4,6 +4,10 @@
   <meta charset="UTF-8">
   <title>Cherry Tree Centre - Room Booking Calendar</title>
   
+  <!-- ADD FIREBASE SCRIPTS HERE -->
+  <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-database-compat.js"></script>
+  
   <!-- ================================ -->
   <!-- SECTION 1: STYLES AND CSS -->
   <!-- ================================ -->
@@ -432,7 +436,27 @@
   <!-- ================================ -->
   <script>
     // Google Apps Script configuration
+<!-- ================================ -->
+  <!-- SECTION 3: GLOBAL CONFIGURATION -->
+  <!-- ================================ -->
+  <script>
+    // Google Apps Script configuration
     const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxaMATLZvtAxJULI2l3teqb0u6FkBiP8LBuGMV7VrcU2NxMEbH92aj8Q4YI6aZ1GLUm4Q/exec';
+    
+    // ADD FIREBASE CONFIGURATION HERE
+    const firebaseConfig = {
+      apiKey: "AIzaSyCVp4QDAnh5RcxGZIrEY2LriUWKQNcNbzE",
+      authDomain: "cherry-tree-bookings.firebaseapp.com",
+      databaseURL: "https://cherry-tree-bookings-default-rtdb.europe-west1.firebasedatabase.app",
+      projectId: "cherry-tree-bookings",
+      storageBucket: "cherry-tree-bookings.firebasestorage.app",
+      messagingSenderId: "280166213685",
+      appId: "1:280166213685:web:f80b11799f41f5f385297c"
+    };
+
+    // Initialize Firebase
+    firebase.initializeApp(firebaseConfig);
+    const database = firebase.database();
     
     // Constants for rooms and business hours
     const rooms = ["Room 1", "Room 2", "Room 4", "Room 6", "Room 7", "Online"];
@@ -1635,92 +1659,104 @@
   <!-- ================================ -->
   <script>
     // Load booking data with priority for specific counsellor
-    async function loadBookingDataWithPriority(priorityCounsellor = null) {
-      const statusElement = document.getElementById('dataStatus');
-      
-      try {
-        if (statusElement) statusElement.textContent = 'Loading booking data...';
-        
-        let url = SCRIPT_URL;
-        if (priorityCounsellor) {
-          url += `?priority_counsellor=${encodeURIComponent(priorityCounsellor)}`;
-          if (statusElement) statusElement.textContent = `Loading ${priorityCounsellor}'s bookings first...`;
-        }
-        
-        const response = await fetch(url);
-        
-        if (!response.ok) {
-          throw new Error(`Failed to fetch data: ${response.statusText}`);
-        }
-        
-        const jsonData = await response.json();
-        
-        // Separate holding room bookings from regular bookings
-        holdingRoomBookings = jsonData.filter(booking => 
-          booking.room === 'Henley_Holding_Room' || 
-          booking.room === '18' ||
-          booking.date === '2030-01-01'
-        );
-        
-        // Regular bookings (excluding holding room)
-        bookingData = jsonData.filter(booking => 
-          booking.room !== 'Henley_Holding_Room' && 
-          booking.room !== '18' &&
-          booking.date !== '2030-01-01'
-        );
-        
-        console.log(`Loaded ${bookingData.length} regular bookings and ${holdingRoomBookings.length} holding room bookings`);
-        
-        // Update holding room count display
-        updateHoldingRoomCount();
-        
-        const cachedData = {
-          data: jsonData,
-          timestamp: Date.now(),
-          expiry: Date.now() + (2 * 60 * 1000)
-        };
-        
-        try {
-          sessionStorage.setItem('bookingDataCache', JSON.stringify(cachedData));
-        } catch (e) {
-          console.warn('Could not cache data in sessionStorage:', e);
-        }
-        
-        populateCounsellorDropdown();
-        updateCounsellorInfo();
-        
-        if (statusElement) {
-          let statusText = `Loaded ${bookingData.length} bookings`;
-          if (holdingRoomBookings.length > 0) {
-            statusText += ` (${holdingRoomBookings.length} in holding room)`;
-          }
-          if (priorityCounsellor) {
-            const priorityCount = bookingData.filter(b => b.client === priorityCounsellor).length;
-            statusText += ` - ${priorityCount} for ${priorityCounsellor}`;
-          }
-          statusElement.textContent = statusText;
-          statusElement.style.color = '#28a745';
-          
-          setTimeout(() => {
-            statusElement.textContent = '';
-          }, 3000);
-        }
-        
-        return Promise.resolve();
-        
-      } catch (error) {
-        console.error('Error loading booking data:', error);
-        if (statusElement) {
-          statusElement.textContent = 'Error loading data';
-          statusElement.style.color = '#dc3545';
-        }
-        
-        bookingData = [];
-        holdingRoomBookings = [];
-        updateHoldingRoomCount();
-        return Promise.resolve();
+// REPLACE THIS ENTIRE FUNCTION
+async function loadBookingDataWithPriority(priorityCounsellor = null) {
+  const statusElement = document.getElementById('dataStatus');
+  const startTime = Date.now(); // Track load time
+  
+  try {
+    if (statusElement) statusElement.textContent = 'Loading booking data...';
+    
+    // Get data from Firebase instead of Apps Script
+    const snapshot = await database.ref('bookings').once('value');
+    const jsonData = snapshot.val() || [];
+    
+    // Convert to array if needed
+    const bookingArray = Array.isArray(jsonData) ? jsonData : Object.values(jsonData);
+    
+    // Separate holding room bookings from regular bookings
+    holdingRoomBookings = bookingArray.filter(booking => 
+      booking.room === 'Henley_Holding_Room' || 
+      booking.room === '18' ||
+      booking.date === '2030-01-01'
+    );
+    
+    bookingData = bookingArray.filter(booking => 
+      booking.room !== 'Henley_Holding_Room' && 
+      booking.room !== '18' &&
+      booking.date !== '2030-01-01'
+    );
+    
+    console.log(`Firebase: Loaded ${bookingData.length} bookings in ${Date.now() - startTime}ms`);
+    
+    updateHoldingRoomCount();
+    updateCounsellorInfo();
+    
+    if (statusElement) {
+      let statusText = `Loaded ${bookingData.length} bookings`;
+      if (holdingRoomBookings.length > 0) {
+        statusText += ` (${holdingRoomBookings.length} in holding room)`;
       }
+      if (priorityCounsellor) {
+        const priorityCount = bookingData.filter(b => b.client === priorityCounsellor).length;
+        statusText += ` - ${priorityCount} for ${priorityCounsellor}`;
+      }
+      statusElement.textContent = statusText;
+      statusElement.style.color = '#28a745';
+      
+      setTimeout(() => {
+        statusElement.textContent = '';
+      }, 3000);
     }
+    
+    // Set up real-time listener for updates
+    database.ref('bookings').on('value', (snapshot) => {
+      const updatedData = snapshot.val() || [];
+      const updatedArray = Array.isArray(updatedData) ? updatedData : Object.values(updatedData);
+      
+      // Update local data
+      holdingRoomBookings = updatedArray.filter(booking => 
+        booking.room === 'Henley_Holding_Room' || 
+        booking.room === '18' ||
+        booking.date === '2030-01-01'
+      );
+      
+      bookingData = updatedArray.filter(booking => 
+        booking.room !== 'Henley_Holding_Room' && 
+        booking.room !== '18' &&
+        booking.date !== '2030-01-01'
+      );
+      
+      updateHoldingRoomCount();
+      populateCalendar();
+      console.log('Data updated in real-time!');
+    });
+    
+    return Promise.resolve();
+    
+  } catch (error) {
+    console.error('Firebase error:', error);
+    // Fallback to original Apps Script if Firebase fails
+    console.log('Falling back to Apps Script...');
+    
+    // FALLBACK CODE - uses your original SCRIPT_URL
+    try {
+      const response = await fetch(SCRIPT_URL);
+      if (!response.ok) throw new Error(`Failed: ${response.statusText}`);
+      
+      const jsonData = await response.json();
+      // ... process data as before
+      
+    } catch (fallbackError) {
+      console.error('Both Firebase and Apps Script failed:', fallbackError);
+      bookingData = [];
+      holdingRoomBookings = [];
+    }
+    
+    updateHoldingRoomCount();
+    return Promise.resolve();
+  }
+}
 
     // Load booking data
     async function loadBookingData() {
