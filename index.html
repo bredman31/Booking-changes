@@ -1380,11 +1380,18 @@
     console.log('Calendar population complete');
   }
 // UPDATED: Populate day view with payment status display
+// CORRECTED: Populate day view with proper date filtering
 function populateDayView(filteredBookings) {
   const selectedDate = document.getElementById('dateSelector').value;
+  console.log('Populating day view for date:', selectedDate);
   
-  // In day view: show all bookings but make NONE clickable
-  const dayBookings = bookingData.filter(booking => booking.date === selectedDate);
+  // IMPORTANT: Use selectedDate from the input, not a parameter
+  const dayBookings = bookingData.filter(booking => {
+    console.log(`Checking booking date ${booking.date} against selected ${selectedDate}`);
+    return booking.date === selectedDate;
+  });
+  
+  console.log(`Found ${dayBookings.length} bookings for ${selectedDate}`);
   
   dayBookings.forEach(booking => {
     const startHour = parseInt(booking.start.split(':')[0]);
@@ -1420,7 +1427,7 @@ function populateDayView(filteredBookings) {
             cell.classList.add('selected-booking');
           }
           
-          // NEW: Create booking display with payment status
+          // Create booking display with payment status
           const bookingCode = booking.bookingId || booking.code || '';
           const paymentIndicator = booking.isPaid ? '' : ' (Old system)';
           
@@ -1804,6 +1811,14 @@ function populateWeekView(filteredBookings) {
           });
         }
         
+		// Date selector handler - FIXED
+document.getElementById('dateSelector').addEventListener('change', function() {
+  currentDate = this.value;
+  console.log('Date changed to:', currentDate);
+  populateCalendar();
+  updateURL();
+});
+		
         // If there's a booking to modify from URL, prefill the form
         if (window.bookingToModify) {
           console.log('Auto-filling form from URL parameters:', window.bookingToModify);
