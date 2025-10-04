@@ -1832,11 +1832,16 @@
       });
     }
 
-    // UPDATED: Populate week view
+   // UPDATED: Populate week view
     function populateWeekView(filteredBookings) {
+      // Auto-set counsellor from storage if we have a token
       const storedCounsellor = sessionStorage.getItem('counsellorName');
+      if (!selectedCounsellor && storedCounsellor) {
+        selectedCounsellor = storedCounsellor;
+      }
+      
       if (!selectedCounsellor && !storedCounsellor) {
-        // No counsellor selected or stored - show message
+        // No counsellor selected or stored - show message only if no token
         const grid = document.getElementById('calendarGrid');
         if (grid && !sessionStorage.getItem('accessToken')) {
           grid.innerHTML = '<div style="grid-column: 1 / -1; text-align: center; padding: 20px;">Please select a counsellor or use your access token to view bookings.</div>';
@@ -2029,21 +2034,18 @@
       });
     }
 
-    // UPDATED: Update URL with current parameters and preserve token
+// UPDATED: Update URL with current parameters and preserve token
     function updateURL() {
       const params = new URLSearchParams();
       
-      // ALWAYS preserve token if present
-      const token = sessionStorage.getItem('accessToken');
+      // ALWAYS preserve token - check both sessionStorage AND current URL
+      const existingToken = new URLSearchParams(window.location.search).get('token');
+      const token = sessionStorage.getItem('accessToken') || existingToken;
       if (token) {
         params.set('token', token);
       }
       
       params.set('view', currentView);
-      
-      if (selectedCounsellor && !token) {
-        params.set('counsellor', encodeURIComponent(selectedCounsellor));
-      }
       
       if (currentView === 'day') {
         params.set('date', document.getElementById('dateSelector').value);
