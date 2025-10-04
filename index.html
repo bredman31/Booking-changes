@@ -574,17 +574,11 @@
         };
       }
 
-      updateViewButtons();
-      updateControlsVisibility();
-      const grid = document.getElementById('calendarGrid');
-      if (grid) {
-        grid.className = `calendar-grid ${currentView}-view`;
-        createCalendarGrid();
-      }
-      initializeData();
+      // Initialize with full access when token is valid
+      initializeWithFullAccess();
     }
 
-    // FIXED: Parse non-token parameters
+    // Parse non-token parameters
     function parseNonTokenParams(params) {
       const view = params.get('view');
       const counsellor = params.get('counsellor');
@@ -627,14 +621,8 @@
         };
       }
 
-      updateViewButtons();
-      updateControlsVisibility();
-      const grid = document.getElementById('calendarGrid');
-      if (grid) {
-        grid.className = `calendar-grid ${currentView}-view`;
-        createCalendarGrid();
-      }
-      initializeData();
+      // Initialize with read-only access when no token
+      initializeWithReadOnlyAccess();
     }
 
     // FIXED: Parse URL parameters - token-first and async
@@ -669,6 +657,151 @@
       } else {
         parseNonTokenParams(params);
       }
+    }
+    
+    // Initialize with full access
+    function initializeWithFullAccess() {
+      console.log('Initializing with full access');
+      
+      // Set up view and controls
+      updateViewButtons();
+      updateControlsVisibility();
+      
+      const grid = document.getElementById('calendarGrid');
+      if (grid) {
+        grid.className = `calendar-grid ${currentView}-view`;
+        createCalendarGrid();
+      }
+      
+      // Load data
+      initializeData();
+      
+      // Enable form submission
+      const changeForm = document.getElementById('bookingChangeForm');
+      if (changeForm) {
+        changeForm.addEventListener('submit', handleFormSubmit);
+      }
+      
+      // Set up date selector with token preservation
+      document.getElementById('dateSelector').addEventListener('change', function() {
+        currentDate = this.value;
+        populateCalendar();
+        updateURL(); // This will preserve the token
+      });
+      
+      // Handle auto-fill from URL
+      if (window.bookingToModify) {
+        setTimeout(() => {
+          prefillForm(
+            window.bookingToModify.bookingId,
+            window.bookingToModify.room,
+            window.bookingToModify.date,
+            window.bookingToModify.time
+          );
+          
+          const formContainer = document.querySelector('.form-container');
+          if (formContainer) {
+            formContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          }
+        }, 500);
+      }
+    }
+    
+    // Initialize with read-only access
+    function initializeWithReadOnlyAccess() {
+      console.log('Initializing with read-only access');
+      
+      // Set up view and controls
+      updateViewButtons();
+      updateControlsVisibility();
+      
+      const grid = document.getElementById('calendarGrid');
+      if (grid) {
+        grid.className = `calendar-grid ${currentView}-view`;
+        createCalendarGrid();
+      }
+      
+      // Load data (read-only)
+      initializeData();
+      
+      // Set up date selector (still allow navigation)
+      document.getElementById('dateSelector').addEventListener('change', function() {
+        currentDate = this.value;
+        populateCalendar();
+        updateURL();
+      });
+      
+      // Disable clicking on bookings
+      document.addEventListener('click', function(e) {
+        if (e.target.closest('.grid-cell.booked')) {
+          e.preventDefault();
+          e.stopPropagation();
+        }
+      }, true);
+    }
+    
+    // Handle form submit with token
+    function handleFormSubmit(e) {
+      e.preventDefault();
+      
+      const token = sessionStorage.getItem('accessToken');
+      if (!token) {
+        alert('Session expired. Please use your access link to continue.');
+        return;
+      }
+      
+      const isHoldingRoom = document.getElementById('isHoldingRoomBooking').value === 'true';
+      
+      const changeData = {
+        originalBookingCode: document.getElementById('bookingCodeInput').value,
+        originalRoom: document.getElementById('currentRoomInput').value,
+        originalDate: document.getElementById('currentDateInput').value,
+        originalTime: document.getElementById('currentTimeInput').value,
+        newRoom: document.getElementById('newRoomInput').value,
+        newDate: document.getElementById('newDateInput').value,
+        newTime: document.getElementById('newTimeInput').value,
+        counsellorName: selectedCounsellor,
+        accessToken: token
+      };
+      
+      // Validation for holding room bookings
+      if (isHoldingRoom) {
+        if (!changeData.newRoom || !changeData.newDate || !changeData.newTime) {
+          alert('Please select a room, date, and time for the booking.');
+          return;
+        }
+      } else {
+        // Normal booking validation
+        if (!changeData.newRoom && !changeData.newDate && !changeData.newTime) {
+          alert('Please specify what changes you would like to make.');
+          return;
+        }
+        
+        if (isBookingWithin24Hours(changeData.originalDate, changeData.originalTime)) {
+          alert('This booking is within 24 hours and cannot be modified online. Please contact the centre directly.');
+          return;
+        }
+        
+        if (changeData.newRoom) {
+          const originalLocationId = getLocationIdFromRoom(changeData.originalRoom);
+          const requestedLocationId = getLocationIdFromRoom(changeData.newRoom);
+          
+          if (originalLocationId !== requestedLocationId) {
+            const originalLocation = originalLocationId === '1' ? 'Buckhurst Hill' : 'Henley';
+            const requestedLocation = requestedLocationId === '1' ? 'Buckhurst Hill' : 'Henley';
+            
+            alert(`Cannot change locations. Your current booking is in ${originalLocation}, but you selected a room in ${requestedLocation}. Please choose a room in the same location.`);
+            return;
+          }
+        }
+      }
+      
+      if (!changeData.counsellorName) {
+        alert('Please select a counsellor first.');
+        return;
+      }
+      
+      submitBookingChange(changeData);
     }
     
     // Show access denied
