@@ -496,6 +496,7 @@
   <!-- ================================ -->
   <!-- SECTION 4: UTILITY FUNCTIONS -->
   <!-- ================================ -->
+
   <script>
     // 24-hour check function
     function isBookingWithin24Hours(bookingDate, bookingTime) {
@@ -541,13 +542,86 @@
       return [];
     }
 
-    // Parse URL parameters
+    // UPDATED: Parse URL parameters with token validation
     function parseURLParams() {
       const params = new URLSearchParams(window.location.search);
+      
+      // Check for access token FIRST
+      const accessToken = params.get('token');
+      
+      if (accessToken) {
+        // Store token for this session
+        sessionStorage.setItem('accessToken', accessToken);
+        
+        // Validate token against Firebase
+        validateAccessToken(accessToken).then(isValid => {
+          if (isValid) {
+            processValidSession(params);
+          } else {
+            showAccessDenied();
+          }
+        });
+      } else {
+        // Check if we have a token in session storage
+        const sessionToken = sessionStorage.getItem('accessToken');
+        if (sessionToken) {
+          validateAccessToken(sessionToken).then(isValid => {
+            if (isValid) {
+              processValidSession(params);
+            } else {
+              sessionStorage.removeItem('accessToken');
+              sessionStorage.removeItem('counsellorName');
+              showLimitedAccess();
+            }
+          });
+        } else {
+          // No token - show limited view
+          showLimitedAccess();
+        }
+      }
+    }
+
+    // NEW: Validate access token
+    async function validateAccessToken(token) {
+      try {
+        // Check against Firebase
+        const snapshot = await database.ref('therapist_tokens/' + token).once('value');
+        const tokenData = snapshot.val();
+        
+        if (tokenData && tokenData.active) {
+          // Token is valid - set up user context
+          window.validToken = token;
+          window.clientId = tokenData.clientId;
+          selectedCounsellor = tokenData.name;
+          
+          // Store counsellor name in session for filtering
+          sessionStorage.setItem('counsellorName', tokenData.name);
+          
+          // Hide the counsellor selector
+          const counsellorContainer = document.getElementById('counsellorFilterContainer');
+          if (counsellorContainer) {
+            counsellorContainer.style.display = 'none';
+          }
+          
+          // Update page title
+          document.getElementById('pageTitle').textContent = 
+            `${tokenData.name} - Booking Calendar`;
+          
+          console.log('Token validated for:', tokenData.name);
+          return true;
+        }
+        
+        return false;
+      } catch (error) {
+        console.error('Token validation error:', error);
+        return false;
+      }
+    }
+
+    // NEW: Process valid session
+    function processValidSession(params) {
+      // Continue with other URL parameters
       const view = params.get('view');
-      const counsellor = params.get('counsellor');
-      const clientName = params.get('name');
-      const clientId = params.get('clientId');
       const date = params.get('date');
       const bookingId = params.get('booking');
       const room = params.get('room');
@@ -556,20 +630,6 @@
       
       if (view && (view === 'day' || view === 'week')) {
         currentView = view;
-      }
-      
-      if (clientId && clientName) {
-        selectedCounsellor = decodeURIComponent(clientName);
-        window.clientId = clientId;
-        
-        const counsellorContainer = document.getElementById('counsellorFilterContainer');
-        if (counsellorContainer) {
-          counsellorContainer.style.display = 'none';
-        }
-      }
-      else if (counsellor) {
-        selectedCounsellor = decodeURIComponent(counsellor);
-        window.clientId = null;
       }
       
       if (date) {
@@ -587,6 +647,183 @@
           time: decodeURIComponent(time)
         };
       }
+      
+      // Initialize with full access
+      initializeWithFullAccess();
+    }
+
+    // NEW: Show access denied
+    function showAccessDenied() {
+      document.body.innerHTML = `
+        <div style="display: flex; justify-content: center; align-items: center; height: 100vh; font-family: Arial;">
+          <div style="text-align: center; padding: 40px; background: #f8f9fa; border-radius: 8px; max-width: 500px;">
+            <h2 style="color: #dc3545;">Access Denied</h2>
+            <p>Invalid or expired access token.</p>
+            <p>Please use the link provided in your weekly email.</p>
+            <hr style="margin: 20px 0;">
+            <p style="font-size: 14px; color: #666;">If you believe this is an error, please contact the Cherry Tree Centre.</p>
+          </div>
+        </div>
+      `;
+    }
+
+    // NEW: Show limited access
+    function showLimitedAccess() {
+      // Allow viewing the calendar but not modifying
+      const formContainer = document.querySelector('.form-container');
+      if (formContainer) {
+        formContainer.innerHTML = `
+          <div style="padding: 20px; background: #fff3cd; border-radius: 8px; border: 1px solid #ffeaa7;">
+            <h3 style="color: #856404;">Limited Access</h3>
+            <p>You can view the booking calendar, but you need a valid access token to make changes.</p>
+            <p style="margin-top: 15px;">To modify bookings, please use the personal link sent to your email.</p>
+            <hr style="margin: 20px 0; border-color: #ffeaa7;">
+            <p style="font-size: 14px;">If you are a therapist and don't have your access link, please contact the centre administrator.</p>
+          </div>
+        `;
+      }
+      
+      // Hide modification buttons
+      const cancelBtn = document.getElementById('cancelBookingBtn');
+      const submitBtn = document.getElementById('submitChangeBtn');
+      const holdingBtn = document.getElementById('selectHoldingBtn');
+      
+      if (cancelBtn) cancelBtn.style.display = 'none';
+      if (submitBtn) submitBtn.style.display = 'none';
+      if (holdingBtn) holdingBtn.style.display = 'none';
+      
+      // Still initialize the calendar for viewing
+      initializeWithReadOnlyAccess();
+    }
+
+    // NEW: Initialize with full access
+    function initializeWithFullAccess() {
+      updateViewButtons();
+      updateControlsVisibility();
+      
+      const grid = document.getElementById('calendarGrid');
+      if (grid) {
+        grid.className = `calendar-grid ${currentView}-view`;
+        createCalendarGrid();
+      }
+      
+      initializeData();
+      
+      // Enable form submission
+      const changeForm = document.getElementById('bookingChangeForm');
+      if (changeForm) {
+        changeForm.addEventListener('submit', handleFormSubmit);
+      }
+      
+      // Set up date selector
+      document.getElementById('dateSelector').addEventListener('change', function() {
+        currentDate = this.value;
+        populateCalendar();
+        updateURL();
+      });
+      
+      // Handle auto-fill from URL
+      if (window.bookingToModify) {
+        setTimeout(() => {
+          prefillForm(
+            window.bookingToModify.bookingId,
+            window.bookingToModify.room,
+            window.bookingToModify.date,
+            window.bookingToModify.time
+          );
+          
+          const formContainer = document.querySelector('.form-container');
+          if (formContainer) {
+            formContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          }
+        }, 500);
+      }
+    }
+
+    // NEW: Initialize with read-only access
+    function initializeWithReadOnlyAccess() {
+      updateViewButtons();
+      updateControlsVisibility();
+      
+      const grid = document.getElementById('calendarGrid');
+      if (grid) {
+        grid.className = `calendar-grid ${currentView}-view`;
+        createCalendarGrid();
+      }
+      
+      initializeData();
+      
+      // Disable clicking on bookings
+      document.addEventListener('click', function(e) {
+        if (e.target.closest('.grid-cell')) {
+          e.preventDefault();
+          e.stopPropagation();
+        }
+      }, true);
+    }
+
+    // NEW: Handle form submit with token
+    function handleFormSubmit(e) {
+      e.preventDefault();
+      
+      const token = sessionStorage.getItem('accessToken');
+      if (!token) {
+        alert('Session expired. Please use your access link to continue.');
+        return;
+      }
+      
+      const isHoldingRoom = document.getElementById('isHoldingRoomBooking').value === 'true';
+      
+      const changeData = {
+        originalBookingCode: document.getElementById('bookingCodeInput').value,
+        originalRoom: document.getElementById('currentRoomInput').value,
+        originalDate: document.getElementById('currentDateInput').value,
+        originalTime: document.getElementById('currentTimeInput').value,
+        newRoom: document.getElementById('newRoomInput').value,
+        newDate: document.getElementById('newDateInput').value,
+        newTime: document.getElementById('newTimeInput').value,
+        counsellorName: selectedCounsellor,
+        accessToken: token
+      };
+      
+      // Validation for holding room bookings
+      if (isHoldingRoom) {
+        if (!changeData.newRoom || !changeData.newDate || !changeData.newTime) {
+          alert('Please select a room, date, and time for the booking.');
+          return;
+        }
+      } else {
+        // Normal booking validation
+        if (!changeData.newRoom && !changeData.newDate && !changeData.newTime) {
+          alert('Please specify what changes you would like to make.');
+          return;
+        }
+        
+        if (isBookingWithin24Hours(changeData.originalDate, changeData.originalTime)) {
+          alert('This booking is within 24 hours and cannot be modified online. Please contact the centre directly.');
+          return;
+        }
+        
+        if (changeData.newRoom) {
+          const originalLocationId = getLocationIdFromRoom(changeData.originalRoom);
+          const requestedLocationId = getLocationIdFromRoom(changeData.newRoom);
+          
+          if (originalLocationId !== requestedLocationId) {
+            const originalLocation = originalLocationId === '1' ? 'Buckhurst Hill' : 'Henley';
+            const requestedLocation = requestedLocationId === '1' ? 'Buckhurst Hill' : 'Henley';
+            
+            alert(`Cannot change locations. Your current booking is in ${originalLocation}, but you selected a room in ${requestedLocation}. Please choose a room in the same location.`);
+            return;
+          }
+        }
+      }
+      
+      if (!changeData.counsellorName) {
+        alert('Please select a counsellor first.');
+        return;
+      }
+      
+      submitBookingChange(changeData);
     }
 
     // Populate room dropdown based on current booking's location
@@ -701,7 +938,6 @@
       return {roomNumber, roomClass};
     }
   </script>
-
   <!-- ================================ -->
   <!-- SECTION 5: BOOKING FORM FUNCTIONS -->
   <!-- ================================ -->
@@ -1233,7 +1469,7 @@
     }
   </script>
 
-  <!-- ================================ -->
+ <!-- ================================ -->
   <!-- SECTION 6: CALENDAR FUNCTIONS -->
   <!-- ================================ -->
   <script>
@@ -1253,7 +1489,7 @@
       console.log(`Holding room bookings: ${holdingRoomBookings.length}`);
     }
     
-    // Switch between day and week views
+    // UPDATED: Switch between day and week views
     function switchView(view) {
       currentView = view;
       
@@ -1273,8 +1509,11 @@
       if (dayControls) dayControls.classList.toggle('hidden', view !== 'day');
       if (weekControls) weekControls.classList.toggle('hidden', view !== 'week');
       
-      if (counsellorContainer && !window.clientId) {
+      // Hide counsellor selector if we have a token
+      if (counsellorContainer && !sessionStorage.getItem('accessToken')) {
         counsellorContainer.classList.toggle('hidden', false);
+      } else if (counsellorContainer) {
+        counsellorContainer.style.display = 'none';
       }
       
       const grid = document.getElementById('calendarGrid');
@@ -1285,7 +1524,7 @@
       updateCounsellorInfo();
       createCalendarGrid();
       populateCalendar();
-      updateURL();
+      updateURL(); // This now preserves the token
     }
 
     // Filter by counsellor
@@ -1302,40 +1541,44 @@
       const nameDiv = document.getElementById('counsellorName');
       const summaryDiv = document.getElementById('counsellorSummary');
       
+      // Use stored counsellor name if available
+      const storedCounsellor = sessionStorage.getItem('counsellorName');
+      const counsellorToUse = selectedCounsellor || storedCounsellor;
+      
       if (currentView === 'day') {
-        if (selectedCounsellor) {
-          nameDiv.textContent = selectedCounsellor;
+        if (counsellorToUse) {
+          nameDiv.textContent = counsellorToUse;
           summaryDiv.textContent = `Viewing your bookings (Day View) - Only your bookings are modifiable`;
           infoDiv.classList.remove('hidden');
           
-          if (window.clientId) {
-            document.getElementById('pageTitle').textContent = `${selectedCounsellor} - Day View`;
+          if (window.clientId || sessionStorage.getItem('accessToken')) {
+            document.getElementById('pageTitle').textContent = `${counsellorToUse} - Day View`;
           } else {
-            document.getElementById('pageTitle').textContent = `${selectedCounsellor} - Your Bookings (Day View)`;
+            document.getElementById('pageTitle').textContent = `${counsellorToUse} - Your Bookings (Day View)`;
           }
         } else {
           infoDiv.classList.add('hidden');
           document.getElementById('pageTitle').textContent = 'Cherry Tree Centre - Select Counsellor for Day View';
         }
       } else {
-        if (selectedCounsellor) {
+        if (counsellorToUse) {
           const counsellorBookings = bookingData.filter(booking => 
-            booking.client.toLowerCase().includes(selectedCounsellor.toLowerCase())
+            booking.client.toLowerCase().includes(counsellorToUse.toLowerCase())
           );
           
-          nameDiv.textContent = selectedCounsellor;
+          nameDiv.textContent = counsellorToUse;
           summaryDiv.textContent = `${counsellorBookings.length} bookings found`;
           infoDiv.classList.remove('hidden');
           
-          if (window.clientId) {
-            document.getElementById('pageTitle').textContent = `My Bookings - ${selectedCounsellor}`;
+          if (window.clientId || sessionStorage.getItem('accessToken')) {
+            document.getElementById('pageTitle').textContent = `My Bookings - ${counsellorToUse}`;
           } else {
-            document.getElementById('pageTitle').textContent = `Bookings - ${selectedCounsellor}`;
+            document.getElementById('pageTitle').textContent = `Bookings - ${counsellorToUse}`;
           }
         } else {
           infoDiv.classList.add('hidden');
           
-          if (window.clientId) {
+          if (window.clientId || sessionStorage.getItem('accessToken')) {
             document.getElementById('pageTitle').textContent = 'Please select your name to view bookings';
           } else {
             document.getElementById('pageTitle').textContent = 'Select Counsellor to View Bookings';
@@ -1368,13 +1611,13 @@
       });
     }
 
-    // Change week navigation
+    // UPDATED: Change week navigation
     function changeWeek(direction) {
       currentWeekStart.setDate(currentWeekStart.getDate() + (direction * 7));
       updateWeekDisplay();
       createCalendarGrid();
       populateCalendar();
-      updateURL();
+      updateURL(); // This now preserves the token
     }
 
     // Update week display text
@@ -1490,7 +1733,7 @@
       updateWeekDisplay();
     }
 
-    // Populate calendar with booking data
+    // UPDATED: Populate calendar with booking data
     function populateCalendar() {
       const cells = document.querySelectorAll('.grid-cell');
       
@@ -1506,9 +1749,12 @@
         booking.date !== '2030-01-01'
       );
       
-      if (currentView === 'week' && selectedCounsellor) {
+      // Use stored counsellor name for filtering
+      const storedCounsellor = sessionStorage.getItem('counsellorName');
+      if (currentView === 'week' && (selectedCounsellor || storedCounsellor)) {
+        const counsellorToFilter = selectedCounsellor || storedCounsellor;
         filteredBookings = filteredBookings.filter(booking => 
-          booking.client && booking.client.toLowerCase().includes(selectedCounsellor.toLowerCase())
+          booking.client && booking.client.toLowerCase().includes(counsellorToFilter.toLowerCase())
         );
       }
       
@@ -1572,9 +1818,15 @@
       });
     }
 
-    // Populate week view
+    // UPDATED: Populate week view
     function populateWeekView(filteredBookings) {
-      if (!selectedCounsellor) {
+      const storedCounsellor = sessionStorage.getItem('counsellorName');
+      if (!selectedCounsellor && !storedCounsellor) {
+        // No counsellor selected or stored - show message
+        const grid = document.getElementById('calendarGrid');
+        if (grid && !sessionStorage.getItem('accessToken')) {
+          grid.innerHTML = '<div style="grid-column: 1 / -1; text-align: center; padding: 20px;">Please select a counsellor or use your access token to view bookings.</div>';
+        }
         return;
       }
       
@@ -1626,7 +1878,8 @@
                   <div class="client-name">${bookingCode}${paymentIndicator}</div>
                 `;
                 
-                if (!isWithin24Hours) {
+                // Only allow clicking if we have a valid token
+                if (!isWithin24Hours && sessionStorage.getItem('accessToken')) {
                   cell.addEventListener('click', function() {
                     const bookingCode = booking.bookingId;
                     const room = roomDisplayName;
@@ -1778,15 +2031,19 @@ async function loadBookingDataWithPriority(priorityCounsellor = null) {
       });
     }
 
-    // Update URL with current parameters
+// UPDATED: Update URL with current parameters and preserve token
     function updateURL() {
       const params = new URLSearchParams();
+      
+      // ALWAYS preserve token if present
+      const token = sessionStorage.getItem('accessToken');
+      if (token) {
+        params.set('token', token);
+      }
+      
       params.set('view', currentView);
       
-      if (window.clientId && selectedCounsellor) {
-        params.set('clientId', window.clientId);
-        params.set('name', encodeURIComponent(selectedCounsellor));
-      } else if (selectedCounsellor) {
+      if (selectedCounsellor && !token) {
         params.set('counsellor', encodeURIComponent(selectedCounsellor));
       }
       
