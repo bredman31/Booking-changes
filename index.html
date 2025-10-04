@@ -268,7 +268,6 @@
     }
   </style>
 </head>
-
 <body>
   <!-- ================================ -->
   <!-- SECTION 2: HTML STRUCTURE -->
@@ -286,7 +285,6 @@
       </select>
     </div>
   </div>
-
   <div class="main-container">
     <!-- Left panel: Form for modifying bookings -->
     <div class="form-container">
@@ -430,10 +428,6 @@
       </div>
     </div>
   </div>
-
-  <!-- ================================ -->
-  <!-- SECTION 3: GLOBAL CONFIGURATION -->
-  <!-- ================================ -->
   <!-- ================================ -->
   <!-- SECTION 3: GLOBAL CONFIGURATION -->
   <!-- ================================ -->
@@ -451,7 +445,6 @@
       messagingSenderId: "280166213685",
       appId: "1:280166213685:web:f80b11799f41f5f385297c"
     };
-
     // Initialize Firebase
     firebase.initializeApp(firebaseConfig);
     const database = firebase.database();
@@ -468,35 +461,29 @@
     let currentDate = new Date().toISOString().split('T')[0];
     let currentWeekStart = new Date();
     let selectedCounsellor = '';
-
     // Global variable for client ID from URL
     window.clientId = null;
     // Global variable for booking to modify from URL
     window.bookingToModify = null;
-
     // Set today's date as default
     document.getElementById('dateSelector').value = currentDate;
     
     // Set current week to start on Monday
     const today = new Date();
     const dayOfWeek = today.getDay();
-
     let daysToSubtract;
     if (dayOfWeek === 0) {
       daysToSubtract = 6;
     } else {
       daysToSubtract = dayOfWeek - 1;
     }
-
     currentWeekStart = new Date(today);
     currentWeekStart.setDate(today.getDate() - daysToSubtract);
     currentWeekStart.setHours(0, 0, 0, 0);
   </script>
-
   <!-- ================================ -->
   <!-- SECTION 4: UTILITY FUNCTIONS -->
   <!-- ================================ -->
-
   <script>
     // 24-hour check function
     function isBookingWithin24Hours(bookingDate, bookingTime) {
@@ -520,7 +507,6 @@
       
       return `${date}T${formattedTime}`;
     }
-
     // Get location ID from room name
     function getLocationIdFromRoom(roomName) {
       const henleyRooms = ['Room_1', 'Room 1', 'Room_2', 'Room 2', 'Room_4', 'Room 4', 'Room_6', 'Room 6', 'Room_7', 'Room 7', 'Car Park', 'Henley_Holding_Room'];
@@ -531,7 +517,6 @@
         return '1';
       }
     }
-
     // Get available rooms for a specific location
     function getRoomsForLocation(locationId) {
       if (locationId === '1') {
@@ -541,118 +526,152 @@
       }
       return [];
     }
-
-    // UPDATED: Parse URL parameters with token validation
-    function parseURLParams() {
-      const params = new URLSearchParams(window.location.search);
-      
-      // Check for access token FIRST
-      const accessToken = params.get('token');
-      
-      if (accessToken) {
-        // Store token for this session
-        sessionStorage.setItem('accessToken', accessToken);
-        
-        // Validate token against Firebase
-        validateAccessToken(accessToken).then(isValid => {
-          if (isValid) {
-            processValidSession(params);
-          } else {
-            showAccessDenied();
-          }
-        });
-      } else {
-        // Check if we have a token in session storage
-        const sessionToken = sessionStorage.getItem('accessToken');
-        if (sessionToken) {
-          validateAccessToken(sessionToken).then(isValid => {
-            if (isValid) {
-              processValidSession(params);
-            } else {
-              sessionStorage.removeItem('accessToken');
-              sessionStorage.removeItem('counsellorName');
-              showLimitedAccess();
-            }
-          });
-        } else {
-          // No token - show limited view
-          showLimitedAccess();
-        }
-      }
-    }
-
-    // NEW: Validate access token
+    
+    // FIXED: Token validation function
     async function validateAccessToken(token) {
       try {
-        // Check against Firebase
-        const snapshot = await database.ref('therapist_tokens/' + token).once('value');
-        const tokenData = snapshot.val();
-        
-        if (tokenData && tokenData.active) {
-          // Token is valid - set up user context
-          window.validToken = token;
-          window.clientId = tokenData.clientId;
-          selectedCounsellor = tokenData.name;
-          
-          // Store counsellor name in session for filtering
-          sessionStorage.setItem('counsellorName', tokenData.name);
-          
-          // Hide the counsellor selector
-          const counsellorContainer = document.getElementById('counsellorFilterContainer');
-          if (counsellorContainer) {
-            counsellorContainer.style.display = 'none';
-          }
-          
-          // Update page title
-          document.getElementById('pageTitle').textContent = 
-            `${tokenData.name} - Booking Calendar`;
-          
-          console.log('Token validated for:', tokenData.name);
+        const snap = await database.ref('therapist_tokens/' + token).once('value');
+        const t = snap.val();
+        if (t && t.active) {
+          sessionStorage.setItem('accessToken', token);
+          sessionStorage.setItem('counsellorName', t.name || '');
+          window.clientId = t.clientId || null;
+          selectedCounsellor = t.name || '';
           return true;
         }
-        
         return false;
-      } catch (error) {
-        console.error('Token validation error:', error);
+      } catch (e) {
+        console.error('Token validation error:', e);
         return false;
       }
     }
 
-    // NEW: Process valid session
+    // FIXED: Process valid session function
     function processValidSession(params) {
-      // Continue with other URL parameters
       const view = params.get('view');
       const date = params.get('date');
       const bookingId = params.get('booking');
       const room = params.get('room');
       const time = params.get('time');
       const modify = params.get('modify');
-      
-      if (view && (view === 'day' || view === 'week')) {
-        currentView = view;
-      }
-      
+
+      if (view === 'day' || view === 'week') currentView = view;
+
       if (date) {
         currentDate = date;
-        document.getElementById('dateSelector').value = currentDate;
-        const dateObj = new Date(date + 'T12:00:00');
-        currentWeekStart = getWeekStartDate(dateObj);
+        const dateEl = document.getElementById('dateSelector');
+        if (dateEl) dateEl.value = currentDate;
+        const d = new Date(date + 'T12:00:00');
+        currentWeekStart = getWeekStartDate(d);
       }
-      
+
       if (modify === 'true' && bookingId && room && date && time) {
         window.bookingToModify = {
-          bookingId: bookingId,
+          bookingId,
           room: decodeURIComponent(room),
-          date: date,
+          date,
           time: decodeURIComponent(time)
         };
       }
-      
-      // Initialize with full access
-      initializeWithFullAccess();
+
+      updateViewButtons();
+      updateControlsVisibility();
+      const grid = document.getElementById('calendarGrid');
+      if (grid) {
+        grid.className = `calendar-grid ${currentView}-view`;
+        createCalendarGrid();
+      }
+      initializeData();
     }
 
-    // NEW: Show access denied
+    // FIXED: Parse non-token parameters
+    function parseNonTokenParams(params) {
+      const view = params.get('view');
+      const counsellor = params.get('counsellor');
+      const clientName = params.get('name');
+      const clientId = params.get('clientId');
+      const date = params.get('date');
+      const bookingId = params.get('booking');
+      const room = params.get('room');
+      const time = params.get('time');
+      const modify = params.get('modify');
+
+      if (view === 'day' || view === 'week') currentView = view;
+
+      if (clientId && clientName) {
+        selectedCounsellor = decodeURIComponent(clientName);
+        window.clientId = clientId;
+      } else if (counsellor) {
+        selectedCounsellor = decodeURIComponent(counsellor);
+        window.clientId = null;
+      } else {
+        // last resort: if a previous token set the name, reuse it for rendering
+        const storedName = sessionStorage.getItem('counsellorName');
+        if (storedName) selectedCounsellor = storedName;
+      }
+
+      if (date) {
+        currentDate = date;
+        const dateEl = document.getElementById('dateSelector');
+        if (dateEl) dateEl.value = currentDate;
+        const d = new Date(date + 'T12:00:00');
+        currentWeekStart = getWeekStartDate(d);
+      }
+
+      if (modify === 'true' && bookingId && room && date && time) {
+        window.bookingToModify = {
+          bookingId,
+          room: decodeURIComponent(room),
+          date,
+          time: decodeURIComponent(time)
+        };
+      }
+
+      updateViewButtons();
+      updateControlsVisibility();
+      const grid = document.getElementById('calendarGrid');
+      if (grid) {
+        grid.className = `calendar-grid ${currentView}-view`;
+        createCalendarGrid();
+      }
+      initializeData();
+    }
+
+    // FIXED: Parse URL parameters - token-first and async
+    function parseURLParams() {
+      const params = new URLSearchParams(window.location.search);
+      const tokenFromURL = params.get('token');
+      const tokenFromSession = sessionStorage.getItem('accessToken');
+
+      if (tokenFromURL) {
+        validateAccessToken(tokenFromURL).then(ok => {
+          if (ok) {
+            processValidSession(params);
+            updateURL(); // ensures token stays in URL
+          } else {
+            sessionStorage.removeItem('accessToken');
+            sessionStorage.removeItem('counsellorName');
+            // fall back to non-token params below
+            parseNonTokenParams(params);
+          }
+        });
+      } else if (tokenFromSession) {
+        validateAccessToken(tokenFromSession).then(ok => {
+          if (ok) {
+            processValidSession(params);
+            updateURL();
+          } else {
+            sessionStorage.removeItem('accessToken');
+            sessionStorage.removeItem('counsellorName');
+            parseNonTokenParams(params);
+          }
+        });
+      } else {
+        parseNonTokenParams(params);
+      }
+    }
+    
+    // Show access denied
     function showAccessDenied() {
       document.body.innerHTML = `
         <div style="display: flex; justify-content: center; align-items: center; height: 100vh; font-family: Arial;">
@@ -666,8 +685,8 @@
         </div>
       `;
     }
-
-    // NEW: Show limited access
+    
+    // Show limited access
     function showLimitedAccess() {
       // Allow viewing the calendar but not modifying
       const formContainer = document.querySelector('.form-container');
@@ -695,7 +714,8 @@
       // Still initialize the calendar for viewing
       initializeWithReadOnlyAccess();
     }
-    // NEW: Initialize with full access
+    
+    // Initialize with full access
     function initializeWithFullAccess() {
       console.log('Initializing with full access');
       
@@ -742,7 +762,8 @@
         }, 500);
       }
     }
-    // NEW: Initialize with read-only access
+    
+    // Initialize with read-only access
     function initializeWithReadOnlyAccess() {
       console.log('Initializing with read-only access');
       
@@ -774,9 +795,8 @@
         }
       }, true);
     }
-
     
-    // NEW: Handle form submit with token
+    // Handle form submit with token
     function handleFormSubmit(e) {
       e.preventDefault();
       
@@ -839,7 +859,7 @@
       
       submitBookingChange(changeData);
     }
-
+    
     // Populate room dropdown based on current booking's location
     function populateRoomDropdown(currentRoom) {
       const newRoomInput = document.getElementById('newRoomInput');
@@ -884,7 +904,7 @@
         roomLabel.textContent = `New Room (if changing) - ${locationName} only:`;
       }
     }
-
+    
     // Convert room display name to underscore format for webhook
     function convertRoomNameToUnderscore(roomName) {
       if (roomName && roomName.startsWith('Room ')) {
@@ -892,7 +912,7 @@
       }
       return roomName;
     }
-
+    
     // Get week start date (Monday)
     function getWeekStartDate(date) {
       const result = new Date(date);
@@ -910,7 +930,7 @@
       
       return result;
     }
-
+    
     // Format date as YYYY-MM-DD
     function formatDate(date) {
       const year = date.getFullYear();
@@ -918,7 +938,7 @@
       const day = String(date.getDate()).padStart(2, '0');
       return `${year}-${month}-${day}`;
     }
-
+    
     // Get room display name from booking data
     function getRoomDisplayName(booking) {
       if (booking.room === 'Room_1' || booking.room === '1') return 'Room 1';
@@ -930,7 +950,7 @@
       if (booking.location && booking.location.toLowerCase().includes('online')) return 'Online';
       return booking.room || 'Unknown';
     }
-
+    
     // Get room mapping for CSS classes
     function getRoomMapping(booking) {
       let roomNumber, roomClass;
@@ -1131,7 +1151,7 @@
         within24Hours: isWithin24Hours
       });
     }
-
+    
     // Clear the booking form
     function clearBookingForm() {
       document.getElementById('currentRoomDisplay').textContent = '';
@@ -1173,7 +1193,7 @@
       
       document.getElementById('submitChangeBtn').textContent = 'Submit Change Request';
     }
-
+    
     // Handle booking cancellation
     async function cancelBooking() {
       const bookingCode = document.getElementById('bookingCodeInput').value;
@@ -1306,7 +1326,7 @@
         cancelStatusDiv.textContent = `Error: ${error.message}`;
       }
     }
-
+    
     // Submit booking change request
     async function submitBookingChange(changeData) {
       const statusDiv = document.getElementById('submitStatus');
@@ -1420,7 +1440,7 @@
         statusDiv.textContent = `Error: ${error.message}`;
       }
     }
-
+    
     // Fallback counsellor ID lookup
     async function lookupCounsellorId(counsellorName) {
       try {
@@ -1441,7 +1461,7 @@
         return null;
       }
     }
-
+    
     // Log change to Google Sheets
     async function logChangeToGoogleSheets(changeData, webhookPayload) {
       try {
@@ -1482,8 +1502,7 @@
       }
     }
   </script>
-
- <!-- ================================ -->
+  <!-- ================================ -->
   <!-- SECTION 6: CALENDAR FUNCTIONS -->
   <!-- ================================ -->
   <script>
@@ -1540,7 +1559,7 @@
       populateCalendar();
       updateURL(); // This now preserves the token
     }
-
+    
     // Filter by counsellor
     function filterByCounsellor() {
       selectedCounsellor = document.getElementById('counsellorSelect').value;
@@ -1548,7 +1567,7 @@
       populateCalendar();
       updateURL();
     }
-
+    
     // Update counsellor info display
     function updateCounsellorInfo() {
       const infoDiv = document.getElementById('counsellorInfo');
@@ -1600,7 +1619,7 @@
         }
       }
     }
-
+    
     // Populate counsellor dropdown
     function populateCounsellorDropdown() {
       const select = document.getElementById('counsellorSelect');
@@ -1624,7 +1643,7 @@
         select.appendChild(option);
       });
     }
-
+    
     // UPDATED: Change week navigation
     function changeWeek(direction) {
       currentWeekStart.setDate(currentWeekStart.getDate() + (direction * 7));
@@ -1633,7 +1652,7 @@
       populateCalendar();
       updateURL(); // This now preserves the token
     }
-
+    
     // Update week display text
     function updateWeekDisplay() {
       const weekEnd = new Date(currentWeekStart);
@@ -1652,7 +1671,7 @@
       
       document.getElementById('weekDisplay').textContent = `${startStr} - ${endStr}`;
     }
-
+    
     // Create calendar grid based on current view
     function createCalendarGrid() {
       const grid = document.getElementById("calendarGrid");
@@ -1670,7 +1689,7 @@
         createWeekGrid(grid);
       }
     }
-
+    
     // Create day view grid
     function createDayGrid(grid) {
       const emptyCell = document.createElement("div");
@@ -1708,7 +1727,7 @@
         });
       });
     }
-
+    
     // Create week view grid
     function createWeekGrid(grid) {
       const emptyCell = document.createElement("div");
@@ -1746,7 +1765,7 @@
       
       updateWeekDisplay();
     }
-
+    
     // UPDATED: Populate calendar with booking data
     function populateCalendar() {
       const cells = document.querySelectorAll('.grid-cell');
@@ -1755,7 +1774,7 @@
         cell.innerHTML = '';
         cell.classList.remove('booked', 'room-1', 'room-2', 'room-4', 'room-6', 'room-7', 'online', 'selected-booking', 'past-booking');
       });
-
+      
       // Filter out holding room bookings from regular calendar display
       let filteredBookings = bookingData.filter(booking => 
         booking.room !== 'Henley_Holding_Room' && 
@@ -1778,7 +1797,7 @@
         populateWeekView(filteredBookings);
       }
     }
-
+    
     // Populate day view
     function populateDayView(filteredBookings) {
       const selectedDate = document.getElementById('dateSelector').value;
@@ -1831,23 +1850,15 @@
         }
       });
     }
-
-   // UPDATED: Populate week view
+    
+    // FIXED: Populate week view with token persistence
     function populateWeekView(filteredBookings) {
-      // Auto-set counsellor from storage if we have a token
-      const storedCounsellor = sessionStorage.getItem('counsellorName');
-      if (!selectedCounsellor && storedCounsellor) {
-        selectedCounsellor = storedCounsellor;
+      // if a token set the name earlier, reuse it
+      if (!selectedCounsellor) {
+        const stored = sessionStorage.getItem('counsellorName');
+        if (stored) selectedCounsellor = stored;
       }
-      
-      if (!selectedCounsellor && !storedCounsellor) {
-        // No counsellor selected or stored - show message only if no token
-        const grid = document.getElementById('calendarGrid');
-        if (grid && !sessionStorage.getItem('accessToken')) {
-          grid.innerHTML = '<div style="grid-column: 1 / -1; text-align: center; padding: 20px;">Please select a counsellor or use your access token to view bookings.</div>';
-        }
-        return;
-      }
+      if (!selectedCounsellor) return;
       
       filteredBookings.forEach(booking => {
         const bookingDate = new Date(booking.date + 'T12:00:00');
@@ -1923,8 +1934,7 @@
       });
     }
   </script>
-
-<!-- ================================ -->
+  <!-- ================================ -->
   <!-- SECTION 7: DATA MANAGEMENT FUNCTIONS -->
   <!-- ================================ -->
   <script>
@@ -2011,13 +2021,13 @@
         return Promise.resolve();
       }
     }
-
+    
     // Load booking data
     async function loadBookingData() {
       const priorityCounsellor = selectedCounsellor || sessionStorage.getItem('counsellorName') || null;
       return loadBookingDataWithPriority(priorityCounsellor);
     }
-
+    
     // Refresh data manually
     function refreshData() {
       console.log('Manual refresh triggered');
@@ -2033,22 +2043,30 @@
         populateCalendar();
       });
     }
-
-// UPDATED: Update URL with current parameters and preserve token
+    
+    // FIXED: Update URL with token preservation
     function updateURL() {
+      // start from current query so we don't drop unknown params
+      const current = new URLSearchParams(window.location.search);
+      const existingToken = current.get('token');
+      const sessionToken = sessionStorage.getItem('accessToken');
       const params = new URLSearchParams();
       
-      // ALWAYS preserve token - check both sessionStorage AND current URL
-      const existingToken = new URLSearchParams(window.location.search).get('token');
-      const token = sessionStorage.getItem('accessToken') || existingToken;
-      if (token) {
-        params.set('token', token);
-      }
+      const token = sessionToken || existingToken;
+      if (token) params.set('token', token);
       
       params.set('view', currentView);
       
+      if (window.clientId && (selectedCounsellor || sessionStorage.getItem('counsellorName'))) {
+        params.set('clientId', window.clientId);
+        params.set('name', encodeURIComponent(selectedCounsellor || sessionStorage.getItem('counsellorName') || ''));
+      } else if (selectedCounsellor) {
+        params.set('counsellor', encodeURIComponent(selectedCounsellor));
+      }
+      
       if (currentView === 'day') {
-        params.set('date', document.getElementById('dateSelector').value);
+        const ds = document.getElementById('dateSelector');
+        params.set('date', ds ? ds.value : currentDate);
       } else {
         params.set('date', formatDate(currentWeekStart));
       }
@@ -2056,7 +2074,7 @@
       const newURL = window.location.pathname + '?' + params.toString();
       window.history.replaceState({}, '', newURL);
     }
-
+    
     // Initialize view buttons
     function updateViewButtons() {
       const dayBtn = document.querySelector('[onclick="switchView(\'day\')"]');
@@ -2067,7 +2085,7 @@
         weekBtn.classList.toggle('active', currentView === 'week');
       }
     }
-
+    
     // Update controls visibility based on view
     function updateControlsVisibility() {
       const dayControls = document.getElementById('dayControls');
@@ -2084,7 +2102,7 @@
         counsellorContainer.style.display = 'none';
       }
     }
-
+    
     // Initialize data
     function initializeData() {
       const priorityCounsellor = selectedCounsellor || sessionStorage.getItem('counsellorName') || null;
@@ -2092,16 +2110,14 @@
         populateCalendar();
       });
     }
-
+    
     // Initialize when DOM is ready - CORRECTED VERSION
     document.addEventListener('DOMContentLoaded', function() {
       console.log('DOM loaded, starting initialization...');
       
       // Call parseURLParams which will handle the rest of initialization
-      // parseURLParams is in Section 4 and will call either:
-      // - initializeWithFullAccess() if token is valid
-      // - initializeWithReadOnlyAccess() if no token/invalid token
-      
       parseURLParams(); // This handles everything now
     });
   </script>
+</body>
+</html>
