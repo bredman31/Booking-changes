@@ -695,9 +695,11 @@
       // Still initialize the calendar for viewing
       initializeWithReadOnlyAccess();
     }
-
     // NEW: Initialize with full access
     function initializeWithFullAccess() {
+      console.log('Initializing with full access');
+      
+      // Set up view and controls
       updateViewButtons();
       updateControlsVisibility();
       
@@ -707,6 +709,7 @@
         createCalendarGrid();
       }
       
+      // Load data
       initializeData();
       
       // Enable form submission
@@ -715,11 +718,11 @@
         changeForm.addEventListener('submit', handleFormSubmit);
       }
       
-      // Set up date selector
+      // Set up date selector with token preservation
       document.getElementById('dateSelector').addEventListener('change', function() {
         currentDate = this.value;
         populateCalendar();
-        updateURL();
+        updateURL(); // This will preserve the token
       });
       
       // Handle auto-fill from URL
@@ -739,9 +742,11 @@
         }, 500);
       }
     }
-
     // NEW: Initialize with read-only access
     function initializeWithReadOnlyAccess() {
+      console.log('Initializing with read-only access');
+      
+      // Set up view and controls
       updateViewButtons();
       updateControlsVisibility();
       
@@ -751,17 +756,26 @@
         createCalendarGrid();
       }
       
+      // Load data (read-only)
       initializeData();
+      
+      // Set up date selector (still allow navigation)
+      document.getElementById('dateSelector').addEventListener('change', function() {
+        currentDate = this.value;
+        populateCalendar();
+        updateURL();
+      });
       
       // Disable clicking on bookings
       document.addEventListener('click', function(e) {
-        if (e.target.closest('.grid-cell')) {
+        if (e.target.closest('.grid-cell.booked')) {
           e.preventDefault();
           e.stopPropagation();
         }
       }, true);
     }
 
+    
     // NEW: Handle form submit with token
     function handleFormSubmit(e) {
       e.preventDefault();
@@ -1905,113 +1919,97 @@
     }
   </script>
 
-  <!-- ================================ -->
+<!-- ================================ -->
   <!-- SECTION 7: DATA MANAGEMENT FUNCTIONS -->
   <!-- ================================ -->
   <script>
     // Load booking data with priority for specific counsellor
-// REPLACE THIS ENTIRE FUNCTION
-async function loadBookingDataWithPriority(priorityCounsellor = null) {
-  const statusElement = document.getElementById('dataStatus');
-  const startTime = Date.now(); // Track load time
-  
-  try {
-    if (statusElement) statusElement.textContent = 'Loading booking data...';
-    
-    // Get data from Firebase instead of Apps Script
-    const snapshot = await database.ref('bookings').once('value');
-    const jsonData = snapshot.val() || [];
-    
-    // Convert to array if needed
-    const bookingArray = Array.isArray(jsonData) ? jsonData : Object.values(jsonData);
-    
-    // Separate holding room bookings from regular bookings
-    holdingRoomBookings = bookingArray.filter(booking => 
-      booking.room === 'Henley_Holding_Room' || 
-      booking.room === '18' ||
-      booking.date === '2030-01-01'
-    );
-    
-    bookingData = bookingArray.filter(booking => 
-      booking.room !== 'Henley_Holding_Room' && 
-      booking.room !== '18' &&
-      booking.date !== '2030-01-01'
-    );
-    
-    console.log(`Firebase: Loaded ${bookingData.length} bookings in ${Date.now() - startTime}ms`);
-    
-    updateHoldingRoomCount();
-    updateCounsellorInfo();
-    
-    if (statusElement) {
-      let statusText = `Loaded ${bookingData.length} bookings`;
-      if (holdingRoomBookings.length > 0) {
-        statusText += ` (${holdingRoomBookings.length} in holding room)`;
+    async function loadBookingDataWithPriority(priorityCounsellor = null) {
+      const statusElement = document.getElementById('dataStatus');
+      const startTime = Date.now();
+      
+      try {
+        if (statusElement) statusElement.textContent = 'Loading booking data...';
+        
+        // Get data from Firebase
+        const snapshot = await database.ref('bookings').once('value');
+        const jsonData = snapshot.val() || [];
+        
+        // Convert to array if needed
+        const bookingArray = Array.isArray(jsonData) ? jsonData : Object.values(jsonData);
+        
+        // Separate holding room bookings from regular bookings
+        holdingRoomBookings = bookingArray.filter(booking => 
+          booking.room === 'Henley_Holding_Room' || 
+          booking.room === '18' ||
+          booking.date === '2030-01-01'
+        );
+        
+        bookingData = bookingArray.filter(booking => 
+          booking.room !== 'Henley_Holding_Room' && 
+          booking.room !== '18' &&
+          booking.date !== '2030-01-01'
+        );
+        
+        console.log(`Firebase: Loaded ${bookingData.length} bookings in ${Date.now() - startTime}ms`);
+        
+        updateHoldingRoomCount();
+        updateCounsellorInfo();
+        
+        if (statusElement) {
+          let statusText = `Loaded ${bookingData.length} bookings`;
+          if (holdingRoomBookings.length > 0) {
+            statusText += ` (${holdingRoomBookings.length} in holding room)`;
+          }
+          if (priorityCounsellor) {
+            const priorityCount = bookingData.filter(b => b.client === priorityCounsellor).length;
+            statusText += ` - ${priorityCount} for ${priorityCounsellor}`;
+          }
+          statusElement.textContent = statusText;
+          statusElement.style.color = '#28a745';
+          
+          setTimeout(() => {
+            statusElement.textContent = '';
+          }, 3000);
+        }
+        
+        // Set up real-time listener for updates
+        database.ref('bookings').on('value', (snapshot) => {
+          const updatedData = snapshot.val() || [];
+          const updatedArray = Array.isArray(updatedData) ? updatedData : Object.values(updatedData);
+          
+          // Update local data
+          holdingRoomBookings = updatedArray.filter(booking => 
+            booking.room === 'Henley_Holding_Room' || 
+            booking.room === '18' ||
+            booking.date === '2030-01-01'
+          );
+          
+          bookingData = updatedArray.filter(booking => 
+            booking.room !== 'Henley_Holding_Room' && 
+            booking.room !== '18' &&
+            booking.date !== '2030-01-01'
+          );
+          
+          updateHoldingRoomCount();
+          populateCalendar();
+          console.log('Data updated in real-time!');
+        });
+        
+        return Promise.resolve();
+        
+      } catch (error) {
+        console.error('Firebase error:', error);
+        bookingData = [];
+        holdingRoomBookings = [];
+        updateHoldingRoomCount();
+        return Promise.resolve();
       }
-      if (priorityCounsellor) {
-        const priorityCount = bookingData.filter(b => b.client === priorityCounsellor).length;
-        statusText += ` - ${priorityCount} for ${priorityCounsellor}`;
-      }
-      statusElement.textContent = statusText;
-      statusElement.style.color = '#28a745';
-      
-      setTimeout(() => {
-        statusElement.textContent = '';
-      }, 3000);
     }
-    
-    // Set up real-time listener for updates
-    database.ref('bookings').on('value', (snapshot) => {
-      const updatedData = snapshot.val() || [];
-      const updatedArray = Array.isArray(updatedData) ? updatedData : Object.values(updatedData);
-      
-      // Update local data
-      holdingRoomBookings = updatedArray.filter(booking => 
-        booking.room === 'Henley_Holding_Room' || 
-        booking.room === '18' ||
-        booking.date === '2030-01-01'
-      );
-      
-      bookingData = updatedArray.filter(booking => 
-        booking.room !== 'Henley_Holding_Room' && 
-        booking.room !== '18' &&
-        booking.date !== '2030-01-01'
-      );
-      
-      updateHoldingRoomCount();
-      populateCalendar();
-      console.log('Data updated in real-time!');
-    });
-    
-    return Promise.resolve();
-    
-  } catch (error) {
-    console.error('Firebase error:', error);
-    // Fallback to original Apps Script if Firebase fails
-    console.log('Falling back to Apps Script...');
-    
-    // FALLBACK CODE - uses your original SCRIPT_URL
-    try {
-      const response = await fetch(SCRIPT_URL);
-      if (!response.ok) throw new Error(`Failed: ${response.statusText}`);
-      
-      const jsonData = await response.json();
-      // ... process data as before
-      
-    } catch (fallbackError) {
-      console.error('Both Firebase and Apps Script failed:', fallbackError);
-      bookingData = [];
-      holdingRoomBookings = [];
-    }
-    
-    updateHoldingRoomCount();
-    return Promise.resolve();
-  }
-}
 
     // Load booking data
     async function loadBookingData() {
-      const priorityCounsellor = selectedCounsellor || null;
+      const priorityCounsellor = selectedCounsellor || sessionStorage.getItem('counsellorName') || null;
       return loadBookingDataWithPriority(priorityCounsellor);
     }
 
@@ -2024,14 +2022,14 @@ async function loadBookingDataWithPriority(priorityCounsellor = null) {
         console.warn('Could not clear cache:', e);
       }
       
-      const priorityCounsellor = selectedCounsellor || null;
+      const priorityCounsellor = selectedCounsellor || sessionStorage.getItem('counsellorName') || null;
       loadBookingDataWithPriority(priorityCounsellor).then(() => {
         console.log('Refresh complete, repopulating calendar');
         populateCalendar();
       });
     }
 
-// UPDATED: Update URL with current parameters and preserve token
+    // UPDATED: Update URL with current parameters and preserve token
     function updateURL() {
       const params = new URLSearchParams();
       
@@ -2077,158 +2075,31 @@ async function loadBookingDataWithPriority(priorityCounsellor = null) {
       if (dayControls) dayControls.classList.toggle('hidden', currentView !== 'day');
       if (weekControls) weekControls.classList.toggle('hidden', currentView !== 'week');
       
-      if (counsellorContainer && !window.clientId) {
+      // Hide counsellor selector if we have a token
+      if (counsellorContainer && !sessionStorage.getItem('accessToken')) {
         counsellorContainer.classList.toggle('hidden', false);
-      } else if (counsellorContainer && window.clientId) {
-        counsellorContainer.classList.toggle('hidden', true);
+      } else if (counsellorContainer) {
+        counsellorContainer.style.display = 'none';
       }
     }
 
     // Initialize data
     function initializeData() {
-      try {
-        const cachedData = sessionStorage.getItem('bookingDataCache');
-        if (cachedData) {
-          const parsedData = JSON.parse(cachedData);
-          if (parsedData.expiry > Date.now()) {
-            const allData = parsedData.data;
-            
-            // Separate holding room bookings from regular bookings
-            holdingRoomBookings = allData.filter(booking => 
-              booking.room === 'Henley_Holding_Room' || 
-              booking.room === '18' ||
-              booking.date === '2030-01-01'
-            );
-            
-            bookingData = allData.filter(booking => 
-              booking.room !== 'Henley_Holding_Room' && 
-              booking.room !== '18' &&
-              booking.date !== '2030-01-01'
-            );
-            
-            updateHoldingRoomCount();
-            // No dropdown to populate anymore
-            updateCounsellorInfo();
-            populateCalendar();
-            return;
-          }
-        }
-      } catch (e) {
-        console.warn('Could not load cached data:', e);
-      }
-      
-      const priorityCounsellor = selectedCounsellor || null;
+      const priorityCounsellor = selectedCounsellor || sessionStorage.getItem('counsellorName') || null;
       loadBookingDataWithPriority(priorityCounsellor).then(() => {
         populateCalendar();
       });
     }
 
-    // Initialize when DOM is ready
+    // Initialize when DOM is ready - CORRECTED VERSION
     document.addEventListener('DOMContentLoaded', function() {
-      console.log('DOM loaded, initializing...');
+      console.log('DOM loaded, starting initialization...');
       
-      setTimeout(() => {
-        parseURLParams();
-        
-        updateViewButtons();
-        updateControlsVisibility();
-        
-        const grid = document.getElementById('calendarGrid');
-        if (grid) {
-          grid.className = `calendar-grid ${currentView}-view`;
-          createCalendarGrid();
-        } else {
-          console.error('Calendar grid element not found!');
-        }
-        
-        initializeData();
-        
-        // Set up booking change form handler
-        const changeForm = document.getElementById('bookingChangeForm');
-        if (changeForm) {
-          changeForm.addEventListener('submit', function(e) {
-            e.preventDefault();
-            
-            const isHoldingRoom = document.getElementById('isHoldingRoomBooking').value === 'true';
-            
-            const changeData = {
-              originalBookingCode: document.getElementById('bookingCodeInput').value,
-              originalRoom: document.getElementById('currentRoomInput').value,
-              originalDate: document.getElementById('currentDateInput').value,
-              originalTime: document.getElementById('currentTimeInput').value,
-              newRoom: document.getElementById('newRoomInput').value,
-              newDate: document.getElementById('newDateInput').value,
-              newTime: document.getElementById('newTimeInput').value,
-              counsellorName: selectedCounsellor
-            };
-            
-            // Validation for holding room bookings
-            if (isHoldingRoom) {
-              if (!changeData.newRoom || !changeData.newDate || !changeData.newTime) {
-                alert('Please select a room, date, and time for the booking.');
-                return;
-              }
-            } else {
-              // Normal booking validation
-              if (!changeData.newRoom && !changeData.newDate && !changeData.newTime) {
-                alert('Please specify what changes you would like to make.');
-                return;
-              }
-              
-              if (isBookingWithin24Hours(changeData.originalDate, changeData.originalTime)) {
-                alert('This booking is within 24 hours and cannot be modified online. Please contact the centre directly.');
-                return;
-              }
-              
-              if (changeData.newRoom) {
-                const originalLocationId = getLocationIdFromRoom(changeData.originalRoom);
-                const requestedLocationId = getLocationIdFromRoom(changeData.newRoom);
-                
-                if (originalLocationId !== requestedLocationId) {
-                  const originalLocation = originalLocationId === '1' ? 'Buckhurst Hill' : 'Henley';
-                  const requestedLocation = requestedLocationId === '1' ? 'Buckhurst Hill' : 'Henley';
-                  
-                  alert(`Cannot change locations. Your current booking is in ${originalLocation}, but you selected a room in ${requestedLocation}. Please choose a room in the same location.`);
-                  return;
-                }
-              }
-            }
-            
-            if (!changeData.counsellorName) {
-              alert('Please select a counsellor first.');
-              return;
-            }
-            
-            submitBookingChange(changeData);
-          });
-        }
-        
-        document.getElementById('dateSelector').addEventListener('change', function() {
-          currentDate = this.value;
-          console.log('Date changed to:', currentDate);
-          populateCalendar();
-          updateURL();
-        });
-        
-        if (window.bookingToModify) {
-          console.log('Auto-filling form from URL parameters:', window.bookingToModify);
-          
-          prefillForm(
-            window.bookingToModify.bookingId,
-            window.bookingToModify.room,
-            window.bookingToModify.date,
-            window.bookingToModify.time
-          );
-          
-          setTimeout(() => {
-            const formContainer = document.querySelector('.form-container');
-            if (formContainer) {
-              formContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
-            }
-          }, 500);
-        }
-      }, 100);
+      // Call parseURLParams which will handle the rest of initialization
+      // parseURLParams is in Section 4 and will call either:
+      // - initializeWithFullAccess() if token is valid
+      // - initializeWithReadOnlyAccess() if no token/invalid token
+      
+      parseURLParams(); // This handles everything now
     });
   </script>
-</body>
-</html>
