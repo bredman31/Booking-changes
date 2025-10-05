@@ -527,27 +527,52 @@
       return [];
     }
     
-    // FIXED: Token validation function
+    // FIXED: Token validation function WITH DEBUGGING
     async function validateAccessToken(token) {
+      console.log('🔐 validateAccessToken called with token:', token);
+      
       try {
+        console.log('📡 Checking Firebase for token:', token);
         const snap = await database.ref('therapist_tokens/' + token).once('value');
         const t = snap.val();
+        
+        console.log('📦 Firebase returned:', t);
+        
         if (t && t.active) {
+          console.log('✅ Token is valid and active');
+          console.log('👤 Counsellor name:', t.name);
+          console.log('🆔 Client ID:', t.clientId);
+          
           sessionStorage.setItem('accessToken', token);
           sessionStorage.setItem('counsellorName', t.name || '');
           window.clientId = t.clientId || null;
           selectedCounsellor = t.name || '';
+          
+          console.log('💾 Stored in sessionStorage:');
+          console.log('  - accessToken:', sessionStorage.getItem('accessToken'));
+          console.log('  - counsellorName:', sessionStorage.getItem('counsellorName'));
+          console.log('  - selectedCounsellor global:', selectedCounsellor);
+          console.log('  - window.clientId:', window.clientId);
+          
           return true;
+        } else {
+          console.log('❌ Token invalid or inactive');
+          console.log('  - Token data exists?', !!t);
+          console.log('  - Token active?', t?.active);
         }
         return false;
       } catch (e) {
-        console.error('Token validation error:', e);
+        console.error('🚨 Token validation error:', e);
+        console.error('  - Error message:', e.message);
+        console.error('  - Stack:', e.stack);
         return false;
       }
     }
 
-    // FIXED: Process valid session function
+    // FIXED: Process valid session function WITH DEBUGGING
     function processValidSession(params) {
+      console.log('🎯 processValidSession called with params:', Object.fromEntries(params));
+      
       const view = params.get('view');
       const date = params.get('date');
       const bookingId = params.get('booking');
@@ -555,14 +580,26 @@
       const time = params.get('time');
       const modify = params.get('modify');
 
-      if (view === 'day' || view === 'week') currentView = view;
+      console.log('📋 Extracted params:');
+      console.log('  - view:', view);
+      console.log('  - date:', date);
+      console.log('  - modify:', modify);
+
+      if (view === 'day' || view === 'week') {
+        currentView = view;
+        console.log('  - Set currentView to:', currentView);
+      }
 
       if (date) {
         currentDate = date;
         const dateEl = document.getElementById('dateSelector');
-        if (dateEl) dateEl.value = currentDate;
+        if (dateEl) {
+          dateEl.value = currentDate;
+          console.log('  - Set date selector to:', currentDate);
+        }
         const d = new Date(date + 'T12:00:00');
         currentWeekStart = getWeekStartDate(d);
+        console.log('  - Set week start to:', formatDate(currentWeekStart));
       }
 
       if (modify === 'true' && bookingId && room && date && time) {
@@ -572,8 +609,10 @@
           date,
           time: decodeURIComponent(time)
         };
+        console.log('  - Set booking to modify:', window.bookingToModify);
       }
 
+      console.log('🚀 Calling initializeWithFullAccess...');
       // Initialize with full access when token is valid
       initializeWithFullAccess();
     }
