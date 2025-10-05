@@ -526,6 +526,25 @@
       }
       return [];
     }
+
+// Restore session state from storage - call this at start of any navigation
+function restoreSessionState() {
+  const token = sessionStorage.getItem('accessToken');
+  const counsellorName = sessionStorage.getItem('counsellorName');
+  
+  if (token && counsellorName && !selectedCounsellor) {
+    selectedCounsellor = counsellorName;
+    console.log('Session restored: counsellor =', counsellorName);
+    return true;
+  }
+  
+  if (token && !counsellorName) {
+    console.warn('Token exists but no counsellor name found');
+    return false;
+  }
+  
+  return !!token;
+}
     
     // FIXED: Token validation function WITH DEBUGGING
     async function validateAccessToken(token) {
@@ -569,58 +588,53 @@
       }
     }
 
-javascriptfunction processValidSession(params) {
-  console.log('🎯 processValidSession called with params:', Object.fromEntries(params));
-  
-  // CRITICAL FIX: Restore counsellor name from sessionStorage
-  const storedCounsellor = sessionStorage.getItem('counsellorName');
-  if (storedCounsellor && !selectedCounsellor) {
-    selectedCounsellor = storedCounsellor;
-    console.log('  - Restored selectedCounsellor from session:', selectedCounsellor);
-  }
-  
-  const view = params.get('view');
-  const date = params.get('date');
-  const bookingId = params.get('booking');
-  const room = params.get('room');
-  const time = params.get('time');
-  const modify = params.get('modify');
+    // FIXED: Process valid session function WITH DEBUGGING
+    function processValidSession(params) {
+      console.log('🎯 processValidSession called with params:', Object.fromEntries(params));
+      
+      const view = params.get('view');
+      const date = params.get('date');
+      const bookingId = params.get('booking');
+      const room = params.get('room');
+      const time = params.get('time');
+      const modify = params.get('modify');
 
-  console.log('📋 Extracted params:');
-  console.log('  - view:', view);
-  console.log('  - date:', date);
-  console.log('  - modify:', modify);
+      console.log('📋 Extracted params:');
+      console.log('  - view:', view);
+      console.log('  - date:', date);
+      console.log('  - modify:', modify);
 
-  if (view === 'day' || view === 'week') {
-    currentView = view;
-    console.log('  - Set currentView to:', currentView);
-  }
+      if (view === 'day' || view === 'week') {
+        currentView = view;
+        console.log('  - Set currentView to:', currentView);
+      }
 
-  if (date) {
-    currentDate = date;
-    const dateEl = document.getElementById('dateSelector');
-    if (dateEl) {
-      dateEl.value = currentDate;
-      console.log('  - Set date selector to:', currentDate);
+      if (date) {
+        currentDate = date;
+        const dateEl = document.getElementById('dateSelector');
+        if (dateEl) {
+          dateEl.value = currentDate;
+          console.log('  - Set date selector to:', currentDate);
+        }
+        const d = new Date(date + 'T12:00:00');
+        currentWeekStart = getWeekStartDate(d);
+        console.log('  - Set week start to:', formatDate(currentWeekStart));
+      }
+
+      if (modify === 'true' && bookingId && room && date && time) {
+        window.bookingToModify = {
+          bookingId,
+          room: decodeURIComponent(room),
+          date,
+          time: decodeURIComponent(time)
+        };
+        console.log('  - Set booking to modify:', window.bookingToModify);
+      }
+
+      console.log('🚀 Calling initializeWithFullAccess...');
+      // Initialize with full access when token is valid
+      initializeWithFullAccess();
     }
-    const d = new Date(date + 'T12:00:00');
-    currentWeekStart = getWeekStartDate(d);
-    console.log('  - Set week start to:', formatDate(currentWeekStart));
-  }
-
-  if (modify === 'true' && bookingId && room && date && time) {
-    window.bookingToModify = {
-      bookingId,
-      room: decodeURIComponent(room),
-      date,
-      time: decodeURIComponent(time)
-    };
-    console.log('  - Set booking to modify:', window.bookingToModify);
-  }
-
-  console.log('🚀 Calling initializeWithFullAccess...');
-  initializeWithFullAccess();
-}
 
     // Parse non-token parameters
     function parseNonTokenParams(params) {
@@ -1701,6 +1715,7 @@ javascriptfunction processValidSession(params) {
     
     // UPDATED: Switch between day and week views
     function switchView(view) {
+        restoreSessionState(); 
       currentView = view;
       
       const buttons = document.querySelectorAll('.view-btn');
@@ -1739,6 +1754,7 @@ javascriptfunction processValidSession(params) {
     
     // Filter by counsellor
     function filterByCounsellor() {
+        restoreSessionState(); 
       selectedCounsellor = document.getElementById('counsellorSelect').value;
       updateCounsellorInfo();
       populateCalendar();
@@ -1823,6 +1839,7 @@ javascriptfunction processValidSession(params) {
     
     // UPDATED: Change week navigation
     function changeWeek(direction) {
+        restoreSessionState(); 
       currentWeekStart.setDate(currentWeekStart.getDate() + (direction * 7));
       updateWeekDisplay();
       createCalendarGrid();
@@ -1945,16 +1962,8 @@ javascriptfunction processValidSession(params) {
     
     // UPDATED: Populate calendar with booking data
     function populateCalendar() {
-  // Safety check: restore counsellor from sessionStorage if lost
-  if (!selectedCounsellor) {
-    const stored = sessionStorage.getItem('counsellorName');
-    if (stored) {
-      selectedCounsellor = stored;
-      console.log('Restored selectedCounsellor in populateCalendar:', selectedCounsellor);
-    }
-  }
-  
-  const cells = document.querySelectorAll('.grid-cell');
+        restoreSessionState(); 
+      const cells = document.querySelectorAll('.grid-cell');
       
       cells.forEach(cell => {
         cell.innerHTML = '';
