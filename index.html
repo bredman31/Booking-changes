@@ -454,7 +454,7 @@
     firebase.initializeApp(firebaseConfig);
     const database = firebase.database();
     
-    // Constants for rooms and business hours
+    // Constants for rooms and business hours - ADDED ROOM 5
     const rooms = ["Room 1", "Room 2", "Room 4", "Room 5", "Room 6", "Room 7", "Online"];
     const businessHours = Array.from({length: 13}, (_, i) => `${String(i + 8).padStart(2, '0')}:00`);
     const weekDays = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
@@ -512,7 +512,7 @@
       
       return `${date}T${formattedTime}`;
     }
-    // Get location ID from room name
+    // Get location ID from room name - ADDED ROOM 5
     function getLocationIdFromRoom(roomName) {
       const henleyRooms = ['Room_1', 'Room 1', 'Room_2', 'Room 2', 'Room_4', 'Room 4', 'Room_5', 'Room 5', 'Room_6', 'Room 6', 'Room_7', 'Room 7', 'Car Park', 'Henley_Holding_Room'];
       
@@ -522,7 +522,7 @@
         return '1';
       }
     }
-    // Get available rooms for a specific location
+    // Get available rooms for a specific location - ADDED ROOM 5
     function getRoomsForLocation(locationId) {
       if (locationId === '1') {
         return ['Online'];
@@ -911,7 +911,7 @@ function restoreSessionState() {
       initializeWithReadOnlyAccess();
     }
     
-    // Populate room dropdown based on current booking's location
+    // Populate room dropdown based on current booking's location - ADDED ROOM 5
     function populateRoomDropdown(currentRoom) {
       const newRoomInput = document.getElementById('newRoomInput');
       const roomLabel = document.getElementById('roomChangeLabel');
@@ -990,7 +990,7 @@ function restoreSessionState() {
       return `${year}-${month}-${day}`;
     }
     
-    // Get room display name from booking data
+    // Get room display name from booking data - ADDED ROOM 5
     function getRoomDisplayName(booking) {
       if (booking.room === 'Room_1' || booking.room === '1') return 'Room 1';
       if (booking.room === 'Room_2' || booking.room === '2') return 'Room 2';
@@ -1003,7 +1003,7 @@ function restoreSessionState() {
       return booking.room || 'Unknown';
     }
     
-    // Get room mapping for CSS classes
+    // Get room mapping for CSS classes - ADDED ROOM 5
     function getRoomMapping(booking) {
       let roomNumber, roomClass;
       
@@ -1061,7 +1061,7 @@ function restoreSessionState() {
       
       // Update displays
       document.getElementById('currentRoomDisplay').textContent = 'Holding Room';
-      document.getElementById('bookingCodeDisplay').textContent = selectedBooking.bookingId || '';
+      document.getElementById('bookingCodeDisplay').textContent = selectedBooking.bookingId || selectedBooking.code || '';
       document.getElementById('clientNameDisplay').textContent = selectedBooking.client || '';
       
       // Hide cancel button and divider for holding room bookings
@@ -1070,8 +1070,8 @@ function restoreSessionState() {
       document.getElementById('changeRequestHeader').classList.add('hidden');
       document.getElementById('holdingMoveHeader').classList.remove('hidden');
       
-      // Update hidden inputs - FIXED: Only use bookingId
-      document.getElementById('bookingCodeInput').value = selectedBooking.bookingId || '';
+      // Update hidden inputs - keep fallback for display, but we'll fix in webhook
+      document.getElementById('bookingCodeInput').value = selectedBooking.bookingId || selectedBooking.code || '';
       document.getElementById('currentRoomInput').value = 'Henley_Holding_Room';
       document.getElementById('currentDateInput').value = '2030-01-01';
       document.getElementById('currentTimeInput').value = selectedBooking.start || '09:00';
@@ -1248,7 +1248,7 @@ function restoreSessionState() {
       document.getElementById('submitChangeBtn').textContent = 'Submit Change Request';
     }
     
-    // Handle booking cancellation
+    // Handle booking cancellation - UPDATED ROOM MAPPING WITH ROOM 5
     async function cancelBooking() {
       const bookingCode = document.getElementById('bookingCodeInput').value;
       const room = document.getElementById('currentRoomInput').value;
@@ -1308,7 +1308,7 @@ function restoreSessionState() {
             'Room_1': '3',
             'Room_2': '7',
             'Room_4': '8',
-            'Room_5': '19',
+            'Room_5': '13',
             'Room_6': '9',
             'Room_7': '10',
             'Car Park': '12',
@@ -1321,7 +1321,7 @@ function restoreSessionState() {
             timestamp: new Date().toISOString(),
             action: 'modify',
             counsellor_id: counsellorId,
-            original_booking_code: bookingCode,
+            original_booking_code: booking.bookingId || bookingCode,  // FIXED: Prefer bookingId
             original_room: roomForWebhook,
             original_room_id: ROOM_MAPPING[roomForWebhook] || '3',
             original_location_id: getLocationIdFromRoom(roomForWebhook),
@@ -1339,7 +1339,7 @@ function restoreSessionState() {
             timestamp: new Date().toISOString(),
             action: 'cancel',
             counsellor_id: counsellorId,
-            booking_code: bookingCode,
+            booking_code: booking.bookingId || bookingCode,  // FIXED: Prefer bookingId
             original_datetime: `${date}T${time}:00`,
             original_room: roomForWebhook,
             service_id: '2',
@@ -1382,7 +1382,7 @@ function restoreSessionState() {
       }
     }
     
-    // Submit booking change request
+    // Submit booking change request - UPDATED ROOM MAPPING WITH ROOM 5
     async function submitBookingChange(changeData) {
       const statusDiv = document.getElementById('submitStatus');
       const isHoldingRoom = document.getElementById('isHoldingRoomBooking').value === 'true';
@@ -1403,6 +1403,7 @@ function restoreSessionState() {
           }
         }
         
+        // FIXED: Find booking and use bookingId directly
         const booking = bookingData.concat(holdingRoomBookings).find(b => 
           (b.bookingId === changeData.originalBookingCode || b.code === changeData.originalBookingCode)
         );
@@ -1414,7 +1415,7 @@ function restoreSessionState() {
           'Room_1': '3',
           'Room_2': '7',
           'Room_4': '8',
-          'Room_5': '19',
+          'Room_5': '13',
           'Room_6': '9',
           'Room_7': '10',
           'Car Park': '12',
@@ -1437,7 +1438,7 @@ function restoreSessionState() {
           timestamp: new Date().toISOString(),
           action: 'modify',
           counsellor_id: counsellorId,
-          original_booking_code: changeData.originalBookingCode,
+          original_booking_code: booking ? booking.bookingId : changeData.originalBookingCode,  // FIXED: Use bookingId from booking object
           original_room: originalRoomUnderscore,
           original_room_id: originalRoomId,
           original_location_id: originalLocationId,
@@ -1749,7 +1750,7 @@ function restoreSessionState() {
       }
     }
     
-    // Create day view grid
+    // Create day view grid - ADDED ROOM 5
     function createDayGrid(grid) {
       const emptyCell = document.createElement("div");
       emptyCell.className = "grid-header";
