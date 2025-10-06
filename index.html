@@ -189,6 +189,10 @@
       background: #a5d4a5;
       border-color: #90b890;
     }
+	.grid-cell.booked.room-5 {
+  background: #e57373;
+  border-color: #d32f2f;
+}
     .grid-cell.booked.room-6 {
       background: #c8a882;
       border-color: #b5946e;
@@ -344,12 +348,13 @@
             <label id="roomChangeLabel" style="display: block; font-weight: bold; margin-bottom: 5px;">New Room (if changing):</label>
             <select id="newRoomInput" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px;">
               <option value="">No change</option>
-              <option value="Room 1">Room 1</option>
-              <option value="Room 2">Room 2</option>
-              <option value="Room 4">Room 4</option>
-              <option value="Room 6">Room 6</option>
-              <option value="Room 7">Room 7</option>
-              <option value="Online">Online</option>
+<option value="Room 1">Room 1</option>
+<option value="Room 2">Room 2</option>
+<option value="Room 4">Room 4</option>
+<option value="Room 5">Room 5</option>
+<option value="Room 6">Room 6</option>
+<option value="Room 7">Room 7</option>
+<option value="Online">Online</option>
             </select>
           </div>
           
@@ -450,7 +455,7 @@
     const database = firebase.database();
     
     // Constants for rooms and business hours
-    const rooms = ["Room 1", "Room 2", "Room 4", "Room 6", "Room 7", "Online"];
+    const rooms = ["Room 1", "Room 2", "Room 4", "Room 5", "Room 6", "Room 7", "Online"];
     const businessHours = Array.from({length: 13}, (_, i) => `${String(i + 8).padStart(2, '0')}:00`);
     const weekDays = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
     
@@ -508,24 +513,24 @@
       return `${date}T${formattedTime}`;
     }
     // Get location ID from room name
-    function getLocationIdFromRoom(roomName) {
-      const henleyRooms = ['Room_1', 'Room 1', 'Room_2', 'Room 2', 'Room_4', 'Room 4', 'Room_6', 'Room 6', 'Room_7', 'Room 7', 'Car Park', 'Henley_Holding_Room'];
-      
-      if (henleyRooms.includes(roomName)) {
-        return '2';
-      } else {
-        return '1';
-      }
-    }
+function getLocationIdFromRoom(roomName) {
+  const henleyRooms = ['Room_1', 'Room 1', 'Room_2', 'Room 2', 'Room_4', 'Room 4', 'Room_5', 'Room 5', 'Room_6', 'Room 6', 'Room_7', 'Room 7', 'Car Park', 'Henley_Holding_Room'];
+  
+  if (henleyRooms.includes(roomName)) {
+    return '2';
+  } else {
+    return '1';
+  }
+}
     // Get available rooms for a specific location
-    function getRoomsForLocation(locationId) {
-      if (locationId === '1') {
-        return ['Online'];
-      } else if (locationId === '2') {
-        return ['Room 1', 'Room 2', 'Room 4', 'Room 6', 'Room 7', 'Car Park'];
-      }
-      return [];
-    }
+function getRoomsForLocation(locationId) {
+  if (locationId === '1') {
+    return ['Online'];
+  } else if (locationId === '2') {
+    return ['Room 1', 'Room 2', 'Room 4', 'Room 5', 'Room 6', 'Room 7', 'Car Park'];
+  }
+  return [];
+}
 
 // Restore session state from storage - call this at start of any navigation
 function restoreSessionState() {
@@ -1062,7 +1067,7 @@ function restoreSessionState() {
         newRoomInput.innerHTML = '<option value="">Select a room (required)</option>';
         
         // Add all rooms from both locations
-        ['Room 1', 'Room 2', 'Room 4', 'Room 6', 'Room 7', 'Online'].forEach(roomName => {
+        ['Room 1', 'Room 2', 'Room 4', 'Room 5', 'Room 6', 'Room 7', 'Online'].forEach(roomName => {
           const option = document.createElement('option');
           option.value = roomName;
           option.textContent = roomName;
@@ -1135,6 +1140,7 @@ function restoreSessionState() {
       if (booking.room === 'Room_1' || booking.room === '1') return 'Room 1';
       if (booking.room === 'Room_2' || booking.room === '2') return 'Room 2';
       if (booking.room === 'Room_4' || booking.room === '4') return 'Room 4';
+	  if (booking.room === 'Room_5' || booking.room === '5') return 'Room 5';
       if (booking.room === 'Room_6' || booking.room === '6') return 'Room 6';
       if (booking.room === 'Room_7' || booking.room === '7') return 'Room 7';
       if (booking.room === 'Henley_Holding_Room' || booking.room === '18') return 'Holding Room';
@@ -1152,6 +1158,8 @@ function restoreSessionState() {
         roomNumber = '2'; roomClass = 'room-2';
       } else if (booking.room === 'Room_4' || booking.room === '4') {
         roomNumber = '4'; roomClass = 'room-4';
+		} else if (booking.room === 'Room_5' || booking.room === '5') {
+  roomNumber = '5'; roomClass = 'room-5';
       } else if (booking.room === 'Room_6' || booking.room === '6') {
         roomNumber = '6'; roomClass = 'room-6';
       } else if (booking.room === 'Room_7' || booking.room === '7') {
@@ -1208,7 +1216,7 @@ function restoreSessionState() {
       document.getElementById('holdingMoveHeader').classList.remove('hidden');
       
       // Update hidden inputs
-      document.getElementById('bookingCodeInput').value = selectedBooking.bookingId || selectedBooking.code || '';
+document.getElementById('bookingCodeInput').value = selectedBooking.bookingId || '';
       document.getElementById('currentRoomInput').value = 'Henley_Holding_Room';
       document.getElementById('currentDateInput').value = '2030-01-01';
       document.getElementById('currentTimeInput').value = selectedBooking.start || '09:00';
@@ -1441,16 +1449,18 @@ function restoreSessionState() {
         let payload;
         
         if (isPaidBooking) {
-          const ROOM_MAPPING = {
-            'Room_1': '3',
-            'Room_2': '7',
-            'Room_4': '8',
-            'Room_6': '9',
-            'Room_7': '10',
-            'Car Park': '12',
-            'Online': '11',
-            'Online Counselling': '11',
-            'Henley_Holding_Room': '18'
+const ROOM_MAPPING = {
+  'Room_1': '3',
+  'Room_2': '7',
+  'Room_4': '8',
+  'Room_5': '19',
+  'Room_6': '9',
+  'Room_7': '10',
+  'Car Park': '12',
+  'Online': '11',
+  'Online Counselling': '11',
+  'Henley_Holding_Room': '18'
+};
           };
           
           payload = {
@@ -1546,17 +1556,18 @@ function restoreSessionState() {
         const originalRoomUnderscore = convertRoomNameToUnderscore(changeData.originalRoom);
         const newRoomUnderscore = changeData.newRoom ? convertRoomNameToUnderscore(changeData.newRoom) : originalRoomUnderscore;
         
-        const ROOM_MAPPING = {
-          'Room_1': '3',
-          'Room_2': '7',
-          'Room_4': '8',
-          'Room_6': '9',
-          'Room_7': '10',
-          'Car Park': '12',
-          'Online': '11',
-          'Online Counselling': '11',
-          'Henley_Holding_Room': '18'
-        };
+const ROOM_MAPPING = {
+  'Room_1': '3',
+  'Room_2': '7',
+  'Room_4': '8',
+  'Room_5': '19',
+  'Room_6': '9',
+  'Room_7': '10',
+  'Car Park': '12',
+  'Online': '11',
+  'Online Counselling': '11',
+  'Henley_Holding_Room': '18'
+};
         
         const originalRoomId = ROOM_MAPPING[originalRoomUnderscore] || '18';
         const requestedRoomId = ROOM_MAPPING[newRoomUnderscore];
