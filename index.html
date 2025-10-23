@@ -2015,14 +2015,24 @@ function restoreSessionState() {
         // Convert to array if needed
         const bookingArray = Array.isArray(jsonData) ? jsonData : Object.values(jsonData);
         
-        // Separate holding room bookings from regular bookings
-        holdingRoomBookings = bookingArray.filter(booking => 
+        // Filter out cancelled bookings first
+        const cancelledCount = bookingArray.filter(b => b.status === 'cancelled').length;
+        const activeBookings = bookingArray.filter(booking => 
+          booking.status !== 'cancelled'
+        );
+        
+        if (cancelledCount > 0) {
+          console.log(`Filtered out ${cancelledCount} cancelled bookings`);
+        }
+        
+        // Separate holding room bookings from regular bookings (excluding cancelled)
+        holdingRoomBookings = activeBookings.filter(booking => 
           booking.room === 'Henley_Holding_Room' || 
           booking.room === '18' ||
           booking.date === '2030-01-01'
         );
         
-        bookingData = bookingArray.filter(booking => 
+        bookingData = activeBookings.filter(booking => 
           booking.room !== 'Henley_Holding_Room' && 
           booking.room !== '18' &&
           booking.date !== '2030-01-01'
@@ -2055,14 +2065,19 @@ function restoreSessionState() {
           const updatedData = snapshot.val() || [];
           const updatedArray = Array.isArray(updatedData) ? updatedData : Object.values(updatedData);
           
-          // Update local data
-          holdingRoomBookings = updatedArray.filter(booking => 
+          // Filter out cancelled bookings first
+          const activeUpdatedBookings = updatedArray.filter(booking => 
+            booking.status !== 'cancelled'
+          );
+          
+          // Update local data (excluding cancelled)
+          holdingRoomBookings = activeUpdatedBookings.filter(booking => 
             booking.room === 'Henley_Holding_Room' || 
             booking.room === '18' ||
             booking.date === '2030-01-01'
           );
           
-          bookingData = updatedArray.filter(booking => 
+          bookingData = activeUpdatedBookings.filter(booking => 
             booking.room !== 'Henley_Holding_Room' && 
             booking.room !== '18' &&
             booking.date !== '2030-01-01'
