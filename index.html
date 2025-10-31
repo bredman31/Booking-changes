@@ -2015,11 +2015,11 @@ function restoreSessionState() {
         // Convert to array if needed
         const bookingArray = Array.isArray(jsonData) ? jsonData : Object.values(jsonData);
         
-        // Filter out cancelled bookings first
-        const cancelledCount = bookingArray.filter(b => b.status === 'cancelled').length;
-        const activeBookings = bookingArray.filter(booking => 
-          booking.status !== 'cancelled'
-        );
+// Filter out cancelled bookings first
+const cancelledCount = bookingArray.filter(b => b.status === 'cancelled' || b.status === 'cancel').length;
+const activeBookings = bookingArray.filter(booking => 
+  booking.status !== 'cancelled' && booking.status !== 'cancel'
+);
         
         if (cancelledCount > 0) {
           console.log(`Filtered out ${cancelledCount} cancelled bookings`);
@@ -2065,10 +2065,10 @@ function restoreSessionState() {
           const updatedData = snapshot.val() || [];
           const updatedArray = Array.isArray(updatedData) ? updatedData : Object.values(updatedData);
           
-          // Filter out cancelled bookings first
-          const activeUpdatedBookings = updatedArray.filter(booking => 
-            booking.status !== 'cancelled'
-          );
+// Filter out cancelled bookings first
+const activeUpdatedBookings = updatedArray.filter(booking => 
+  booking.status !== 'cancelled' && booking.status !== 'cancel'
+);
           
           // Update local data (excluding cancelled)
           holdingRoomBookings = activeUpdatedBookings.filter(booking => 
