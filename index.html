@@ -466,6 +466,7 @@
     let currentDate = new Date().toISOString().split('T')[0];
     let currentWeekStart = new Date();
     let selectedCounsellor = '';
+    let hasVisitedDayView = false;
     // Global variable for client ID from URL
     window.clientId = null;
     // Global variable for booking to modify from URL
@@ -1599,7 +1600,18 @@ function restoreSessionState() {
       
       if (dayControls) dayControls.classList.toggle('hidden', view !== 'day');
       if (weekControls) weekControls.classList.toggle('hidden', view !== 'week');
-      
+        if (view === 'day') {
+    if (!hasVisitedDayView) {
+      // First time viewing day view - set to today
+      currentDate = new Date().toISOString().split('T')[0];
+      hasVisitedDayView = true;
+    }
+    // Always sync the date selector with currentDate
+    const dateSelector = document.getElementById('dateSelector');
+    if (dateSelector) {
+      dateSelector.value = currentDate;
+    }
+  }
       // Hide counsellor selector if we have a token
       if (counsellorContainer && !sessionStorage.getItem('accessToken')) {
         counsellorContainer.classList.toggle('hidden', false);
