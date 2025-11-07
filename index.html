@@ -1378,52 +1378,52 @@ function restoreSessionState() {
         
         let payload;
         
-        if (isPaidBooking) {
-          const ROOM_MAPPING = {
-            'Room_1': '3',
-            'Room_2': '7',
-            'Room_4': '8',
-            'Room_5': '19',
-            'Room_6': '9',
-            'Room_7': '10',
-            'Room_8': '20',
-            'Room_9': '21',
-            'Car Park': '12',
-            'Online': '11',
-            'Online Counselling': '11',
-            'Henley_Holding_Room': '18'
-          };
-          
-          payload = {
-            timestamp: new Date().toISOString(),
-            action: 'modify',
-            counsellor_id: counsellorId,
-            original_booking_code: booking.bookingId || bookingCode,
-            original_room: roomForWebhook,
-            original_room_id: ROOM_MAPPING[roomForWebhook] || '3',
-            original_location_id: getLocationIdFromRoom(roomForWebhook),
-            original_datetime: `${date}T${time}:00`,
-            requested_room: 'Henley_Holding_Room',
-            requested_room_id: '18',
-            requested_location_id: '2',
-            requested_datetime: `2030-01-01T${time}:00`,
-            service_id: '2',
-            comments: booking ? (booking.comments || '') : '',
-            is_paid: 'True'
-          };
-        } else {
-          payload = {
-            timestamp: new Date().toISOString(),
-            action: 'cancel',
-            counsellor_id: counsellorId,
-            booking_code: booking.bookingId || bookingCode,
-            original_datetime: `${date}T${time}:00`,
-            original_room: roomForWebhook,
-            service_id: '2',
-            comments: booking ? (booking.comments || '') : '',
-            is_paid: 'No'
-          };
-        }
+ if (isPaidBooking) {
+  const ROOM_MAPPING = {
+    'Room_1': '3',
+    'Room_2': '7',
+    'Room_4': '8',
+    'Room_5': '19',
+    'Room_6': '9',
+    'Room_7': '10',
+    'Room_8': '20',
+    'Room_9': '21',
+    'Car Park': '12',
+    'Online': '11',
+    'Online Counselling': '11',
+    'Henley_Holding_Room': '18'
+  };
+  
+  payload = {
+    timestamp: new Date().toISOString(),
+    action: 'modify',
+    counsellor_id: counsellorId,
+    booking_code: booking.bookingId || bookingCode,  // ✅ CHANGED
+    original_room: roomForWebhook,
+    original_room_id: ROOM_MAPPING[roomForWebhook] || '3',
+    original_location_id: getLocationIdFromRoom(roomForWebhook),
+    original_datetime: `${date}T${time}:00`,
+    requested_room: 'Henley_Holding_Room',
+    requested_room_id: '18',
+    requested_location_id: '2',
+    requested_datetime: `2030-01-01T${time}:00`,
+    service_id: '2',
+    comments: booking ? (booking.comments || '') : '',
+    is_paid: 'True'
+  };
+} else {
+  payload = {
+    timestamp: new Date().toISOString(),
+    action: 'cancel',
+    counsellor_id: counsellorId,
+    booking_code: booking.bookingId || bookingCode,  // ✅ ALREADY CORRECT
+    original_datetime: `${date}T${time}:00`,
+    original_room: roomForWebhook,
+    service_id: '2',
+    comments: booking ? (booking.comments || '') : '',
+    is_paid: 'No'
+  };
+}
         
         cancelStatusDiv.textContent = 'Sending cancellation request...';
         const CANCEL_WEBHOOK_URL = 'https://hook.eu2.make.com/p754q5eks857boisu6m3unr6qer6be4t';
@@ -1513,26 +1513,26 @@ function restoreSessionState() {
         const originalLocationId = isHoldingRoom ? '2' : getLocationIdFromRoom(originalRoomUnderscore);
         const requestedLocationId = getLocationIdFromRoom(newRoomUnderscore);
         
-        const webhookPayload = {
-          timestamp: new Date().toISOString(),
-          action: 'modify',
-          counsellor_id: counsellorId,
-          original_booking_code: booking ? booking.bookingId : changeData.originalBookingCode,
-          original_room: originalRoomUnderscore,
-          original_room_id: originalRoomId,
-          original_location_id: originalLocationId,
-          original_datetime: `${changeData.originalDate}T${changeData.originalTime}:00`,
-          requested_room: newRoomUnderscore,
-          requested_room_id: requestedRoomId,
-          requested_location_id: requestedLocationId,
-          requested_datetime: formatDateTimeForSimplybookMe(
-            changeData.newDate || changeData.originalDate,
-            changeData.newTime || changeData.originalTime
-          ),
-          service_id: '2',
-          comments: booking ? (booking.comments || '') : '',
-          is_paid: booking ? (booking.isPaid ? 'True' : 'No') : 'No'
-        };
+const webhookPayload = {
+  timestamp: new Date().toISOString(),
+  action: 'modify',
+  counsellor_id: counsellorId,
+  booking_code: booking ? booking.bookingId : changeData.originalBookingCode,  // ✅ CHANGED
+  original_room: originalRoomUnderscore,
+  original_room_id: originalRoomId,
+  original_location_id: originalLocationId,
+  original_datetime: `${changeData.originalDate}T${changeData.originalTime}:00`,
+  requested_room: newRoomUnderscore,
+  requested_room_id: requestedRoomId,
+  requested_location_id: requestedLocationId,
+  requested_datetime: formatDateTimeForSimplybookMe(
+    changeData.newDate || changeData.originalDate,
+    changeData.newTime || changeData.originalTime
+  ),
+  service_id: '2',
+  comments: booking ? (booking.comments || '') : '',
+  is_paid: booking ? (booking.isPaid ? 'True' : 'No') : 'No'
+};
         
         console.log('Webhook payload:', webhookPayload);
         
