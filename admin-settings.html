@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Cherry Tree Centre - Room Settings</title>
+  
+  <!-- Firebase Scripts -->
+  <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-database-compat.js"></script>
+  
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #f5f5f5;
+    }
+    
+    .header {
+      background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+      color: white;
+      padding: 20px 30px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    
+    .header h1 {
+      margin: 0 0 5px 0;
+      font-size: 24px;
+    }
+    
+    .header p {
+      margin: 0;
+      opacity: 0.9;
+      font-size: 14px;
+    }
+    
+    .controls-bar {
+      background: white;
+      padding: 15px 30px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    button {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 5px;
+      font-size: 14px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+    
+    .back-btn {
+      background: #718096;
+      color: white;
+    }
+    
+    .back-btn:hover {
+      background: #4a5568;
+    }
+    
+    .save-btn {
+      background: #48bb78;
+      color: white;
+      font-size: 16px;
+      padding: 12px 30px;
+    }
+    
+    .save-btn:hover {
+      background: #38a169;
+    }
+    
+    .save-btn:disabled {
+      background: #cbd5e0;
+      cursor: not-allowed;
+    }
+    
+    .container {
+      max-width: 1200px;
+      margin: 30px auto;
+      padding: 0 20px;
+    }
+    
+    .status-message {
+      padding: 15px 20px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      font-size: 14px;
+      font-weight: bold;
+    }
+    
+    .status-loading {
+      background: #bee3f8;
+      color: #2c5282;
+    }
+    
+    .status-success {
+      background: #c6f6d5;
+      color: #22543d;
+    }
+    
+    .status-error {
+      background: #fed7d7;
+      color: #742a2a;
+    }
+    
+    .rooms-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+      gap: 20px;
+    }
+    
+    .room-card {
+      background: white;
+      border-radius: 8px;
+      padding: 20px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      transition: transform 0.2s;
+    }
+    
+    .room-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+    
+    .room-card.disabled {
+      opacity: 0.5;
+    }
+    
+    .room-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      padding-bottom: 15px;
+      border-bottom: 2px solid #e2e8f0;
+    }
+    
+    .room-title {
+      font-size: 18px;
+      font-weight: bold;
+      color: #2d3748;
+    }
+    
+    /* Toggle Switch */
+    .toggle-switch {
+      position: relative;
+      width: 60px;
+      height: 30px;
+    }
+    
+    .toggle-switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+    
+    .toggle-slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: #cbd5e0;
+      transition: 0.3s;
+      border-radius: 30px;
+    }
+    
+    .toggle-slider:before {
+      position: absolute;
+      content: "";
+      height: 22px;
+      width: 22px;
+      left: 4px;
+      bottom: 4px;
+      background-color: white;
+      transition: 0.3s;
+      border-radius: 50%;
+    }
+    
+    input:checked + .toggle-slider {
+      background-color: #48bb78;
+    }
+    
+    input:checked + .toggle-slider:before {
+      transform: translateX(30px);
+    }
+    
+    .color-group {
+      margin-bottom: 15px;
+    }
+    
+    .color-label {
+      display: block;
+      font-size: 14px;
+      font-weight: 600;
+      color: #4a5568;
+      margin-bottom: 8px;
+    }
+    
+    .color-picker-wrapper {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    
+    .color-picker {
+      width: 80px;
+      height: 40px;
+      border: 2px solid #cbd5e0;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    
+    .color-value {
+      font-family: 'Courier New', monospace;
+      font-size: 13px;
+      color: #718096;
+      background: #f7fafc;
+      padding: 8px 12px;
+      border-radius: 5px;
+      flex: 1;
+    }
+    
+    .preview-box {
+      margin-top: 15px;
+      padding: 15px;
+      border-radius: 5px;
+      text-align: center;
+      font-weight: bold;
+      color: #2d3748;
+      border: 2px solid;
+    }
+    
+    .info-section {
+      background: white;
+      border-radius: 8px;
+      padding: 20px;
+      margin-bottom: 20px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    
+    .info-section h2 {
+      margin: 0 0 10px 0;
+      color: #2d3748;
+      font-size: 20px;
+    }
+    
+    .info-section p {
+      margin: 5px 0;
+      color: #4a5568;
+      line-height: 1.6;
+    }
+    
+    .access-denied {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      background: #f5f5f5;
+    }
+    
+    .access-denied-card {
+      background: white;
+      padding: 40px;
+      border-radius: 8px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+      text-align: center;
+      max-width: 500px;
+    }
+    
+    .access-denied-card h2 {
+      color: #e53e3e;
+      margin: 0 0 15px 0;
+    }
+    
+    .hidden {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <div id="settingsContent" class="hidden">
+    <div class="header">
+      <h1>⚙️ Room Configuration Settings</h1>
+      <p>Toggle rooms on/off and customize colors</p>
+    </div>
+    
+    <div class="controls-bar">
+      <button class="back-btn" onclick="goBackToViewer()">← Back to Counselor Viewer</button>
+      <button class="save-btn" id="saveBtn" onclick="saveSettings()">💾 Save All Changes</button>
+    </div>
+    
+    <div class="container">
+      <div id="statusMessage" class="status-message hidden"></div>
+      
+      <div class="info-section">
+        <h2>ℹ️ Instructions</h2>
+        <p><strong>Toggle Switch:</strong> Turn rooms on or off. Disabled rooms won't appear in the booking calendar.</p>
+        <p><strong>Color Pickers:</strong> Customize the background and border colors for each room.</p>
+        <p><strong>Preview:</strong> See how the room will look in the calendar below each room's settings.</p>
+        <p><strong>Save:</strong> Click "Save All Changes" to apply your settings. Changes will be reflected immediately in the booking calendar.</p>
+      </div>
+      
+      <div class="rooms-grid" id="roomsGrid">
+        <!-- Room cards will be dynamically inserted here -->
+      </div>
+    </div>
+  </div>
+  
+  <div id="accessDenied" class="access-denied hidden">
+    <div class="access-denied-card">
+      <h2>🔒 Access Denied</h2>
+      <p>You need a valid admin token to access this panel.</p>
+      <p style="margin-top: 20px; font-size: 14px; color: #666;">
+        Please use the admin access link provided.
+      </p>
+    </div>
+  </div>
+  
+  <script>
+    // Firebase configuration
+    const firebaseConfig = {
+      apiKey: "AIzaSyCVp4QDAnh5RcxGZIrEY2LriUWKQNcNbzE",
+      authDomain: "cherry-tree-bookings.firebaseapp.com",
+      databaseURL: "https://cherry-tree-bookings-default-rtdb.europe-west1.firebasedatabase.app",
+      projectId: "cherry-tree-bookings",
+      storageBucket: "cherry-tree-bookings.firebasestorage.app",
+      messagingSenderId: "280166213685",
+      appId: "1:280166213685:web:f80b11799f41f5f385297c"
+    };
+    
+    firebase.initializeApp(firebaseConfig);
+    const database = firebase.database();
+    
+    // Default room configuration
+    const defaultRoomConfig = {
+      'Room_1': { enabled: true, color: '#d4a5a5', borderColor: '#b89090', displayName: 'Room 1' },
+      'Room_2': { enabled: true, color: '#b299d4', borderColor: '#9680c0', displayName: 'Room 2' },
+      'Room_4': { enabled: true, color: '#a5d4a5', borderColor: '#90b890', displayName: 'Room 4' },
+      'Room_5': { enabled: true, color: '#e57373', borderColor: '#d32f2f', displayName: 'Room 5' },
+      'Room_6': { enabled: true, color: '#c8a882', borderColor: '#b5946e', displayName: 'Room 6' },
+      'Room_7': { enabled: true, color: '#e6d45a', borderColor: '#d4c347', displayName: 'Room 7' },
+      'Room_8': { enabled: true, color: '#90caf9', borderColor: '#64b5f6', displayName: 'Room 8' },
+      'Room_9': { enabled: true, color: '#ce93d8', borderColor: '#ba68c8', displayName: 'Room 9' },
+      'Online': { enabled: true, color: '#7dd87d', borderColor: '#6bc46b', displayName: 'Online' }
+    };
+    
+    let currentConfig = {};
+    
+    // Validate admin token
+    async function validateAdminToken(token) {
+      try {
+        const snapshot = await database.ref('admin_tokens/' + token).once('value');
+        const adminData = snapshot.val();
+        
+        if (adminData && adminData.active && adminData.role === 'admin') {
+          console.log('✅ Admin access granted:', adminData.name);
+          return true;
+        }
+        return false;
+      } catch (error) {
+        console.error('Token validation error:', error);
+        return false;
+      }
+    }
+    
+    // Show status message
+    function showStatus(message, type) {
+      const statusDiv = document.getElementById('statusMessage');
+      statusDiv.textContent = message;
+      statusDiv.className = `status-message status-${type}`;
+      statusDiv.classList.remove('hidden');
+      
+      if (type === 'success') {
+        setTimeout(() => {
+          statusDiv.classList.add('hidden');
+        }, 3000);
+      }
+    }
+    
+    // Load room configuration
+    async function loadRoomConfig() {
+      showStatus('Loading room configuration...', 'loading');
+      
+      try {
+        const snapshot = await database.ref('room_config').once('value');
+        const config = snapshot.val();
+        
+        if (config) {
+          currentConfig = config;
+          console.log('Loaded room config from Firebase');
+        } else {
+          // Initialize with defaults if no config exists
+          currentConfig = { ...defaultRoomConfig };
+          console.log('Using default room config');
+        }
+        
+        renderRoomCards();
+        showStatus('Room configuration loaded', 'success');
+        
+      } catch (error) {
+        console.error('Error loading room config:', error);
+        showStatus('Error loading configuration', 'error');
+        currentConfig = { ...defaultRoomConfig };
+        renderRoomCards();
+      }
+    }
+    
+    // Render room cards
+    function renderRoomCards() {
+      const grid = document.getElementById('roomsGrid');
+      grid.innerHTML = '';
+      
+      Object.keys(currentConfig).forEach(roomKey => {
+        const room = currentConfig[roomKey];
+        const card = createRoomCard(roomKey, room);
+        grid.appendChild(card);
+      });
+    }
+    
+    // Create a room card
+    function createRoomCard(roomKey, room) {
+      const card = document.createElement('div');
+      card.className = 'room-card';
+      card.id = `card-${roomKey}`;
+      if (!room.enabled) card.classList.add('disabled');
+      
+      card.innerHTML = `
+        <div class="room-header">
+          <div class="room-title">${room.displayName}</div>
+          <label class="toggle-switch">
+            <input type="checkbox" ${room.enabled ? 'checked' : ''} onchange="toggleRoom('${roomKey}')">
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+        
+        <div class="color-group">
+          <label class="color-label">Background Color</label>
+          <div class="color-picker-wrapper">
+            <input type="color" class="color-picker" value="${room.color}" 
+                   onchange="updateColor('${roomKey}', 'color', this.value)">
+            <span class="color-value" id="color-${roomKey}">${room.color}</span>
+          </div>
+        </div>
+        
+        <div class="color-group">
+          <label class="color-label">Border Color</label>
+          <div class="color-picker-wrapper">
+            <input type="color" class="color-picker" value="${room.borderColor}" 
+                   onchange="updateColor('${roomKey}', 'borderColor', this.value)">
+            <span class="color-value" id="border-${roomKey}">${room.borderColor}</span>
+          </div>
+        </div>
+        
+        <div class="preview-box" id="preview-${roomKey}" 
+             style="background: ${room.color}; border-color: ${room.borderColor};">
+          ${room.displayName} Preview
+        </div>
+      `;
+      
+      return card;
+    }
+    
+    // Toggle room enabled/disabled
+    function toggleRoom(roomKey) {
+      currentConfig[roomKey].enabled = !currentConfig[roomKey].enabled;
+      
+      const card = document.getElementById(`card-${roomKey}`);
+      if (currentConfig[roomKey].enabled) {
+        card.classList.remove('disabled');
+      } else {
+        card.classList.add('disabled');
+      }
+      
+      console.log(`${roomKey} ${currentConfig[roomKey].enabled ? 'enabled' : 'disabled'}`);
+    }
+    
+    // Update color
+    function updateColor(roomKey, colorType, value) {
+      currentConfig[roomKey][colorType] = value;
+      
+      // Update display
+      const displayId = colorType === 'color' ? `color-${roomKey}` : `border-${roomKey}`;
+      document.getElementById(displayId).textContent = value;
+      
+      // Update preview
+      const preview = document.getElementById(`preview-${roomKey}`);
+      if (colorType === 'color') {
+        preview.style.background = value;
+      } else {
+        preview.style.borderColor = value;
+      }
+      
+      console.log(`${roomKey} ${colorType} updated to ${value}`);
+    }
+    
+    // Save settings to Firebase
+    async function saveSettings() {
+      const saveBtn = document.getElementById('saveBtn');
+      saveBtn.disabled = true;
+      saveBtn.textContent = '⏳ Saving...';
+      
+      showStatus('Saving room configuration...', 'loading');
+      
+      try {
+        await database.ref('room_config').set(currentConfig);
+        
+        console.log('Room configuration saved successfully');
+        showStatus('✅ Settings saved successfully!', 'success');
+        
+        saveBtn.textContent = '💾 Save All Changes';
+        saveBtn.disabled = false;
+        
+      } catch (error) {
+        console.error('Error saving room config:', error);
+        showStatus('❌ Error saving settings. Please try again.', 'error');
+        
+        saveBtn.textContent = '💾 Save All Changes';
+        saveBtn.disabled = false;
+      }
+    }
+    
+    // Go back to viewer
+    function goBackToViewer() {
+      const params = new URLSearchParams(window.location.search);
+      const token = params.get('token');
+      if (token) {
+        window.location.href = `admin.html?token=${token}`;
+      }
+    }
+    
+    // Initialize
+    document.addEventListener('DOMContentLoaded', async function() {
+      const params = new URLSearchParams(window.location.search);
+      const token = params.get('token');
+      
+      if (!token) {
+        document.getElementById('accessDenied').classList.remove('hidden');
+        return;
+      }
+      
+      const isValid = await validateAdminToken(token);
+      
+      if (isValid) {
+        document.getElementById('settingsContent').classList.remove('hidden');
+        await loadRoomConfig();
+      } else {
+        document.getElementById('accessDenied').classList.remove('hidden');
+      }
+    });
+  </script>
+</body>
+</html>

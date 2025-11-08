@@ -1,0 +1,676 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Cherry Tree Centre - Admin Panel</title>
+  
+  <!-- Firebase Scripts -->
+  <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-database-compat.js"></script>
+  
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #f5f5f5;
+    }
+    
+    .header {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 20px 30px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    
+    .header h1 {
+      margin: 0 0 5px 0;
+      font-size: 24px;
+    }
+    
+    .header p {
+      margin: 0;
+      opacity: 0.9;
+      font-size: 14px;
+    }
+    
+    .controls-bar {
+      background: white;
+      padding: 15px 30px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 15px;
+    }
+    
+    .control-group {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    
+    .control-group label {
+      font-weight: bold;
+      color: #333;
+    }
+    
+    select, button {
+      padding: 10px 15px;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      font-size: 14px;
+      cursor: pointer;
+    }
+    
+    select {
+      min-width: 200px;
+      background: white;
+    }
+    
+    button {
+      background: #667eea;
+      color: white;
+      border: none;
+      font-weight: bold;
+      transition: background 0.3s;
+    }
+    
+    button:hover {
+      background: #5568d3;
+    }
+    
+    .settings-btn {
+      background: #48bb78;
+    }
+    
+    .settings-btn:hover {
+      background: #38a169;
+    }
+    
+    .refresh-btn {
+      background: #4299e1;
+    }
+    
+    .refresh-btn:hover {
+      background: #3182ce;
+    }
+    
+    .calendar-container {
+      padding: 20px 30px;
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+    
+    .info-card {
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    }
+    
+    .info-card h3 {
+      margin: 0 0 10px 0;
+      color: #667eea;
+    }
+    
+    .week-navigation {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      margin-bottom: 20px;
+    }
+    
+    .week-display {
+      font-weight: bold;
+      font-size: 16px;
+      color: #333;
+    }
+    
+    .calendar-grid {
+      display: grid;
+      grid-template-columns: 80px repeat(7, 1fr);
+      border: 1px solid #ddd;
+      background: white;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    }
+    
+    .grid-header {
+      background: #667eea;
+      color: white;
+      font-weight: bold;
+      padding: 10px;
+      text-align: center;
+      border: 1px solid #5568d3;
+      font-size: 13px;
+    }
+    
+    .time-header {
+      background: #f7fafc;
+      font-weight: bold;
+      padding: 8px;
+      text-align: center;
+      border: 1px solid #e2e8f0;
+      font-size: 12px;
+      color: #4a5568;
+    }
+    
+    .grid-cell {
+      border: 1px solid #e2e8f0;
+      padding: 4px;
+      min-height: 40px;
+      font-size: 11px;
+      background: white;
+      position: relative;
+    }
+    
+    .grid-cell.booked {
+      border: 2px solid #333;
+    }
+    
+    .grid-cell.booked.room-1 { background: #d4a5a5; border-color: #b89090; }
+    .grid-cell.booked.room-2 { background: #b299d4; border-color: #9680c0; }
+    .grid-cell.booked.room-4 { background: #a5d4a5; border-color: #90b890; }
+    .grid-cell.booked.room-5 { background: #e57373; border-color: #d32f2f; }
+    .grid-cell.booked.room-6 { background: #c8a882; border-color: #b5946e; }
+    .grid-cell.booked.room-7 { background: #e6d45a; border-color: #d4c347; }
+    .grid-cell.booked.room-8 { background: #90caf9; border-color: #64b5f6; }
+    .grid-cell.booked.room-9 { background: #ce93d8; border-color: #ba68c8; }
+    .grid-cell.booked.online { background: #7dd87d; border-color: #6bc46b; }
+    
+    .booking-info {
+      font-weight: bold;
+      color: #2d3748;
+      margin-bottom: 2px;
+    }
+    
+    .booking-details {
+      color: #4a5568;
+      font-size: 10px;
+    }
+    
+    .status-message {
+      padding: 10px 15px;
+      border-radius: 5px;
+      margin-bottom: 15px;
+      font-size: 14px;
+    }
+    
+    .status-loading {
+      background: #bee3f8;
+      color: #2c5282;
+    }
+    
+    .status-success {
+      background: #c6f6d5;
+      color: #22543d;
+    }
+    
+    .status-error {
+      background: #fed7d7;
+      color: #742a2a;
+    }
+    
+    .legend {
+      display: flex;
+      gap: 20px;
+      flex-wrap: wrap;
+      margin-top: 20px;
+      padding: 15px;
+      background: #f7fafc;
+      border-radius: 5px;
+    }
+    
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .legend-color {
+      width: 30px;
+      height: 20px;
+      border: 2px solid #333;
+      border-radius: 3px;
+    }
+    
+    .access-denied {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      background: #f5f5f5;
+    }
+    
+    .access-denied-card {
+      background: white;
+      padding: 40px;
+      border-radius: 8px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+      text-align: center;
+      max-width: 500px;
+    }
+    
+    .access-denied-card h2 {
+      color: #e53e3e;
+      margin: 0 0 15px 0;
+    }
+    
+    .hidden {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <div id="adminContent" class="hidden">
+    <div class="header">
+      <h1>🔧 Cherry Tree Centre - Admin Panel</h1>
+      <p>Administrative view of counselor bookings</p>
+    </div>
+    
+    <div class="controls-bar">
+      <div class="control-group">
+        <label for="counsellorSelect">Select Counselor:</label>
+        <select id="counsellorSelect" onchange="changeCounsellor()">
+          <option value="">-- Choose a Counselor --</option>
+        </select>
+      </div>
+      
+      <div class="control-group">
+        <button class="refresh-btn" onclick="refreshData()">🔄 Refresh Data</button>
+        <button class="settings-btn" onclick="goToSettings()">⚙️ Room Settings</button>
+      </div>
+    </div>
+    
+    <div class="calendar-container">
+      <div id="statusMessage" class="status-message hidden"></div>
+      
+      <div class="info-card">
+        <h3 id="counsellorName">Select a counselor to view bookings</h3>
+        <p id="counsellorSummary"></p>
+      </div>
+      
+      <div class="week-navigation">
+        <button onclick="changeWeek(-1)">← Previous Week</button>
+        <span class="week-display" id="weekDisplay"></span>
+        <button onclick="changeWeek(1)">Next Week →</button>
+      </div>
+      
+      <div class="calendar-grid" id="calendarGrid">
+        <!-- Dynamic grid will be inserted here -->
+      </div>
+      
+      <div class="legend">
+        <div class="legend-item">
+          <div class="legend-color" style="background: #d4a5a5; border-color: #b89090;"></div>
+          <span>Room 1</span>
+        </div>
+        <div class="legend-item">
+          <div class="legend-color" style="background: #b299d4; border-color: #9680c0;"></div>
+          <span>Room 2</span>
+        </div>
+        <div class="legend-item">
+          <div class="legend-color" style="background: #a5d4a5; border-color: #90b890;"></div>
+          <span>Room 4</span>
+        </div>
+        <div class="legend-item">
+          <div class="legend-color" style="background: #e57373; border-color: #d32f2f;"></div>
+          <span>Room 5</span>
+        </div>
+        <div class="legend-item">
+          <div class="legend-color" style="background: #c8a882; border-color: #b5946e;"></div>
+          <span>Room 6</span>
+        </div>
+        <div class="legend-item">
+          <div class="legend-color" style="background: #e6d45a; border-color: #d4c347;"></div>
+          <span>Room 7</span>
+        </div>
+        <div class="legend-item">
+          <div class="legend-color" style="background: #90caf9; border-color: #64b5f6;"></div>
+          <span>Room 8</span>
+        </div>
+        <div class="legend-item">
+          <div class="legend-color" style="background: #ce93d8; border-color: #ba68c8;"></div>
+          <span>Room 9</span>
+        </div>
+        <div class="legend-item">
+          <div class="legend-color" style="background: #7dd87d; border-color: #6bc46b;"></div>
+          <span>Online</span>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <div id="accessDenied" class="access-denied hidden">
+    <div class="access-denied-card">
+      <h2>🔒 Access Denied</h2>
+      <p>You need a valid admin token to access this panel.</p>
+      <p style="margin-top: 20px; font-size: 14px; color: #666;">
+        Please use the admin access link provided.
+      </p>
+    </div>
+  </div>
+  
+  <script>
+    // Firebase configuration
+    const firebaseConfig = {
+      apiKey: "AIzaSyCVp4QDAnh5RcxGZIrEY2LriUWKQNcNbzE",
+      authDomain: "cherry-tree-bookings.firebaseapp.com",
+      databaseURL: "https://cherry-tree-bookings-default-rtdb.europe-west1.firebasedatabase.app",
+      projectId: "cherry-tree-bookings",
+      storageBucket: "cherry-tree-bookings.firebasestorage.app",
+      messagingSenderId: "280166213685",
+      appId: "1:280166213685:web:f80b11799f41f5f385297c"
+    };
+    
+    firebase.initializeApp(firebaseConfig);
+    const database = firebase.database();
+    
+    // Global variables
+    let bookingData = [];
+    let selectedCounsellor = '';
+    let currentWeekStart = new Date();
+    const businessHours = Array.from({length: 13}, (_, i) => `${String(i + 8).padStart(2, '0')}:00`);
+    
+    // Set week to start on Monday
+    const today = new Date();
+    const dayOfWeek = today.getDay();
+    const daysToSubtract = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+    currentWeekStart = new Date(today);
+    currentWeekStart.setDate(today.getDate() - daysToSubtract);
+    currentWeekStart.setHours(0, 0, 0, 0);
+    
+    // Validate admin token
+    async function validateAdminToken(token) {
+      try {
+        const snapshot = await database.ref('admin_tokens/' + token).once('value');
+        const adminData = snapshot.val();
+        
+        if (adminData && adminData.active && adminData.role === 'admin') {
+          console.log('✅ Admin access granted:', adminData.name);
+          return true;
+        }
+        return false;
+      } catch (error) {
+        console.error('Token validation error:', error);
+        return false;
+      }
+    }
+    
+    // Show status message
+    function showStatus(message, type) {
+      const statusDiv = document.getElementById('statusMessage');
+      statusDiv.textContent = message;
+      statusDiv.className = `status-message status-${type}`;
+      statusDiv.classList.remove('hidden');
+      
+      if (type === 'success' || type === 'loading') {
+        setTimeout(() => {
+          statusDiv.classList.add('hidden');
+        }, 3000);
+      }
+    }
+    
+    // Load booking data
+    async function loadBookingData() {
+      showStatus('Loading booking data...', 'loading');
+      
+      try {
+        const snapshot = await database.ref('bookings').once('value');
+        const jsonData = snapshot.val() || [];
+        const bookingArray = Array.isArray(jsonData) ? jsonData : Object.values(jsonData);
+        
+        // Filter out cancelled and holding room bookings
+        bookingData = bookingArray.filter(booking => 
+          booking.status !== 'cancelled' && 
+          booking.status !== 'cancel' &&
+          booking.room !== 'Henley_Holding_Room' && 
+          booking.room !== '18' &&
+          booking.date !== '2030-01-01'
+        );
+        
+        console.log(`Loaded ${bookingData.length} bookings`);
+        showStatus(`Loaded ${bookingData.length} bookings`, 'success');
+        
+        populateCounsellorDropdown();
+        
+      } catch (error) {
+        console.error('Error loading bookings:', error);
+        showStatus('Error loading booking data', 'error');
+      }
+    }
+    
+    // Populate counsellor dropdown
+    function populateCounsellorDropdown() {
+      const select = document.getElementById('counsellorSelect');
+      const counsellors = new Set();
+      
+      bookingData.forEach(booking => {
+        if (booking.client && booking.client.trim()) {
+          counsellors.add(booking.client.trim());
+        }
+      });
+      
+      select.innerHTML = '<option value="">-- Choose a Counselor --</option>';
+      
+      Array.from(counsellors).sort().forEach(counsellor => {
+        const option = document.createElement('option');
+        option.value = counsellor;
+        option.textContent = counsellor;
+        select.appendChild(option);
+      });
+    }
+    
+    // Change counsellor selection
+    function changeCounsellor() {
+      selectedCounsellor = document.getElementById('counsellorSelect').value;
+      updateCounsellorInfo();
+      populateCalendar();
+    }
+    
+    // Update counsellor info display
+    function updateCounsellorInfo() {
+      const nameDiv = document.getElementById('counsellorName');
+      const summaryDiv = document.getElementById('counsellorSummary');
+      
+      if (selectedCounsellor) {
+        const counsellorBookings = bookingData.filter(booking => 
+          booking.client && booking.client.toLowerCase().includes(selectedCounsellor.toLowerCase())
+        );
+        
+        nameDiv.textContent = selectedCounsellor;
+        summaryDiv.textContent = `Total bookings: ${counsellorBookings.length}`;
+      } else {
+        nameDiv.textContent = 'Select a counselor to view bookings';
+        summaryDiv.textContent = '';
+      }
+    }
+    
+    // Change week
+    function changeWeek(direction) {
+      currentWeekStart.setDate(currentWeekStart.getDate() + (direction * 7));
+      updateWeekDisplay();
+      populateCalendar();
+    }
+    
+    // Update week display
+    function updateWeekDisplay() {
+      const weekEnd = new Date(currentWeekStart);
+      weekEnd.setDate(weekEnd.getDate() + 6);
+      
+      const startStr = currentWeekStart.toLocaleDateString('en-GB', {
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric'
+      });
+      const endStr = weekEnd.toLocaleDateString('en-GB', {
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric'
+      });
+      
+      document.getElementById('weekDisplay').textContent = `${startStr} - ${endStr}`;
+    }
+    
+    // Create calendar grid
+    function createCalendarGrid() {
+      const grid = document.getElementById('calendarGrid');
+      grid.innerHTML = '';
+      
+      // Time header
+      const emptyCell = document.createElement('div');
+      emptyCell.className = 'grid-header';
+      emptyCell.textContent = 'Time';
+      grid.appendChild(emptyCell);
+      
+      // Day headers
+      const weekDays = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+      for (let i = 0; i < 7; i++) {
+        const cellDate = new Date(currentWeekStart);
+        cellDate.setDate(currentWeekStart.getDate() + i);
+        
+        const header = document.createElement('div');
+        header.className = 'grid-header';
+        const dayNum = String(cellDate.getDate()).padStart(2, '0');
+        const monthNum = String(cellDate.getMonth() + 1).padStart(2, '0');
+        header.textContent = `${weekDays[i]} ${dayNum}/${monthNum}`;
+        grid.appendChild(header);
+      }
+      
+      // Time slots and cells
+      businessHours.forEach(time => {
+        const timeCell = document.createElement('div');
+        timeCell.className = 'time-header';
+        timeCell.textContent = time;
+        grid.appendChild(timeCell);
+        
+        for (let day = 0; day < 7; day++) {
+          const cell = document.createElement('div');
+          cell.className = 'grid-cell';
+          cell.id = `week-cell-${day}-${time}`;
+          grid.appendChild(cell);
+        }
+      });
+    }
+    
+    // Populate calendar
+    function populateCalendar() {
+      createCalendarGrid();
+      
+      if (!selectedCounsellor) return;
+      
+      const filteredBookings = bookingData.filter(booking => 
+        booking.client && booking.client.toLowerCase().includes(selectedCounsellor.toLowerCase())
+      );
+      
+      filteredBookings.forEach(booking => {
+        const bookingDate = new Date(booking.date + 'T12:00:00');
+        const weekStartNoon = new Date(currentWeekStart);
+        weekStartNoon.setHours(12, 0, 0, 0);
+        
+        const msPerDay = 24 * 60 * 60 * 1000;
+        const timeDiff = bookingDate.getTime() - weekStartNoon.getTime();
+        const daysDiff = Math.round(timeDiff / msPerDay);
+        
+        if (daysDiff >= 0 && daysDiff <= 6) {
+          const startHour = parseInt(booking.start.split(':')[0]);
+          const endHour = parseInt(booking.end.split(':')[0]);
+          
+          for (let hour = startHour; hour < endHour; hour++) {
+            if (hour >= 8 && hour <= 20) {
+              const timeString = `${String(hour).padStart(2, '0')}:00`;
+              const cellId = `week-cell-${daysDiff}-${timeString}`;
+              const cell = document.getElementById(cellId);
+              
+              if (cell) {
+                const roomDisplayName = getRoomDisplayName(booking);
+                const roomClass = getRoomClass(booking);
+                
+                cell.classList.add('booked', roomClass);
+                
+                const bookingCode = booking.bookingId || booking.code || '';
+                const paymentIndicator = booking.isPaid ? '💳' : '📝';
+                
+                cell.innerHTML = `
+                  <div class="booking-info">${roomDisplayName}</div>
+                  <div class="booking-details">${paymentIndicator} ${bookingCode}</div>
+                `;
+              }
+            }
+          }
+        }
+      });
+    }
+    
+    // Get room display name
+    function getRoomDisplayName(booking) {
+      if (booking.room === 'Room_1' || booking.room === '1') return 'Room 1';
+      if (booking.room === 'Room_2' || booking.room === '2') return 'Room 2';
+      if (booking.room === 'Room_4' || booking.room === '4') return 'Room 4';
+      if (booking.room === 'Room_5' || booking.room === '5') return 'Room 5';
+      if (booking.room === 'Room_6' || booking.room === '6') return 'Room 6';
+      if (booking.room === 'Room_7' || booking.room === '7') return 'Room 7';
+      if (booking.room === 'Room_8' || booking.room === '8') return 'Room 8';
+      if (booking.room === 'Room_9' || booking.room === '9') return 'Room 9';
+      if (booking.location && booking.location.toLowerCase().includes('online')) return 'Online';
+      return booking.room || 'Unknown';
+    }
+    
+    // Get room CSS class
+    function getRoomClass(booking) {
+      if (booking.room === 'Room_1' || booking.room === '1') return 'room-1';
+      if (booking.room === 'Room_2' || booking.room === '2') return 'room-2';
+      if (booking.room === 'Room_4' || booking.room === '4') return 'room-4';
+      if (booking.room === 'Room_5' || booking.room === '5') return 'room-5';
+      if (booking.room === 'Room_6' || booking.room === '6') return 'room-6';
+      if (booking.room === 'Room_7' || booking.room === '7') return 'room-7';
+      if (booking.room === 'Room_8' || booking.room === '8') return 'room-8';
+      if (booking.room === 'Room_9' || booking.room === '9') return 'room-9';
+      if (booking.location && booking.location.toLowerCase().includes('online')) return 'online';
+      return '';
+    }
+    
+    // Refresh data
+    function refreshData() {
+      loadBookingData().then(() => {
+        if (selectedCounsellor) {
+          populateCalendar();
+        }
+      });
+    }
+    
+    // Go to settings page
+    function goToSettings() {
+      const params = new URLSearchParams(window.location.search);
+      const token = params.get('token');
+      if (token) {
+        window.location.href = `admin-settings.html?token=${token}`;
+      }
+    }
+    
+    // Initialize
+    document.addEventListener('DOMContentLoaded', async function() {
+      const params = new URLSearchParams(window.location.search);
+      const token = params.get('token');
+      
+      if (!token) {
+        document.getElementById('accessDenied').classList.remove('hidden');
+        return;
+      }
+      
+      const isValid = await validateAdminToken(token);
+      
+      if (isValid) {
+        document.getElementById('adminContent').classList.remove('hidden');
+        updateWeekDisplay();
+        await loadBookingData();
+      } else {
+        document.getElementById('accessDenied').classList.remove('hidden');
+      }
+    });
+  </script>
+</body>
+</html>
