@@ -218,20 +218,9 @@
       background: #f0f7ff;
     }
     
-    /* Room colour coding */
     .grid-cell.booked {
       cursor: pointer;
     }
-    
-    .grid-cell.booked.room-1 { background: #d4a5a5; border-left: 4px solid #b89090; }
-    .grid-cell.booked.room-2 { background: #b299d4; border-left: 4px solid #9680c0; }
-    .grid-cell.booked.room-4 { background: #a5d4a5; border-left: 4px solid #90b890; }
-    .grid-cell.booked.room-5 { background: #e57373; border-left: 4px solid #d32f2f; }
-    .grid-cell.booked.room-6 { background: #c8a882; border-left: 4px solid #b5946e; }
-    .grid-cell.booked.room-7 { background: #e6d45a; border-left: 4px solid #d4c347; }
-    .grid-cell.booked.room-8 { background: #80cbc4; border-left: 4px solid #4db6ac; }
-    .grid-cell.booked.room-9 { background: #ce93d8; border-left: 4px solid #ba68c8; }
-    .grid-cell.booked.online { background: #7dd87d; border-left: 4px solid #6bc46b; }
     
     .grid-cell.selected {
       box-shadow: 0 0 0 3px #007bff inset;
@@ -333,12 +322,6 @@
       font-size: 14px;
     }
     
-    .form-group select:focus,
-    .form-group input:focus {
-      outline: none;
-      border-color: #007bff;
-    }
-    
     .form-actions {
       display: flex;
       flex-direction: column;
@@ -405,7 +388,6 @@
       color: #856404;
     }
     
-    /* No selection state */
     .no-selection {
       text-align: center;
       padding: 40px 20px;
@@ -417,7 +399,6 @@
       margin-bottom: 15px;
     }
     
-    /* No counsellor selected */
     .no-counsellor {
       text-align: center;
       padding: 60px 20px;
@@ -452,20 +433,14 @@
       width: 16px;
       height: 16px;
       border-radius: 4px;
+      border: 2px solid;
     }
-    
-    .legend-color.room-1 { background: #d4a5a5; }
-    .legend-color.room-2 { background: #b299d4; }
-    .legend-color.room-4 { background: #a5d4a5; }
-    .legend-color.room-5 { background: #e57373; }
-    .legend-color.room-6 { background: #c8a882; }
-    .legend-color.room-7 { background: #e6d45a; }
-    .legend-color.room-8 { background: #80cbc4; }
-    .legend-color.room-9 { background: #ce93d8; }
-    .legend-color.online { background: #7dd87d; }
   </style>
 </head>
 <body>
+  <!-- Dynamic styles -->
+  <style id="dynamicStyles"></style>
+  
   <header class="admin-header">
     <div class="header-left">
       <a href="index.html" class="back-link">← Admin Portal</a>
@@ -493,16 +468,8 @@
       </div>
       
       <!-- Legend -->
-      <div class="legend">
-        <div class="legend-item"><div class="legend-color room-1"></div>Room 1</div>
-        <div class="legend-item"><div class="legend-color room-2"></div>Room 2</div>
-        <div class="legend-item"><div class="legend-color room-4"></div>Room 4</div>
-        <div class="legend-item"><div class="legend-color room-5"></div>Room 5</div>
-        <div class="legend-item"><div class="legend-color room-6"></div>Room 6</div>
-        <div class="legend-item"><div class="legend-color room-7"></div>Room 7</div>
-        <div class="legend-item"><div class="legend-color room-8"></div>Room 8</div>
-        <div class="legend-item"><div class="legend-color room-9"></div>Room 9</div>
-        <div class="legend-item"><div class="legend-color online"></div>Online</div>
+      <div class="legend" id="legendContainer">
+        Loading room configuration...
       </div>
       
       <div class="calendar-container">
@@ -526,13 +493,11 @@
       </div>
       
       <div class="form-content">
-        <!-- No selection state -->
         <div class="no-selection" id="noSelection">
           <div class="no-selection-icon">👆</div>
           <p>Click on any booking in the calendar to select it for modification.</p>
         </div>
         
-        <!-- Booking form -->
         <div id="bookingForm" style="display: none;">
           <div class="booking-details">
             <div class="detail-row">
@@ -563,15 +528,6 @@
             <label>New Room</label>
             <select id="newRoom">
               <option value="">No change</option>
-              <option value="Room 1">Room 1</option>
-              <option value="Room 2">Room 2</option>
-              <option value="Room 4">Room 4</option>
-              <option value="Room 5">Room 5</option>
-              <option value="Room 6">Room 6</option>
-              <option value="Room 7">Room 7</option>
-              <option value="Room 8">Room 8</option>
-              <option value="Room 9">Room 9</option>
-              <option value="Online">Online</option>
             </select>
           </div>
           
@@ -637,7 +593,21 @@
     const ROOM_ID_MAPPING = {
       'Room_1': '3', 'Room_2': '7', 'Room_4': '8', 'Room_5': '13',
       'Room_6': '9', 'Room_7': '10', 'Room_8': '14', 'Room_9': '15',
-      'Car Park': '12', 'Online': '11', 'Henley_Holding_Room': '18'
+      'Car_Park': '12', 'Online': '11', 'Henley_Holding_Room': '18'
+    };
+    
+    // Default room config
+    const defaultRoomConfig = {
+      'Room_1': { enabled: true, color: '#d4a5a5', borderColor: '#b89090', displayName: 'Room 1', location: 'henley', order: 1 },
+      'Room_2': { enabled: true, color: '#b299d4', borderColor: '#9680c0', displayName: 'Room 2', location: 'henley', order: 2 },
+      'Room_4': { enabled: true, color: '#a5d4a5', borderColor: '#90b890', displayName: 'Room 4', location: 'henley', order: 3 },
+      'Room_5': { enabled: true, color: '#e57373', borderColor: '#d32f2f', displayName: 'Room 5', location: 'henley', order: 4 },
+      'Room_6': { enabled: true, color: '#c8a882', borderColor: '#b5946e', displayName: 'Room 6', location: 'henley', order: 5 },
+      'Room_7': { enabled: true, color: '#e6d45a', borderColor: '#d4c347', displayName: 'Room 7', location: 'henley', order: 6 },
+      'Room_8': { enabled: true, color: '#80cbc4', borderColor: '#4db6ac', displayName: 'Room 8', location: 'henley', order: 7 },
+      'Room_9': { enabled: true, color: '#ce93d8', borderColor: '#ba68c8', displayName: 'Room 9', location: 'henley', order: 8 },
+      'Car_Park': { enabled: true, color: '#bdbdbd', borderColor: '#9e9e9e', displayName: 'Car Park', location: 'henley', order: 9 },
+      'Online': { enabled: true, color: '#7dd87d', borderColor: '#6bc46b', displayName: 'Online', location: 'buckhurst_hill', order: 1 }
     };
     
     const businessHours = [];
@@ -646,6 +616,8 @@
     }
     
     // State
+    let roomConfig = {};
+    let enabledRooms = [];
     let bookingData = [];
     let selectedCounsellor = '';
     let selectedBooking = null;
@@ -661,13 +633,86 @@
     // ================================
     // INITIALIZATION
     // ================================
-    document.addEventListener('DOMContentLoaded', () => {
-      // Auth check disabled for testing
-      sessionStorage.setItem('adminAuth', 'true');
-      
+    document.addEventListener('DOMContentLoaded', async () => {
       updateWeekDisplay();
-      loadBookingData();
+      await loadRoomConfig();
+      await loadBookingData();
     });
+    
+    // ================================
+    // ROOM CONFIGURATION
+    // ================================
+    async function loadRoomConfig() {
+      try {
+        const snapshot = await database.ref('room_config').once('value');
+        const config = snapshot.val();
+        
+        if (config && Object.keys(config).length > 0) {
+          roomConfig = config;
+        } else {
+          roomConfig = defaultRoomConfig;
+        }
+        
+        enabledRooms = Object.entries(roomConfig)
+          .filter(([key, room]) => room.enabled)
+          .sort((a, b) => (a[1].order || 99) - (b[1].order || 99))
+          .map(([key, room]) => ({ key, ...room }));
+        
+        generateDynamicStyles();
+        generateLegend();
+        populateRoomDropdown();
+        
+      } catch (error) {
+        console.error('Error loading room config:', error);
+        roomConfig = defaultRoomConfig;
+        enabledRooms = Object.entries(defaultRoomConfig)
+          .filter(([key, room]) => room.enabled)
+          .sort((a, b) => (a[1].order || 99) - (b[1].order || 99))
+          .map(([key, room]) => ({ key, ...room }));
+        
+        generateDynamicStyles();
+        generateLegend();
+        populateRoomDropdown();
+      }
+    }
+    
+    function generateDynamicStyles() {
+      let css = '';
+      
+      enabledRooms.forEach(room => {
+        const className = room.key.toLowerCase().replace('_', '-');
+        css += `.grid-cell.booked.${className} { background: ${room.color}; border-left: 4px solid ${room.borderColor}; }\n`;
+      });
+      
+      document.getElementById('dynamicStyles').textContent = css;
+    }
+    
+    function generateLegend() {
+      const container = document.getElementById('legendContainer');
+      container.innerHTML = '';
+      
+      enabledRooms.forEach(room => {
+        const item = document.createElement('div');
+        item.className = 'legend-item';
+        item.innerHTML = `
+          <div class="legend-color" style="background: ${room.color}; border-color: ${room.borderColor};"></div>
+          ${room.displayName}
+        `;
+        container.appendChild(item);
+      });
+    }
+    
+    function populateRoomDropdown() {
+      const select = document.getElementById('newRoom');
+      select.innerHTML = '<option value="">No change</option>';
+      
+      enabledRooms.forEach(room => {
+        const option = document.createElement('option');
+        option.value = room.displayName;
+        option.textContent = room.displayName;
+        select.appendChild(option);
+      });
+    }
     
     // ================================
     // DATA LOADING
@@ -678,7 +723,6 @@
         const data = snapshot.val() || [];
         const allBookings = Array.isArray(data) ? data : Object.values(data);
         
-        // Filter active bookings
         bookingData = allBookings.filter(b => 
           b.status !== 'cancelled' && 
           b.status !== 'cancel' &&
@@ -851,10 +895,15 @@
               const cell = document.getElementById(`week-cell-${daysDiff}-${timeStr}`);
               
               if (cell) {
-                const roomName = getRoomDisplayName(booking);
-                const roomClass = getRoomClass(booking);
+                const roomKey = getRoomKey(booking);
+                const roomCfg = roomKey ? enabledRooms.find(r => r.key === roomKey) : null;
+                const roomName = roomCfg ? roomCfg.displayName : getRoomDisplayName(booking);
+                const className = roomKey ? roomKey.toLowerCase().replace('_', '-') : '';
                 
-                cell.classList.add('booked', roomClass);
+                if (className) {
+                  cell.classList.add('booked', className);
+                }
+                
                 cell.innerHTML = `
                   <div class="booking-content">
                     <div class="room-name">${roomName}</div>
@@ -870,30 +919,28 @@
       });
     }
     
-    function getRoomDisplayName(booking) {
-      if (booking.room === 'Room_1' || booking.room === '1') return 'Room 1';
-      if (booking.room === 'Room_2' || booking.room === '2') return 'Room 2';
-      if (booking.room === 'Room_4' || booking.room === '4') return 'Room 4';
-      if (booking.room === 'Room_5' || booking.room === '5') return 'Room 5';
-      if (booking.room === 'Room_6' || booking.room === '6') return 'Room 6';
-      if (booking.room === 'Room_7' || booking.room === '7') return 'Room 7';
-      if (booking.room === 'Room_8' || booking.room === '8') return 'Room 8';
-      if (booking.room === 'Room_9' || booking.room === '9') return 'Room 9';
+    function getRoomKey(booking) {
+      if (booking.room === 'Room_1' || booking.room === '1') return 'Room_1';
+      if (booking.room === 'Room_2' || booking.room === '2') return 'Room_2';
+      if (booking.room === 'Room_4' || booking.room === '4') return 'Room_4';
+      if (booking.room === 'Room_5' || booking.room === '5') return 'Room_5';
+      if (booking.room === 'Room_6' || booking.room === '6') return 'Room_6';
+      if (booking.room === 'Room_7' || booking.room === '7') return 'Room_7';
+      if (booking.room === 'Room_8' || booking.room === '8') return 'Room_8';
+      if (booking.room === 'Room_9' || booking.room === '9') return 'Room_9';
+      if (booking.room === 'Car_Park' || booking.room === 'Car Park') return 'Car_Park';
       if (booking.location && booking.location.toLowerCase().includes('online')) return 'Online';
-      return booking.room || 'Unknown';
+      if (booking.room === 'Online') return 'Online';
+      return null;
     }
     
-    function getRoomClass(booking) {
-      if (booking.room === 'Room_1' || booking.room === '1') return 'room-1';
-      if (booking.room === 'Room_2' || booking.room === '2') return 'room-2';
-      if (booking.room === 'Room_4' || booking.room === '4') return 'room-4';
-      if (booking.room === 'Room_5' || booking.room === '5') return 'room-5';
-      if (booking.room === 'Room_6' || booking.room === '6') return 'room-6';
-      if (booking.room === 'Room_7' || booking.room === '7') return 'room-7';
-      if (booking.room === 'Room_8' || booking.room === '8') return 'room-8';
-      if (booking.room === 'Room_9' || booking.room === '9') return 'room-9';
-      if (booking.location && booking.location.toLowerCase().includes('online')) return 'online';
-      return '';
+    function getRoomDisplayName(booking) {
+      const key = getRoomKey(booking);
+      if (key) {
+        const room = enabledRooms.find(r => r.key === key);
+        if (room) return room.displayName;
+      }
+      return booking.room || 'Unknown';
     }
     
     // ================================
@@ -968,21 +1015,28 @@
       
       try {
         const counsellorId = selectedBooking.clientId || '6';
-        const originalRoom = convertRoomName(getRoomDisplayName(selectedBooking));
-        const requestedRoom = newRoom ? convertRoomName(newRoom) : originalRoom;
+        const originalRoomKey = getRoomKey(selectedBooking) || 'Room_1';
+        
+        let requestedRoomKey = originalRoomKey;
+        if (newRoom) {
+          const roomEntry = enabledRooms.find(r => r.displayName === newRoom);
+          if (roomEntry) {
+            requestedRoomKey = roomEntry.key;
+          }
+        }
         
         const payload = {
           timestamp: new Date().toISOString(),
           action: 'modify',
           counsellor_id: counsellorId,
           original_booking_code: selectedBooking.bookingId,
-          original_room: originalRoom,
-          original_room_id: ROOM_ID_MAPPING[originalRoom] || '3',
-          original_location_id: getLocationId(originalRoom),
+          original_room: originalRoomKey,
+          original_room_id: ROOM_ID_MAPPING[originalRoomKey] || '3',
+          original_location_id: getLocationId(originalRoomKey),
           original_datetime: `${selectedBooking.date}T${selectedBooking.start}:00`,
-          requested_room: requestedRoom,
-          requested_room_id: ROOM_ID_MAPPING[requestedRoom] || '3',
-          requested_location_id: getLocationId(requestedRoom),
+          requested_room: requestedRoomKey,
+          requested_room_id: ROOM_ID_MAPPING[requestedRoomKey] || '3',
+          requested_location_id: getLocationId(requestedRoomKey),
           requested_datetime: `${newDate || selectedBooking.date}T${newTime || selectedBooking.start}:00`,
           service_id: '2',
           is_paid: selectedBooking.isPaid ? 'True' : 'No',
@@ -1021,7 +1075,7 @@
       
       try {
         const counsellorId = selectedBooking.clientId || '6';
-        const roomName = convertRoomName(getRoomDisplayName(selectedBooking));
+        const roomKey = getRoomKey(selectedBooking) || 'Room_1';
         
         let payload;
         if (selectedBooking.isPaid) {
@@ -1030,9 +1084,9 @@
             action: 'modify',
             counsellor_id: counsellorId,
             original_booking_code: selectedBooking.bookingId,
-            original_room: roomName,
-            original_room_id: ROOM_ID_MAPPING[roomName] || '3',
-            original_location_id: getLocationId(roomName),
+            original_room: roomKey,
+            original_room_id: ROOM_ID_MAPPING[roomKey] || '3',
+            original_location_id: getLocationId(roomKey),
             original_datetime: `${selectedBooking.date}T${selectedBooking.start}:00`,
             requested_room: 'Henley_Holding_Room',
             requested_room_id: '18',
@@ -1049,7 +1103,7 @@
             counsellor_id: counsellorId,
             booking_code: selectedBooking.bookingId,
             original_datetime: `${selectedBooking.date}T${selectedBooking.start}:00`,
-            original_room: roomName,
+            original_room: roomKey,
             service_id: '2',
             is_paid: 'No',
             admin_override: 'true'
@@ -1077,15 +1131,8 @@
     // ================================
     // UTILITIES
     // ================================
-    function convertRoomName(name) {
-      if (name && name.startsWith('Room ')) {
-        return name.replace('Room ', 'Room_');
-      }
-      return name;
-    }
-    
-    function getLocationId(roomName) {
-      return (roomName === 'Online' || roomName === 'Online Counselling') ? '1' : '2';
+    function getLocationId(roomKey) {
+      return (roomKey === 'Online') ? '1' : '2';
     }
     
     function showStatus(message, type) {
