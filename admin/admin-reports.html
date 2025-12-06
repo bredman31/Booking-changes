@@ -496,21 +496,20 @@
     .counsellor-card {
       display: flex;
       align-items: center;
-      padding: 6px 8px;
+      padding: 5px 8px;
       background: white;
       border: 1px solid #e0e0e0;
       border-radius: 4px;
-      transition: all 0.2s;
+      gap: 8px;
     }
     
     .counsellor-card:hover {
       border-color: #1a1a2e;
-      box-shadow: 0 1px 4px rgba(0,0,0,0.08);
     }
     
     .counsellor-avatar {
-      width: 28px;
-      height: 28px;
+      width: 26px;
+      height: 26px;
       border-radius: 50%;
       background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
       color: white;
@@ -518,74 +517,47 @@
       align-items: center;
       justify-content: center;
       font-weight: 600;
-      font-size: 10px;
-      margin-right: 8px;
+      font-size: 9px;
       flex-shrink: 0;
     }
     
-    .counsellor-details {
-      flex: 1;
-      min-width: 0;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-    
     .counsellor-name {
-      font-weight: 600;
-      font-size: 12px;
+      font-weight: 500;
+      font-size: 11px;
       color: #1a1a2e;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
-      min-width: 100px;
-    }
-    
-    .counsellor-rooms {
-      display: flex;
-      gap: 3px;
-      flex-wrap: wrap;
-    }
-    
-    .room-badge {
-      font-size: 9px;
-      padding: 2px 6px;
-      border-radius: 3px;
-      font-weight: 500;
-      white-space: nowrap;
+      width: 110px;
+      flex-shrink: 0;
     }
     
     .counsellor-time-bar {
       display: flex;
-      gap: 1px;
-      margin-left: 8px;
+      gap: 2px;
+      flex: 1;
     }
     
     .time-slot {
-      width: 12px;
-      height: 8px;
-      border-radius: 1px;
-      background: #e0e0e0;
-    }
-    
-    .time-slot.booked {
-      background: #28a745;
+      flex: 1;
+      height: 18px;
+      border-radius: 2px;
+      background: #e8e8e8;
     }
     
     .counsellor-stats {
       display: flex;
-      gap: 8px;
-      margin-left: 8px;
+      gap: 6px;
       flex-shrink: 0;
     }
     
     .counsellor-stat {
       text-align: center;
-      min-width: 32px;
+      min-width: 28px;
     }
     
     .counsellor-stat-value {
-      font-size: 13px;
+      font-size: 12px;
       font-weight: 600;
       color: #1a1a2e;
     }
@@ -1344,8 +1316,7 @@
             name: name,
             bookings: [],
             totalHours: 0,
-            rooms: [],
-            timeSlots: new Set()
+            timeSlots: {} // hour -> room info
           };
         }
         
@@ -1355,18 +1326,15 @@
         const endHour = parseInt(booking.end.split(':')[0]);
         counsellorMap[name].totalHours += (endHour - startHour);
         
-        // Track rooms used with their config
+        // Find room info
         let roomInfo = enabledRooms.find(r => r.dbValues.includes(booking.room));
         if (!roomInfo && booking.location && booking.location.toLowerCase().includes('online')) {
           roomInfo = enabledRooms.find(r => r.key === 'Online');
         }
-        if (roomInfo && !counsellorMap[name].rooms.find(r => r.key === roomInfo.key)) {
-          counsellorMap[name].rooms.push(roomInfo);
-        }
         
-        // Track time slots
+        // Track time slots with room colour
         for (let h = startHour; h < endHour; h++) {
-          counsellorMap[name].timeSlots.add(h);
+          counsellorMap[name].timeSlots[h] = roomInfo;
         }
       });
       
@@ -1400,27 +1368,22 @@
       counsellors.forEach(counsellor => {
         const initials = getInitials(counsellor.name);
         
-        // Build room badges with colours
-        let roomBadgesHtml = counsellor.rooms.map(room => {
-          const textColor = getContrastColor(room.color);
-          return `<span class="room-badge" style="background: ${room.color}; color: ${textColor}; border: 1px solid ${room.borderColor};">${room.name}</span>`;
-        }).join('');
-        
-        // Build time bar (8am-8pm = 13 slots)
+        // Build time bar (8am-8pm = 13 slots) with room colours
         let timeBarHtml = '';
         for (let h = 8; h <= 20; h++) {
-          const isBooked = counsellor.timeSlots.has(h);
-          timeBarHtml += `<div class="time-slot ${isBooked ? 'booked' : ''}" title="${h}:00"></div>`;
+          const roomInfo = counsellor.timeSlots[h];
+          if (roomInfo) {
+            timeBarHtml += `<div class="time-slot" style="background: ${roomInfo.color}; border: 1px solid ${roomInfo.borderColor};" title="${h}:00 - ${roomInfo.name}"></div>`;
+          } else {
+            timeBarHtml += `<div class="time-slot" title="${h}:00"></div>`;
+          }
         }
         
         html += `
           <div class="counsellor-card">
             <div class="counsellor-avatar">${initials}</div>
-            <div class="counsellor-details">
-              <div class="counsellor-name">${counsellor.name}</div>
-              <div class="counsellor-rooms">${roomBadgesHtml}</div>
-              <div class="counsellor-time-bar" title="8am-8pm">${timeBarHtml}</div>
-            </div>
+            <div class="counsellor-name">${counsellor.name}</div>
+            <div class="counsellor-time-bar" title="8am-8pm">${timeBarHtml}</div>
             <div class="counsellor-stats">
               <div class="counsellor-stat">
                 <div class="counsellor-stat-value">${counsellor.bookings.length}</div>
