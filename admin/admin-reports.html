@@ -8,6 +8,8 @@
   <!-- Firebase -->
   <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-database-compat.js"></script>
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   
   <style>
     * {
@@ -32,7 +34,7 @@
     .admin-header {
       background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
       color: white;
-      padding: 12px 25px;
+      padding: 10px 25px;
       display: flex;
       justify-content: space-between;
       align-items: center;
@@ -50,42 +52,42 @@
     }
     
     .header-left h1 {
-      font-size: 18px;
+      font-size: 16px;
       font-weight: 500;
     }
     
     .back-link {
       color: rgba(255, 255, 255, 0.7);
       text-decoration: none;
-      font-size: 13px;
+      font-size: 12px;
     }
     
     .back-link:hover {
       color: white;
     }
     
-    /* Main Content - fills remaining space */
+    /* Main Content */
     .main-content {
       flex: 1;
       overflow-y: auto;
-      padding: 15px 25px;
+      padding: 12px 20px;
       display: flex;
       flex-direction: column;
-      gap: 15px;
+      gap: 12px;
     }
     
-    /* Date Range Selector - Compact */
+    /* Date Controls - Compact */
     .date-controls {
       background: white;
-      border-radius: 10px;
-      padding: 12px 18px;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+      border-radius: 8px;
+      padding: 10px 15px;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
       flex-shrink: 0;
     }
     
     .controls-row {
       display: flex;
-      gap: 15px;
+      gap: 12px;
       align-items: center;
       flex-wrap: wrap;
     }
@@ -93,28 +95,28 @@
     .date-controls label {
       font-weight: 600;
       color: #333;
-      font-size: 13px;
+      font-size: 12px;
     }
     
     .date-controls input[type="date"] {
-      padding: 6px 10px;
+      padding: 5px 8px;
       border: 1px solid #ddd;
-      border-radius: 5px;
-      font-size: 13px;
+      border-radius: 4px;
+      font-size: 12px;
     }
     
     .quick-select {
       display: flex;
-      gap: 8px;
+      gap: 6px;
     }
     
     .quick-btn {
-      padding: 6px 14px;
+      padding: 5px 12px;
       border: 1px solid #ddd;
       background: white;
-      border-radius: 5px;
+      border-radius: 4px;
       cursor: pointer;
-      font-size: 12px;
+      font-size: 11px;
       transition: all 0.2s;
     }
     
@@ -132,10 +134,10 @@
       background: #28a745;
       color: white;
       border: none;
-      padding: 6px 16px;
-      border-radius: 5px;
+      padding: 5px 14px;
+      border-radius: 4px;
       cursor: pointer;
-      font-size: 12px;
+      font-size: 11px;
       margin-left: auto;
     }
     
@@ -148,24 +150,24 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 12px;
-      margin-top: 10px;
-      padding-top: 10px;
+      gap: 10px;
+      margin-top: 8px;
+      padding-top: 8px;
       border-top: 1px solid #eee;
     }
     
     .nav-btn {
       background: #f0f0f0;
       border: 1px solid #ddd;
-      padding: 6px 12px;
-      border-radius: 5px;
+      padding: 4px 10px;
+      border-radius: 4px;
       cursor: pointer;
-      font-size: 12px;
+      font-size: 11px;
       transition: all 0.2s;
       display: flex;
       align-items: center;
-      gap: 6px;
-      min-width: 120px;
+      gap: 5px;
+      min-width: 100px;
       justify-content: center;
     }
     
@@ -174,106 +176,104 @@
     }
     
     .period-display {
-      min-width: 200px;
+      min-width: 180px;
       text-align: center;
     }
     
     .period-label {
-      font-size: 10px;
+      font-size: 9px;
       color: #666;
       text-transform: uppercase;
       letter-spacing: 0.5px;
-      margin-bottom: 2px;
     }
     
     .period-value {
-      font-size: 15px;
+      font-size: 13px;
       font-weight: 600;
       color: #1a1a2e;
     }
     
     .period-dates {
-      font-size: 11px;
+      font-size: 10px;
       color: #888;
-      margin-top: 1px;
     }
     
     .today-btn {
       background: #007bff;
       color: white;
       border: none;
-      padding: 5px 12px;
-      border-radius: 5px;
+      padding: 4px 10px;
+      border-radius: 4px;
       cursor: pointer;
-      font-size: 11px;
-      margin-left: 8px;
+      font-size: 10px;
+      margin-left: 6px;
     }
     
     .today-btn:hover {
       background: #0056b3;
     }
     
-    /* Summary Cards - Compact Row */
-    .summary-grid {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 12px;
-      flex-shrink: 0;
-    }
-    
-    .summary-card {
+    /* Compact Summary Strip */
+    .summary-strip {
+      display: flex;
+      gap: 15px;
       background: white;
-      border-radius: 10px;
-      padding: 15px;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
-      text-align: center;
+      border-radius: 8px;
+      padding: 10px 20px;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+      flex-shrink: 0;
+      align-items: center;
     }
     
-    .summary-card .number {
-      font-size: 28px;
+    .summary-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .summary-item .number {
+      font-size: 20px;
       font-weight: bold;
       color: #1a1a2e;
     }
     
-    .summary-card .label {
+    .summary-item .label {
+      font-size: 10px;
       color: #666;
-      font-size: 11px;
-      margin-top: 3px;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
     }
     
-    .summary-card.highlight {
-      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+    .summary-divider {
+      width: 1px;
+      height: 30px;
+      background: #e0e0e0;
     }
     
-    .summary-card.highlight .number,
-    .summary-card.highlight .label {
-      color: white;
-    }
-    
-    /* Content Grid - Side by Side */
-    .content-grid {
+    /* Charts Grid */
+    .charts-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 15px;
+      gap: 12px;
       flex: 1;
       min-height: 0;
     }
     
-    /* Room Stats Section */
+    /* Section Container */
     .section-container {
       background: white;
-      border-radius: 10px;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+      border-radius: 8px;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
       display: flex;
       flex-direction: column;
       overflow: hidden;
     }
     
     .section-header {
-      font-size: 14px;
+      font-size: 13px;
       font-weight: 600;
       color: #1a1a2e;
-      padding: 12px 15px;
+      padding: 10px 12px;
       border-bottom: 1px solid #eee;
       background: #fafafa;
       flex-shrink: 0;
@@ -283,113 +283,143 @@
       flex: 1;
       overflow-y: auto;
       padding: 12px;
-    }
-    
-    .room-stats-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-      gap: 10px;
-    }
-    
-    .room-card {
-      background: #f8f9fa;
-      border-radius: 8px;
-      padding: 12px;
-    }
-    
-    .room-card-header {
       display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 8px;
+      flex-direction: column;
     }
     
-    .room-name {
-      font-size: 13px;
-      font-weight: 600;
-      color: #1a1a2e;
+    /* Bar Chart Container */
+    .bar-chart-container {
+      flex: 1;
+      min-height: 200px;
+      position: relative;
+    }
+    
+    /* Heat Map Styles */
+    .heatmap-container {
+      flex: 1;
+      overflow: auto;
+    }
+    
+    .heatmap-grid {
+      display: inline-block;
+      min-width: 100%;
+    }
+    
+    .heatmap-header-row {
       display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-    
-    .room-color {
-      width: 14px;
-      height: 14px;
-      border-radius: 3px;
-    }
-    
-    .booking-count {
-      font-size: 20px;
-      font-weight: bold;
-      color: #1a1a2e;
-    }
-    
-    .room-stats {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 8px;
-      margin-bottom: 8px;
-    }
-    
-    .stat-item {
-      text-align: center;
-      padding: 6px;
-      background: white;
-      border-radius: 5px;
-    }
-    
-    .stat-value {
-      font-size: 14px;
-      font-weight: 600;
-      color: #333;
-    }
-    
-    .stat-label {
-      font-size: 9px;
-      color: #666;
-      margin-top: 1px;
-    }
-    
-    /* Utilisation Bar */
-    .utilisation-bar-container {
-      margin-top: 6px;
-    }
-    
-    .utilisation-label {
-      display: flex;
-      justify-content: space-between;
-      font-size: 10px;
+      margin-left: 50px;
       margin-bottom: 3px;
     }
     
-    .utilisation-bar {
-      height: 6px;
-      background: #e0e0e0;
-      border-radius: 3px;
-      overflow: hidden;
+    .heatmap-header-cell {
+      width: 42px;
+      text-align: center;
+      font-size: 10px;
+      font-weight: 600;
+      color: #666;
     }
     
-    .utilisation-fill {
-      height: 100%;
-      border-radius: 3px;
-      transition: width 0.5s ease;
+    .heatmap-row {
+      display: flex;
+      align-items: center;
+      margin-bottom: 2px;
     }
     
-    .utilisation-fill.low { background: #28a745; }
-    .utilisation-fill.medium { background: #ffc107; }
-    .utilisation-fill.high { background: #dc3545; }
+    .heatmap-time {
+      width: 46px;
+      font-size: 10px;
+      color: #666;
+      text-align: right;
+      padding-right: 4px;
+    }
     
-    /* Table Styles */
+    .heatmap-cell {
+      width: 40px;
+      height: 24px;
+      margin: 0 1px;
+      border-radius: 3px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 9px;
+      font-weight: 500;
+      transition: transform 0.1s;
+    }
+    
+    .heatmap-cell:hover {
+      transform: scale(1.1);
+      z-index: 1;
+    }
+    
+    /* Heat map totals row */
+    .heatmap-totals-row {
+      display: flex;
+      align-items: center;
+      margin-top: 6px;
+      padding-top: 6px;
+      border-top: 2px solid #e0e0e0;
+    }
+    
+    .heatmap-totals-label {
+      width: 46px;
+      font-size: 9px;
+      color: #333;
+      text-align: right;
+      padding-right: 4px;
+      font-weight: 600;
+    }
+    
+    .heatmap-total-cell {
+      width: 40px;
+      height: 28px;
+      margin: 0 1px;
+      border-radius: 3px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+      font-weight: 600;
+    }
+    
+    .heatmap-total-cell .util-percent {
+      font-size: 9px;
+      opacity: 0.9;
+    }
+    
+    /* Heat map legend */
+    .heatmap-legend {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-top: 10px;
+      justify-content: center;
+      font-size: 10px;
+      color: #666;
+    }
+    
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    
+    .legend-box {
+      width: 14px;
+      height: 14px;
+      border-radius: 2px;
+    }
+    
+    /* Daily Breakdown Table */
     .data-table {
       width: 100%;
       border-collapse: collapse;
-      font-size: 12px;
+      font-size: 11px;
     }
     
     .data-table th,
     .data-table td {
-      padding: 8px 10px;
+      padding: 6px 8px;
       text-align: left;
       border-bottom: 1px solid #eee;
     }
@@ -411,17 +441,27 @@
       font-family: 'Courier New', monospace;
     }
     
+    /* Utilisation colours */
+    .util-good { color: #28a745; }
+    .util-okay { color: #ffc107; }
+    .util-poor { color: #fd7e14; }
+    .util-bad { color: #dc3545; }
+    
+    .bg-good { background: #28a745; color: white; }
+    .bg-okay { background: #ffc107; color: #333; }
+    .bg-poor { background: #fd7e14; color: white; }
+    .bg-bad { background: #dc3545; color: white; }
+    
     /* Loading State */
     .loading {
       text-align: center;
-      padding: 30px;
+      padding: 20px;
       color: #666;
-      font-size: 13px;
+      font-size: 12px;
     }
     
-    /* Dynamic room colours will be injected here */
-    #dynamicStyles {
-    }
+    /* Dynamic room colours */
+    #dynamicStyles {}
   </style>
   <style id="dynamicStyles"></style>
 </head>
@@ -445,7 +485,7 @@
           <button class="quick-btn" onclick="setQuickRange('custom')">Custom</button>
         </div>
         
-        <div id="customDateRange" style="display: none; gap: 10px; align-items: center;">
+        <div id="customDateRange" style="display: none; gap: 8px; align-items: center;">
           <label>From:</label>
           <input type="date" id="startDate">
           <label>To:</label>
@@ -476,56 +516,76 @@
       </div>
     </div>
     
-    <!-- Summary Cards -->
-    <div class="summary-grid">
-      <div class="summary-card highlight">
+    <!-- Compact Summary Strip -->
+    <div class="summary-strip">
+      <div class="summary-item">
         <div class="number" id="totalBookings">0</div>
-        <div class="label">Total Bookings</div>
+        <div class="label">Bookings</div>
       </div>
-      <div class="summary-card">
+      <div class="summary-divider"></div>
+      <div class="summary-item">
         <div class="number" id="totalHours">0</div>
-        <div class="label">Hours Booked</div>
+        <div class="label">Hours</div>
       </div>
-      <div class="summary-card">
+      <div class="summary-divider"></div>
+      <div class="summary-item">
         <div class="number" id="avgUtilisation">0%</div>
-        <div class="label">Avg Utilisation</div>
+        <div class="label">Utilisation</div>
       </div>
-      <div class="summary-card">
+      <div class="summary-divider"></div>
+      <div class="summary-item">
         <div class="number" id="uniqueCounsellors">0</div>
-        <div class="label">Active Counsellors</div>
+        <div class="label">Counsellors</div>
       </div>
     </div>
     
-    <!-- Content Grid -->
-    <div class="content-grid">
-      <!-- Room Statistics -->
+    <!-- Charts Grid -->
+    <div class="charts-grid">
+      <!-- Room Bar Chart -->
       <div class="section-container">
-        <div class="section-header">📍 Room Statistics</div>
+        <div class="section-header">📊 Room Utilisation</div>
         <div class="section-body">
-          <div class="room-stats-grid" id="roomStatsGrid">
-            <div class="loading">Loading...</div>
+          <div class="bar-chart-container">
+            <canvas id="roomBarChart"></canvas>
           </div>
         </div>
       </div>
       
-      <!-- Daily Breakdown -->
+      <!-- Heat Map (Week view) / Daily Breakdown (Day/Month view) -->
       <div class="section-container">
-        <div class="section-header">📅 Daily Breakdown</div>
-        <div class="section-body" style="padding: 0;">
-          <table class="data-table">
-            <thead>
-              <tr>
-                <th>Date</th>
-                <th>Day</th>
-                <th class="number-col">Bookings</th>
-                <th class="number-col">Hours</th>
-                <th class="number-col">Util %</th>
-              </tr>
-            </thead>
-            <tbody id="dailyTableBody">
-              <tr><td colspan="5" class="loading">Loading...</td></tr>
-            </tbody>
-          </table>
+        <div class="section-header" id="rightPanelHeader">📅 Daily Breakdown</div>
+        <div class="section-body" id="rightPanelBody">
+          <!-- Content switches based on view -->
+          <div id="dailyTableContainer">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>Day</th>
+                  <th class="number-col">Bookings</th>
+                  <th class="number-col">Hours</th>
+                  <th class="number-col">Util %</th>
+                </tr>
+              </thead>
+              <tbody id="dailyTableBody">
+                <tr><td colspan="5" class="loading">Loading...</td></tr>
+              </tbody>
+            </table>
+          </div>
+          
+          <div id="heatmapContainer" style="display: none;">
+            <div class="heatmap-container">
+              <div class="heatmap-grid" id="heatmapGrid"></div>
+            </div>
+            <div class="heatmap-legend">
+              <span>Rooms booked:</span>
+              <div class="legend-item"><div class="legend-box" style="background: #f5f5f5; border: 1px solid #ddd;"></div> 0</div>
+              <div class="legend-item"><div class="legend-box" style="background: #c8e6c9;"></div> 1-2</div>
+              <div class="legend-item"><div class="legend-box" style="background: #81c784;"></div> 3-4</div>
+              <div class="legend-item"><div class="legend-box" style="background: #4caf50;"></div> 5-6</div>
+              <div class="legend-item"><div class="legend-box" style="background: #2e7d32;"></div> 7+</div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -550,8 +610,9 @@
     
     // Constants
     const HOURS_PER_DAY = 13; // 8am to 9pm
+    const BUSINESS_HOURS = ['08:00', '09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00', '18:00', '19:00', '20:00'];
     
-    // Default room configuration (fallback)
+    // Default room configuration
     const defaultRoomConfig = {
       'Room_1': { enabled: true, color: '#d4a5a5', borderColor: '#b89090', displayName: 'Room 1', order: 1 },
       'Room_2': { enabled: true, color: '#b299d4', borderColor: '#9680c0', displayName: 'Room 2', order: 2 },
@@ -568,6 +629,7 @@
     const MONTH_NAMES = ['January', 'February', 'March', 'April', 'May', 'June', 
                          'July', 'August', 'September', 'October', 'November', 'December'];
     const DAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    const DAY_NAMES_SHORT = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
     
     // State
     let bookingData = [];
@@ -577,6 +639,7 @@
     let currentDate = new Date();
     let startDate = new Date();
     let endDate = new Date();
+    let barChart = null;
     
     // ================================
     // INITIALIZATION
@@ -591,7 +654,6 @@
       currentDate = new Date();
       currentDate.setHours(12, 0, 0, 0);
       
-      // Load room config first, then reports
       await loadRoomConfig();
       updateNavigationDisplay();
       loadReports();
@@ -611,7 +673,6 @@
           roomConfig = defaultRoomConfig;
         }
         
-        // Build enabled rooms list with database values for matching
         enabledRooms = Object.entries(roomConfig)
           .filter(([key, room]) => room.enabled)
           .map(([key, room]) => ({
@@ -625,7 +686,6 @@
           }))
           .sort((a, b) => a.order - b.order);
         
-        generateDynamicStyles();
         console.log('Loaded room config:', enabledRooms.length, 'enabled rooms');
         
       } catch (error) {
@@ -643,12 +703,10 @@
             dbValues: getDbValuesForRoom(key)
           }))
           .sort((a, b) => a.order - b.order);
-        generateDynamicStyles();
       }
     }
     
     function getDbValuesForRoom(key) {
-      // Map room keys to possible database values
       const mappings = {
         'Room_1': ['Room_1', '1', 'Room 1'],
         'Room_2': ['Room_2', '2', 'Room 2'],
@@ -664,12 +722,47 @@
       return mappings[key] || [key];
     }
     
-    function generateDynamicStyles() {
-      let css = '';
-      enabledRooms.forEach(room => {
-        css += `.room-color.${room.id} { background: ${room.color}; }\n`;
-      });
-      document.getElementById('dynamicStyles').textContent = css;
+    // ================================
+    // UTILISATION HELPERS
+    // ================================
+    function getUtilClass(utilisation, isDaily = false) {
+      if (isDaily) {
+        // Daily: >70% green, 45-70% yellow, 20-45% orange, <20% red
+        if (utilisation >= 70) return 'good';
+        if (utilisation >= 45) return 'okay';
+        if (utilisation >= 20) return 'poor';
+        return 'bad';
+      } else {
+        // Weekly/Monthly: >31% green, 20.5-31% yellow, 10-20.5% orange, <10% red
+        if (utilisation >= 31) return 'good';
+        if (utilisation >= 20.5) return 'okay';
+        if (utilisation >= 10) return 'poor';
+        return 'bad';
+      }
+    }
+    
+    function getUtilColor(utilisation, isDaily = false) {
+      const cls = getUtilClass(utilisation, isDaily);
+      const colors = {
+        'good': '#28a745',
+        'okay': '#ffc107',
+        'poor': '#fd7e14',
+        'bad': '#dc3545'
+      };
+      return colors[cls];
+    }
+    
+    function getHeatColor(roomsBooked) {
+      if (roomsBooked >= 7) return '#2e7d32';
+      if (roomsBooked >= 5) return '#4caf50';
+      if (roomsBooked >= 3) return '#81c784';
+      if (roomsBooked >= 1) return '#c8e6c9';
+      return '#f5f5f5';
+    }
+    
+    function getHeatTextColor(roomsBooked) {
+      if (roomsBooked >= 5) return 'white';
+      return '#333';
     }
     
     // ================================
@@ -955,6 +1048,7 @@
       currentDate.setHours(12, 0, 0, 0);
       
       updateNavigationDisplay();
+      updateRightPanel();
       loadReports();
     }
     
@@ -969,6 +1063,25 @@
         start: formatDate(startDate),
         end: formatDate(endDate)
       };
+    }
+    
+    // ================================
+    // RIGHT PANEL SWITCH
+    // ================================
+    function updateRightPanel() {
+      const header = document.getElementById('rightPanelHeader');
+      const dailyTable = document.getElementById('dailyTableContainer');
+      const heatmap = document.getElementById('heatmapContainer');
+      
+      if (currentRange === 'week') {
+        header.textContent = '🔥 Weekly Heat Map';
+        dailyTable.style.display = 'none';
+        heatmap.style.display = 'block';
+      } else {
+        header.textContent = '📅 Daily Breakdown';
+        dailyTable.style.display = 'block';
+        heatmap.style.display = 'none';
+      }
     }
     
     // ================================
@@ -988,6 +1101,7 @@
           b.date !== '2030-01-01'
         );
         
+        updateRightPanel();
         calculateAndDisplayStats();
         
       } catch (error) {
@@ -1001,6 +1115,7 @@
     function calculateAndDisplayStats() {
       const range = getDateRange();
       const days = getDaysBetween(range.start, range.end);
+      const isDaily = currentRange === 'day';
       
       const filteredBookings = bookingData.filter(b => 
         b.date >= range.start && b.date <= range.end
@@ -1024,18 +1139,31 @@
       
       document.getElementById('totalBookings').textContent = filteredBookings.length;
       document.getElementById('totalHours').textContent = totalHours;
-      document.getElementById('avgUtilisation').textContent = avgUtilisation + '%';
+      
+      const avgUtilEl = document.getElementById('avgUtilisation');
+      avgUtilEl.textContent = avgUtilisation + '%';
+      avgUtilEl.style.color = getUtilColor(avgUtilisation, isDaily);
+      
       document.getElementById('uniqueCounsellors').textContent = counsellors.size;
       
-      displayRoomStats(filteredBookings, days);
-      displayDailyBreakdown(days);
+      // Update charts
+      displayRoomBarChart(filteredBookings, days, isDaily);
+      
+      if (currentRange === 'week') {
+        displayHeatMap(days);
+      } else {
+        displayDailyBreakdown(days, isDaily);
+      }
     }
     
-    function displayRoomStats(filteredBookings, days) {
-      const container = document.getElementById('roomStatsGrid');
-      container.innerHTML = '';
+    // ================================
+    // ROOM BAR CHART
+    // ================================
+    function displayRoomBarChart(filteredBookings, days, isDaily) {
+      const ctx = document.getElementById('roomBarChart').getContext('2d');
       
-      enabledRooms.forEach(room => {
+      // Calculate data for each room
+      const roomData = enabledRooms.map(room => {
         const roomBookings = filteredBookings.filter(b => 
           room.dbValues.includes(b.room) || 
           (room.key === 'Online' && b.location && b.location.toLowerCase().includes('online'))
@@ -1053,48 +1181,184 @@
           ? Math.round((roomHours / availableHours) * 100) 
           : 0;
         
-        let utilizationClass = 'low';
-        if (utilisation > 70) utilizationClass = 'high';
-        else if (utilisation > 40) utilizationClass = 'medium';
-        
-        const card = document.createElement('div');
-        card.className = 'room-card';
-        card.innerHTML = `
-          <div class="room-card-header">
-            <div class="room-name">
-              <div class="room-color ${room.id}"></div>
-              ${room.name}
-            </div>
-            <div class="booking-count">${roomBookings.length}</div>
-          </div>
-          
-          <div class="room-stats">
-            <div class="stat-item">
-              <div class="stat-value">${roomHours}</div>
-              <div class="stat-label">Hrs Booked</div>
-            </div>
-            <div class="stat-item">
-              <div class="stat-value">${availableHours}</div>
-              <div class="stat-label">Hrs Available</div>
-            </div>
-          </div>
-          
-          <div class="utilisation-bar-container">
-            <div class="utilisation-label">
-              <span>Utilisation</span>
-              <span>${utilisation}%</span>
-            </div>
-            <div class="utilisation-bar">
-              <div class="utilisation-fill ${utilizationClass}" style="width: ${utilisation}%"></div>
-            </div>
-          </div>
-        `;
-        
-        container.appendChild(card);
+        return {
+          name: room.name,
+          utilisation: utilisation,
+          color: room.color,
+          utilColor: getUtilColor(utilisation, isDaily)
+        };
+      });
+      
+      // Destroy previous chart if exists
+      if (barChart) {
+        barChart.destroy();
+      }
+      
+      barChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: roomData.map(r => r.name),
+          datasets: [{
+            label: 'Utilisation %',
+            data: roomData.map(r => r.utilisation),
+            backgroundColor: roomData.map(r => r.utilColor),
+            borderColor: roomData.map(r => r.utilColor),
+            borderWidth: 1,
+            borderRadius: 4
+          }]
+        },
+        options: {
+          indexAxis: 'y',
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              display: false
+            },
+            tooltip: {
+              callbacks: {
+                label: function(context) {
+                  return `${context.parsed.x}% utilisation`;
+                }
+              }
+            }
+          },
+          scales: {
+            x: {
+              beginAtZero: true,
+              max: 100,
+              ticks: {
+                callback: function(value) {
+                  return value + '%';
+                }
+              },
+              grid: {
+                color: '#f0f0f0'
+              }
+            },
+            y: {
+              grid: {
+                display: false
+              }
+            }
+          }
+        }
       });
     }
     
-    function displayDailyBreakdown(days) {
+    // ================================
+    // HEAT MAP
+    // ================================
+    function displayHeatMap(days) {
+      const container = document.getElementById('heatmapGrid');
+      container.innerHTML = '';
+      
+      // Create data structure: time -> day -> count
+      const heatData = {};
+      BUSINESS_HOURS.forEach(time => {
+        heatData[time] = {};
+        days.forEach(day => {
+          heatData[time][day] = 0;
+        });
+      });
+      
+      // Count bookings per time slot
+      const filteredBookings = bookingData.filter(b => 
+        b.date >= days[0] && b.date <= days[days.length - 1]
+      );
+      
+      filteredBookings.forEach(booking => {
+        const startHour = parseInt(booking.start.split(':')[0]);
+        const endHour = parseInt(booking.end.split(':')[0]);
+        
+        for (let h = startHour; h < endHour; h++) {
+          const timeKey = `${String(h).padStart(2, '0')}:00`;
+          if (heatData[timeKey] && heatData[timeKey][booking.date] !== undefined) {
+            heatData[timeKey][booking.date]++;
+          }
+        }
+      });
+      
+      // Calculate daily totals
+      const dailyTotals = {};
+      days.forEach(day => {
+        let totalHours = 0;
+        BUSINESS_HOURS.forEach(time => {
+          totalHours += heatData[time][day];
+        });
+        const availableHours = enabledRooms.length * HOURS_PER_DAY;
+        dailyTotals[day] = {
+          hours: totalHours,
+          utilisation: availableHours > 0 ? Math.round((totalHours / availableHours) * 100) : 0
+        };
+      });
+      
+      // Header row
+      const headerRow = document.createElement('div');
+      headerRow.className = 'heatmap-header-row';
+      days.forEach(day => {
+        const dateObj = new Date(day + 'T12:00:00');
+        const cell = document.createElement('div');
+        cell.className = 'heatmap-header-cell';
+        cell.innerHTML = `${DAY_NAMES_SHORT[dateObj.getDay()]}<br>${dateObj.getDate()}`;
+        headerRow.appendChild(cell);
+      });
+      container.appendChild(headerRow);
+      
+      // Data rows
+      BUSINESS_HOURS.forEach(time => {
+        const row = document.createElement('div');
+        row.className = 'heatmap-row';
+        
+        const timeLabel = document.createElement('div');
+        timeLabel.className = 'heatmap-time';
+        timeLabel.textContent = time;
+        row.appendChild(timeLabel);
+        
+        days.forEach(day => {
+          const count = heatData[time][day];
+          const cell = document.createElement('div');
+          cell.className = 'heatmap-cell';
+          cell.style.backgroundColor = getHeatColor(count);
+          cell.style.color = getHeatTextColor(count);
+          cell.textContent = count > 0 ? count : '';
+          cell.title = `${day} ${time}: ${count} rooms booked`;
+          row.appendChild(cell);
+        });
+        
+        container.appendChild(row);
+      });
+      
+      // Totals row
+      const totalsRow = document.createElement('div');
+      totalsRow.className = 'heatmap-totals-row';
+      
+      const totalsLabel = document.createElement('div');
+      totalsLabel.className = 'heatmap-totals-label';
+      totalsLabel.textContent = 'Daily %';
+      totalsRow.appendChild(totalsLabel);
+      
+      days.forEach(day => {
+        const total = dailyTotals[day];
+        const cell = document.createElement('div');
+        cell.className = 'heatmap-total-cell';
+        
+        // Use weekly thresholds for the totals
+        const utilClass = getUtilClass(total.utilisation, false);
+        cell.classList.add('bg-' + utilClass);
+        
+        cell.innerHTML = `${total.utilisation}%`;
+        cell.title = `${day}: ${total.hours} hours booked, ${total.utilisation}% utilisation`;
+        totalsRow.appendChild(cell);
+      });
+      
+      container.appendChild(totalsRow);
+    }
+    
+    // ================================
+    // DAILY BREAKDOWN
+    // ================================
+    function displayDailyBreakdown(days, isDaily) {
       const tbody = document.getElementById('dailyTableBody');
       tbody.innerHTML = '';
       
@@ -1113,6 +1377,9 @@
           ? Math.round((dayHours / availableHours) * 100) 
           : 0;
         
+        const utilClass = getUtilClass(utilisation, isDaily);
+        const utilColor = getUtilColor(utilisation, isDaily);
+        
         const dateObj = new Date(day + 'T12:00:00');
         const dayName = DAY_NAMES[dateObj.getDay()];
         
@@ -1122,7 +1389,7 @@
           <td>${dayName}</td>
           <td class="number-col">${dayBookings.length}</td>
           <td class="number-col">${dayHours}</td>
-          <td class="number-col">${utilisation}%</td>
+          <td class="number-col" style="color: ${utilColor}; font-weight: 600;">${utilisation}%</td>
         `;
         
         tbody.appendChild(row);
