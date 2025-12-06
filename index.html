@@ -8,9 +8,7 @@
   <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-database-compat.js"></script>
   
-
-
-<!-- ================================ -->
+  <!-- ================================ -->
   <!-- SECTION 1: STYLES AND CSS -->
   <!-- ================================ -->
   <style>
@@ -204,8 +202,8 @@
       border-color: #d4c347;
     }
     .grid-cell.booked.room-8 {
-      background: #90caf9;
-      border-color: #64b5f6;
+      background: #80cbc4;
+      border-color: #4db6ac;
     }
     .grid-cell.booked.room-9 {
       background: #ce93d8;
@@ -281,19 +279,9 @@
       text-align: center;
     }
   </style>
-
-
-
-  
+</head>
+<body>
   <!-- ================================ -->
-  <!-- SECTION 2: HTML STRUCTURE -->
-  <!-- ================================ -->
-
-
-
-
-
-<!-- ================================ -->
   <!-- SECTION 2: HTML STRUCTURE -->
   <!-- ================================ -->
   <div class="header">
@@ -455,25 +443,7 @@
       </div>
     </div>
   </div>
-
-
-
-
-
-  
-
-
-
-  
   <!-- ================================ -->
-  <!-- SECTION 3: GLOBAL CONFIGURATION -->
-  <!-- ================================ -->
-
-
-
-
-
-<!-- ================================ -->
   <!-- SECTION 3: GLOBAL CONFIGURATION -->
   <!-- ================================ -->
   <script>
@@ -494,7 +464,7 @@
     firebase.initializeApp(firebaseConfig);
     const database = firebase.database();
     
-    // Constants for rooms and business hours - UPDATED WITH ROOMS 8 & 9
+    // Constants for rooms and business hours - INCLUDES ROOMS 5, 8, 9
     const rooms = ["Room 1", "Room 2", "Room 4", "Room 5", "Room 6", "Room 7", "Room 8", "Room 9", "Online"];
     const businessHours = Array.from({length: 13}, (_, i) => `${String(i + 8).padStart(2, '0')}:00`);
     const weekDays = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
@@ -526,23 +496,9 @@
     currentWeekStart.setDate(today.getDate() - daysToSubtract);
     currentWeekStart.setHours(0, 0, 0, 0);
   </script>
-
-
-
-  
   <!-- ================================ -->
   <!-- SECTION 4: UTILITY FUNCTIONS -->
   <!-- ================================ -->
-
-
-
-
-
-
-
-
-
-  
   <script>
     // 24-hour check function
     function isBookingWithin24Hours(bookingDate, bookingTime) {
@@ -566,7 +522,7 @@
       
       return `${date}T${formattedTime}`;
     }
-    // Get location ID from room name - UPDATED WITH ROOMS 8 & 9
+    // Get location ID from room name - INCLUDES ROOMS 8, 9
     function getLocationIdFromRoom(roomName) {
       const henleyRooms = ['Room_1', 'Room 1', 'Room_2', 'Room 2', 'Room_4', 'Room 4', 'Room_5', 'Room 5', 'Room_6', 'Room 6', 'Room_7', 'Room 7', 'Room_8', 'Room 8', 'Room_9', 'Room 9', 'Car Park', 'Henley_Holding_Room'];
       
@@ -576,7 +532,7 @@
         return '1';
       }
     }
-    // Get available rooms for a specific location - UPDATED WITH ROOMS 8 & 9
+    // Get available rooms for a specific location - INCLUDES ROOMS 8, 9
     function getRoomsForLocation(locationId) {
       if (locationId === '1') {
         return ['Online'];
@@ -965,7 +921,7 @@ function restoreSessionState() {
       initializeWithReadOnlyAccess();
     }
     
-    // Populate room dropdown based on current booking's location - UPDATED WITH ROOMS 8 & 9
+    // Populate room dropdown based on current booking's location - INCLUDES ROOMS 8, 9
     function populateRoomDropdown(currentRoom) {
       const newRoomInput = document.getElementById('newRoomInput');
       const roomLabel = document.getElementById('roomChangeLabel');
@@ -1044,7 +1000,7 @@ function restoreSessionState() {
       return `${year}-${month}-${day}`;
     }
     
-    // Get room display name from booking data - UPDATED WITH ROOMS 8 & 9
+    // Get room display name from booking data - INCLUDES ROOMS 8, 9
     function getRoomDisplayName(booking) {
       if (booking.room === 'Room_1' || booking.room === '1') return 'Room 1';
       if (booking.room === 'Room_2' || booking.room === '2') return 'Room 2';
@@ -1059,7 +1015,7 @@ function restoreSessionState() {
       return booking.room || 'Unknown';
     }
     
-    // Get room mapping for CSS classes - UPDATED WITH ROOMS 8 & 9
+    // Get room mapping for CSS classes - INCLUDES ROOMS 8, 9
     function getRoomMapping(booking) {
       let roomNumber, roomClass;
       
@@ -1086,22 +1042,7 @@ function restoreSessionState() {
       return {roomNumber, roomClass};
     }
   </script>
-
-
-
-
-  
-
-
   <!-- ================================ -->
-  <!-- SECTION 5: BOOKING FORM FUNCTIONS -->
-  <!-- ================================ -->
-
-
-
-
-  
-<!-- ================================ -->
   <!-- SECTION 5: BOOKING FORM FUNCTIONS -->
   <!-- ================================ -->
   <script>
@@ -1323,7 +1264,7 @@ function restoreSessionState() {
       document.getElementById('submitChangeBtn').textContent = 'Submit Change Request';
     }
     
-    // Handle booking cancellation - UPDATED WITH ROOMS 8 & 9, FIXED ROOM 5 ID
+    // Handle booking cancellation - UPDATED ROOM MAPPING WITH ROOMS 8, 9
     async function cancelBooking() {
       const bookingCode = document.getElementById('bookingCodeInput').value;
       const room = document.getElementById('currentRoomInput').value;
@@ -1378,52 +1319,52 @@ function restoreSessionState() {
         
         let payload;
         
- if (isPaidBooking) {
-  const ROOM_MAPPING = {
-    'Room_1': '3',
-    'Room_2': '7',
-    'Room_4': '8',
-    'Room_5': '19',
-    'Room_6': '9',
-    'Room_7': '10',
-    'Room_8': '20',
-    'Room_9': '21',
-    'Car Park': '12',
-    'Online': '11',
-    'Online Counselling': '11',
-    'Henley_Holding_Room': '18'
-  };
-  
-  payload = {
-    timestamp: new Date().toISOString(),
-    action: 'modify',
-    counsellor_id: counsellorId,
-    booking_code: booking.bookingId || bookingCode,  // ✅ CHANGED
-    original_room: roomForWebhook,
-    original_room_id: ROOM_MAPPING[roomForWebhook] || '3',
-    original_location_id: getLocationIdFromRoom(roomForWebhook),
-    original_datetime: `${date}T${time}:00`,
-    requested_room: 'Henley_Holding_Room',
-    requested_room_id: '18',
-    requested_location_id: '2',
-    requested_datetime: `2030-01-01T${time}:00`,
-    service_id: '2',
-    comments: booking ? (booking.comments || '') : '',
-    is_paid: 'True'
-  };
-} else {
-  payload = {
-    timestamp: new Date().toISOString(),
-    action: 'cancel',
-    counsellor_id: counsellorId,
-    booking_code: booking.bookingId || bookingCode,  // ✅ ALREADY CORRECT
-    original_datetime: `${date}T${time}:00`,
-    original_room: roomForWebhook,
-    service_id: '2',
-    comments: booking ? (booking.comments || '') : '',
-    is_paid: 'No'
-  };
-}
+        if (isPaidBooking) {
+          const ROOM_MAPPING = {
+            'Room_1': '3',
+            'Room_2': '7',
+            'Room_4': '8',
+            'Room_5': '13',
+            'Room_6': '9',
+            'Room_7': '10',
+            'Room_8': '14',
+            'Room_9': '15',
+            'Car Park': '12',
+            'Online': '11',
+            'Online Counselling': '11',
+            'Henley_Holding_Room': '18'
+          };
+          
+          payload = {
+            timestamp: new Date().toISOString(),
+            action: 'modify',
+            counsellor_id: counsellorId,
+            original_booking_code: booking.bookingId || bookingCode,
+            original_room: roomForWebhook,
+            original_room_id: ROOM_MAPPING[roomForWebhook] || '3',
+            original_location_id: getLocationIdFromRoom(roomForWebhook),
+            original_datetime: `${date}T${time}:00`,
+            requested_room: 'Henley_Holding_Room',
+            requested_room_id: '18',
+            requested_location_id: '2',
+            requested_datetime: `2030-01-01T${time}:00`,
+            service_id: '2',
+            comments: booking ? (booking.comments || '') : '',
+            is_paid: 'True'
+          };
+        } else {
+          payload = {
+            timestamp: new Date().toISOString(),
+            action: 'cancel',
+            counsellor_id: counsellorId,
+            booking_code: booking.bookingId || bookingCode,
+            original_datetime: `${date}T${time}:00`,
+            original_room: roomForWebhook,
+            service_id: '2',
+            comments: booking ? (booking.comments || '') : '',
+            is_paid: 'No'
+          };
+        }
         
         cancelStatusDiv.textContent = 'Sending cancellation request...';
         const CANCEL_WEBHOOK_URL = 'https://hook.eu2.make.com/p754q5eks857boisu6m3unr6qer6be4t';
@@ -1459,7 +1400,7 @@ function restoreSessionState() {
       }
     }
     
-    // Submit booking change request - UPDATED WITH ROOMS 8 & 9, FIXED ROOM 5 ID
+    // Submit booking change request - UPDATED ROOM MAPPING WITH ROOMS 8, 9
     async function submitBookingChange(changeData) {
       const statusDiv = document.getElementById('submitStatus');
       const isHoldingRoom = document.getElementById('isHoldingRoomBooking').value === 'true';
@@ -1492,11 +1433,11 @@ function restoreSessionState() {
           'Room_1': '3',
           'Room_2': '7',
           'Room_4': '8',
-          'Room_5': '19',
+          'Room_5': '13',
           'Room_6': '9',
           'Room_7': '10',
-          'Room_8': '20',
-          'Room_9': '21',
+          'Room_8': '14',
+          'Room_9': '15',
           'Car Park': '12',
           'Online': '11',
           'Online Counselling': '11',
@@ -1513,26 +1454,26 @@ function restoreSessionState() {
         const originalLocationId = isHoldingRoom ? '2' : getLocationIdFromRoom(originalRoomUnderscore);
         const requestedLocationId = getLocationIdFromRoom(newRoomUnderscore);
         
-const webhookPayload = {
-  timestamp: new Date().toISOString(),
-  action: 'modify',
-  counsellor_id: counsellorId,
-  booking_code: booking ? booking.bookingId : changeData.originalBookingCode,  // ✅ CHANGED
-  original_room: originalRoomUnderscore,
-  original_room_id: originalRoomId,
-  original_location_id: originalLocationId,
-  original_datetime: `${changeData.originalDate}T${changeData.originalTime}:00`,
-  requested_room: newRoomUnderscore,
-  requested_room_id: requestedRoomId,
-  requested_location_id: requestedLocationId,
-  requested_datetime: formatDateTimeForSimplybookMe(
-    changeData.newDate || changeData.originalDate,
-    changeData.newTime || changeData.originalTime
-  ),
-  service_id: '2',
-  comments: booking ? (booking.comments || '') : '',
-  is_paid: booking ? (booking.isPaid ? 'True' : 'No') : 'No'
-};
+        const webhookPayload = {
+          timestamp: new Date().toISOString(),
+          action: 'modify',
+          counsellor_id: counsellorId,
+          original_booking_code: booking ? booking.bookingId : changeData.originalBookingCode,
+          original_room: originalRoomUnderscore,
+          original_room_id: originalRoomId,
+          original_location_id: originalLocationId,
+          original_datetime: `${changeData.originalDate}T${changeData.originalTime}:00`,
+          requested_room: newRoomUnderscore,
+          requested_room_id: requestedRoomId,
+          requested_location_id: requestedLocationId,
+          requested_datetime: formatDateTimeForSimplybookMe(
+            changeData.newDate || changeData.originalDate,
+            changeData.newTime || changeData.originalTime
+          ),
+          service_id: '2',
+          comments: booking ? (booking.comments || '') : '',
+          is_paid: booking ? (booking.isPaid ? 'True' : 'No') : 'No'
+        };
         
         console.log('Webhook payload:', webhookPayload);
         
@@ -1638,21 +1579,7 @@ const webhookPayload = {
       }
     }
   </script>
-
-
-
-
-
-  
   <!-- ================================ -->
-  <!-- SECTION 6: CALENDAR FUNCTIONS -->
-  <!-- ================================ -->
-
-
-
-
-
-<!-- ================================ -->
   <!-- SECTION 6: CALENDAR FUNCTIONS -->
   <!-- ================================ -->
   <script>
@@ -1843,7 +1770,7 @@ const webhookPayload = {
       }
     }
     
-    // Create day view grid - UPDATED WITH ROOMS 8 & 9
+    // Create day view grid - INCLUDES ROOMS 8, 9
     function createDayGrid(grid) {
       const emptyCell = document.createElement("div");
       emptyCell.className = "grid-header";
@@ -2091,22 +2018,7 @@ const webhookPayload = {
       });
     }
   </script>
-
-
-
-
-
-
-
-  
   <!-- ================================ -->
-  <!-- SECTION 7: DATA MANAGEMENT FUNCTIONS -->
-  <!-- ================================ -->
-
-
-
-
-<!-- ================================ -->
   <!-- SECTION 7: DATA MANAGEMENT FUNCTIONS -->
   <!-- ================================ -->
   <script>
@@ -2308,5 +2220,3 @@ const activeUpdatedBookings = updatedArray.filter(booking =>
   </script>
 </body>
 </html>
-  
- 
