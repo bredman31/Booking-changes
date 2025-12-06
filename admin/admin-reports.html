@@ -464,11 +464,11 @@
     .counsellor-summary {
       display: flex;
       align-items: center;
-      gap: 15px;
-      padding: 10px 12px;
+      gap: 12px;
+      padding: 8px 10px;
       background: #f8f9fa;
       border-radius: 6px;
-      margin-bottom: 10px;
+      margin-bottom: 8px;
     }
     
     .counsellor-summary .stat {
@@ -476,13 +476,13 @@
     }
     
     .counsellor-summary .stat-num {
-      font-size: 22px;
+      font-size: 18px;
       font-weight: bold;
       color: #1a1a2e;
     }
     
     .counsellor-summary .stat-label {
-      font-size: 9px;
+      font-size: 8px;
       color: #666;
       text-transform: uppercase;
     }
@@ -490,27 +490,27 @@
     .counsellor-list {
       display: flex;
       flex-direction: column;
-      gap: 8px;
+      gap: 4px;
     }
     
     .counsellor-card {
       display: flex;
       align-items: center;
-      padding: 10px 12px;
+      padding: 6px 8px;
       background: white;
       border: 1px solid #e0e0e0;
-      border-radius: 6px;
+      border-radius: 4px;
       transition: all 0.2s;
     }
     
     .counsellor-card:hover {
       border-color: #1a1a2e;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+      box-shadow: 0 1px 4px rgba(0,0,0,0.08);
     }
     
     .counsellor-avatar {
-      width: 36px;
-      height: 36px;
+      width: 28px;
+      height: 28px;
       border-radius: 50%;
       background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
       color: white;
@@ -518,64 +518,53 @@
       align-items: center;
       justify-content: center;
       font-weight: 600;
-      font-size: 14px;
-      margin-right: 12px;
+      font-size: 10px;
+      margin-right: 8px;
       flex-shrink: 0;
     }
     
     .counsellor-details {
       flex: 1;
       min-width: 0;
+      display: flex;
+      align-items: center;
+      gap: 8px;
     }
     
     .counsellor-name {
       font-weight: 600;
-      font-size: 13px;
+      font-size: 12px;
       color: #1a1a2e;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
+      min-width: 100px;
     }
     
     .counsellor-rooms {
-      font-size: 10px;
-      color: #666;
-      margin-top: 2px;
-    }
-    
-    .counsellor-stats {
       display: flex;
-      gap: 12px;
-      margin-left: auto;
-      flex-shrink: 0;
+      gap: 3px;
+      flex-wrap: wrap;
     }
     
-    .counsellor-stat {
-      text-align: center;
-    }
-    
-    .counsellor-stat-value {
-      font-size: 16px;
-      font-weight: 600;
-      color: #1a1a2e;
-    }
-    
-    .counsellor-stat-label {
-      font-size: 8px;
-      color: #888;
-      text-transform: uppercase;
+    .room-badge {
+      font-size: 9px;
+      padding: 2px 6px;
+      border-radius: 3px;
+      font-weight: 500;
+      white-space: nowrap;
     }
     
     .counsellor-time-bar {
       display: flex;
-      gap: 2px;
-      margin-top: 6px;
+      gap: 1px;
+      margin-left: 8px;
     }
     
     .time-slot {
-      width: 18px;
-      height: 6px;
-      border-radius: 2px;
+      width: 12px;
+      height: 8px;
+      border-radius: 1px;
       background: #e0e0e0;
     }
     
@@ -583,16 +572,40 @@
       background: #28a745;
     }
     
+    .counsellor-stats {
+      display: flex;
+      gap: 8px;
+      margin-left: 8px;
+      flex-shrink: 0;
+    }
+    
+    .counsellor-stat {
+      text-align: center;
+      min-width: 32px;
+    }
+    
+    .counsellor-stat-value {
+      font-size: 13px;
+      font-weight: 600;
+      color: #1a1a2e;
+    }
+    
+    .counsellor-stat-label {
+      font-size: 7px;
+      color: #888;
+      text-transform: uppercase;
+    }
+    
     .no-counsellors {
       text-align: center;
-      padding: 30px;
+      padding: 20px;
       color: #888;
-      font-size: 13px;
+      font-size: 12px;
     }
     
     .no-counsellors-icon {
-      font-size: 32px;
-      margin-bottom: 10px;
+      font-size: 24px;
+      margin-bottom: 8px;
     }
     
     /* Dynamic room colours */
@@ -1331,7 +1344,7 @@
             name: name,
             bookings: [],
             totalHours: 0,
-            rooms: new Set(),
+            rooms: [],
             timeSlots: new Set()
           };
         }
@@ -1342,12 +1355,13 @@
         const endHour = parseInt(booking.end.split(':')[0]);
         counsellorMap[name].totalHours += (endHour - startHour);
         
-        // Track rooms used
-        const room = enabledRooms.find(r => r.dbValues.includes(booking.room));
-        if (room) {
-          counsellorMap[name].rooms.add(room.name);
-        } else if (booking.location && booking.location.toLowerCase().includes('online')) {
-          counsellorMap[name].rooms.add('Online');
+        // Track rooms used with their config
+        let roomInfo = enabledRooms.find(r => r.dbValues.includes(booking.room));
+        if (!roomInfo && booking.location && booking.location.toLowerCase().includes('online')) {
+          roomInfo = enabledRooms.find(r => r.key === 'Online');
+        }
+        if (roomInfo && !counsellorMap[name].rooms.find(r => r.key === roomInfo.key)) {
+          counsellorMap[name].rooms.push(roomInfo);
         }
         
         // Track time slots
@@ -1377,7 +1391,7 @@
           </div>
           <div class="stat">
             <div class="stat-num">${totalHours}</div>
-            <div class="stat-label">Total Hours</div>
+            <div class="stat-label">Hours</div>
           </div>
         </div>
         <div class="counsellor-list">
@@ -1385,7 +1399,12 @@
       
       counsellors.forEach(counsellor => {
         const initials = getInitials(counsellor.name);
-        const roomList = Array.from(counsellor.rooms).join(', ');
+        
+        // Build room badges with colours
+        let roomBadgesHtml = counsellor.rooms.map(room => {
+          const textColor = getContrastColor(room.color);
+          return `<span class="room-badge" style="background: ${room.color}; color: ${textColor}; border: 1px solid ${room.borderColor};">${room.name}</span>`;
+        }).join('');
         
         // Build time bar (8am-8pm = 13 slots)
         let timeBarHtml = '';
@@ -1399,19 +1418,17 @@
             <div class="counsellor-avatar">${initials}</div>
             <div class="counsellor-details">
               <div class="counsellor-name">${counsellor.name}</div>
-              <div class="counsellor-rooms">${roomList}</div>
-              <div class="counsellor-time-bar" title="8am to 8pm - green = booked">
-                ${timeBarHtml}
-              </div>
+              <div class="counsellor-rooms">${roomBadgesHtml}</div>
+              <div class="counsellor-time-bar" title="8am-8pm">${timeBarHtml}</div>
             </div>
             <div class="counsellor-stats">
               <div class="counsellor-stat">
                 <div class="counsellor-stat-value">${counsellor.bookings.length}</div>
-                <div class="counsellor-stat-label">Sessions</div>
+                <div class="counsellor-stat-label">Sess</div>
               </div>
               <div class="counsellor-stat">
                 <div class="counsellor-stat-value">${counsellor.totalHours}</div>
-                <div class="counsellor-stat-label">Hours</div>
+                <div class="counsellor-stat-label">Hrs</div>
               </div>
             </div>
           </div>
@@ -1429,6 +1446,19 @@
         return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
       }
       return name.substring(0, 2).toUpperCase();
+    }
+    
+    function getContrastColor(hexColor) {
+      // Convert hex to RGB
+      const hex = hexColor.replace('#', '');
+      const r = parseInt(hex.substr(0, 2), 16);
+      const g = parseInt(hex.substr(2, 2), 16);
+      const b = parseInt(hex.substr(4, 2), 16);
+      
+      // Calculate luminance
+      const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+      
+      return luminance > 0.5 ? '#333' : '#fff';
     }
     
     // ================================
