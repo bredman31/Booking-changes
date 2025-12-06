@@ -77,6 +77,22 @@
       color: white;
     }
     
+    .add-btn {
+      background: #007bff;
+      border: none;
+      color: white;
+      padding: 12px 25px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 600;
+      transition: background 0.2s;
+    }
+    
+    .add-btn:hover {
+      background: #0056b3;
+    }
+    
     .save-btn {
       background: #28a745;
       border: none;
@@ -201,6 +217,7 @@
       overflow: hidden;
       box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
       transition: transform 0.2s, box-shadow 0.2s;
+      position: relative;
     }
     
     .room-card:hover {
@@ -224,6 +241,27 @@
       font-size: 18px;
       font-weight: 600;
       color: #1a1a2e;
+    }
+    
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    
+    .delete-btn {
+      background: none;
+      border: none;
+      color: #dc3545;
+      cursor: pointer;
+      font-size: 18px;
+      padding: 5px;
+      border-radius: 4px;
+      transition: background 0.2s;
+    }
+    
+    .delete-btn:hover {
+      background: #fee;
     }
     
     /* Toggle Switch */
@@ -355,6 +393,165 @@
     @keyframes spin {
       to { transform: rotate(360deg); }
     }
+    
+    /* Modal */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.3s, visibility 0.3s;
+    }
+    
+    .modal-overlay.show {
+      opacity: 1;
+      visibility: visible;
+    }
+    
+    .modal {
+      background: white;
+      border-radius: 12px;
+      width: 90%;
+      max-width: 500px;
+      max-height: 90vh;
+      overflow-y: auto;
+      transform: scale(0.9);
+      transition: transform 0.3s;
+    }
+    
+    .modal-overlay.show .modal {
+      transform: scale(1);
+    }
+    
+    .modal-header {
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+      color: white;
+      padding: 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .modal-header h2 {
+      font-size: 18px;
+      font-weight: 500;
+    }
+    
+    .modal-close {
+      background: none;
+      border: none;
+      color: white;
+      font-size: 24px;
+      cursor: pointer;
+      padding: 0;
+      line-height: 1;
+    }
+    
+    .modal-body {
+      padding: 25px;
+    }
+    
+    .form-group {
+      margin-bottom: 20px;
+    }
+    
+    .form-group label {
+      display: block;
+      font-weight: 600;
+      margin-bottom: 8px;
+      color: #333;
+      font-size: 14px;
+    }
+    
+    .form-group input,
+    .form-group select {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      font-size: 14px;
+    }
+    
+    .form-group input:focus,
+    .form-group select:focus {
+      outline: none;
+      border-color: #007bff;
+    }
+    
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 15px;
+    }
+    
+    .modal-footer {
+      padding: 20px 25px;
+      background: #f8f9fa;
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      border-top: 1px solid #eee;
+    }
+    
+    .btn {
+      padding: 12px 25px;
+      border: none;
+      border-radius: 6px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    
+    .btn-secondary {
+      background: #6c757d;
+      color: white;
+    }
+    
+    .btn-secondary:hover {
+      background: #5a6268;
+    }
+    
+    .btn-primary {
+      background: #007bff;
+      color: white;
+    }
+    
+    .btn-primary:hover {
+      background: #0056b3;
+    }
+    
+    /* Preview in modal */
+    .preview-section {
+      background: #f8f9fa;
+      border-radius: 8px;
+      padding: 15px;
+      margin-top: 10px;
+    }
+    
+    .preview-label {
+      font-size: 12px;
+      color: #666;
+      margin-bottom: 8px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    
+    .preview-box {
+      padding: 15px;
+      border-radius: 6px;
+      text-align: center;
+      font-weight: 600;
+      border: 3px solid;
+    }
   </style>
 </head>
 <body>
@@ -369,6 +566,7 @@
         <option value="henley">Henley</option>
         <option value="buckhurst_hill">Buckhurst Hill</option>
       </select>
+      <button class="add-btn" onclick="openAddModal()">➕ Add Room</button>
       <button class="save-btn" id="saveBtn" onclick="saveSettings()">💾 Save All Changes</button>
     </div>
   </header>
@@ -376,9 +574,9 @@
   <main class="main-content">
     <div class="info-box">
       <h2>ℹ️ Room Configuration</h2>
+      <p><strong>Add Room:</strong> Click "Add Room" to create a new room for either location.</p>
       <p><strong>Toggle Switch:</strong> Turn rooms on or off. Disabled rooms won't appear in booking calendars.</p>
-      <p><strong>Colours:</strong> Customise background and border colours for each room.</p>
-      <p><strong>Locations:</strong> Rooms are grouped by location (Henley / Buckhurst Hill).</p>
+      <p><strong>Delete:</strong> Click the 🗑️ icon to remove a room (requires confirmation).</p>
       <p><strong>Save:</strong> Click "Save All Changes" to apply your settings to all calendars.</p>
     </div>
     
@@ -391,6 +589,58 @@
       </div>
     </div>
   </main>
+  
+  <!-- Add Room Modal -->
+  <div class="modal-overlay" id="addModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h2>➕ Add New Room</h2>
+        <button class="modal-close" onclick="closeAddModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label>Room Name *</label>
+          <input type="text" id="newRoomName" placeholder="e.g. Room 10, Meeting Room, etc.">
+        </div>
+        
+        <div class="form-group">
+          <label>Location *</label>
+          <select id="newRoomLocation">
+            <option value="henley">Henley</option>
+            <option value="buckhurst_hill">Buckhurst Hill</option>
+          </select>
+        </div>
+        
+        <div class="form-row">
+          <div class="form-group">
+            <label>Background Colour</label>
+            <input type="color" id="newRoomColor" value="#90caf9" onchange="updateModalPreview()">
+          </div>
+          <div class="form-group">
+            <label>Border Colour</label>
+            <input type="color" id="newRoomBorder" value="#64b5f6" onchange="updateModalPreview()">
+          </div>
+        </div>
+        
+        <div class="form-group">
+          <label>Display Order</label>
+          <input type="number" id="newRoomOrder" value="10" min="1" max="99">
+          <small style="color: #666; font-size: 12px;">Lower numbers appear first</small>
+        </div>
+        
+        <div class="preview-section">
+          <div class="preview-label">Preview</div>
+          <div class="preview-box" id="modalPreview" style="background: #90caf9; border-color: #64b5f6; color: #333;">
+            New Room
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeAddModal()">Cancel</button>
+        <button class="btn btn-primary" onclick="addRoom()">Add Room</button>
+      </div>
+    </div>
+  </div>
   
   <script>
     // ================================
@@ -411,7 +661,6 @@
     
     // Default room configuration with locations
     const defaultRoomConfig = {
-      // Henley Rooms
       'Room_1': { enabled: true, color: '#d4a5a5', borderColor: '#b89090', displayName: 'Room 1', location: 'henley', order: 1 },
       'Room_2': { enabled: true, color: '#b299d4', borderColor: '#9680c0', displayName: 'Room 2', location: 'henley', order: 2 },
       'Room_4': { enabled: true, color: '#a5d4a5', borderColor: '#90b890', displayName: 'Room 4', location: 'henley', order: 3 },
@@ -421,7 +670,6 @@
       'Room_8': { enabled: true, color: '#80cbc4', borderColor: '#4db6ac', displayName: 'Room 8', location: 'henley', order: 7 },
       'Room_9': { enabled: true, color: '#ce93d8', borderColor: '#ba68c8', displayName: 'Room 9', location: 'henley', order: 8 },
       'Car_Park': { enabled: true, color: '#bdbdbd', borderColor: '#9e9e9e', displayName: 'Car Park', location: 'henley', order: 9 },
-      // Buckhurst Hill Rooms
       'Online': { enabled: true, color: '#7dd87d', borderColor: '#6bc46b', displayName: 'Online', location: 'buckhurst_hill', order: 1 }
     };
     
@@ -449,7 +697,6 @@
         const config = snapshot.val();
         
         if (config && Object.keys(config).length > 0) {
-          // Merge with defaults to ensure all fields exist
           currentConfig = {};
           
           // Start with defaults
@@ -549,14 +796,15 @@
       
       card.innerHTML = `
         <div class="room-card-header">
-          <div>
-            <span class="room-name">${room.displayName}</span>
+          <span class="room-name">${room.displayName}</span>
+          <div class="header-actions">
+            <button class="delete-btn" onclick="deleteRoom('${roomKey}')" title="Delete room">🗑️</button>
+            <label class="toggle-switch">
+              <input type="checkbox" ${room.enabled ? 'checked' : ''} 
+                     onchange="toggleRoom('${roomKey}')">
+              <span class="toggle-slider"></span>
+            </label>
           </div>
-          <label class="toggle-switch">
-            <input type="checkbox" ${room.enabled ? 'checked' : ''} 
-                   onchange="toggleRoom('${roomKey}')">
-            <span class="toggle-slider"></span>
-          </label>
         </div>
         
         <div class="room-card-body">
@@ -630,6 +878,88 @@
     }
     
     // ================================
+    // ADD ROOM
+    // ================================
+    function openAddModal() {
+      document.getElementById('addModal').classList.add('show');
+      document.getElementById('newRoomName').value = '';
+      document.getElementById('newRoomLocation').value = 'henley';
+      document.getElementById('newRoomColor').value = '#90caf9';
+      document.getElementById('newRoomBorder').value = '#64b5f6';
+      document.getElementById('newRoomOrder').value = '10';
+      updateModalPreview();
+    }
+    
+    function closeAddModal() {
+      document.getElementById('addModal').classList.remove('show');
+    }
+    
+    function updateModalPreview() {
+      const color = document.getElementById('newRoomColor').value;
+      const border = document.getElementById('newRoomBorder').value;
+      const name = document.getElementById('newRoomName').value || 'New Room';
+      
+      const preview = document.getElementById('modalPreview');
+      preview.style.background = color;
+      preview.style.borderColor = border;
+      preview.textContent = name;
+    }
+    
+    function addRoom() {
+      const name = document.getElementById('newRoomName').value.trim();
+      const location = document.getElementById('newRoomLocation').value;
+      const color = document.getElementById('newRoomColor').value;
+      const borderColor = document.getElementById('newRoomBorder').value;
+      const order = parseInt(document.getElementById('newRoomOrder').value) || 10;
+      
+      if (!name) {
+        alert('Please enter a room name');
+        return;
+      }
+      
+      // Generate a key from the name
+      const roomKey = name.replace(/\s+/g, '_').replace(/[^a-zA-Z0-9_]/g, '');
+      
+      // Check if key already exists
+      if (currentConfig[roomKey]) {
+        alert('A room with this name already exists. Please choose a different name.');
+        return;
+      }
+      
+      // Add the new room
+      currentConfig[roomKey] = {
+        enabled: true,
+        color: color,
+        borderColor: borderColor,
+        displayName: name,
+        location: location,
+        order: order
+      };
+      
+      closeAddModal();
+      renderRoomsByLocation();
+      showStatus(`Room "${name}" added successfully! Remember to save your changes.`, 'success');
+    }
+    
+    // ================================
+    // DELETE ROOM
+    // ================================
+    function deleteRoom(roomKey) {
+      const room = currentConfig[roomKey];
+      if (!room) return;
+      
+      const confirmMessage = `Are you sure you want to delete "${room.displayName}"?\n\n⚠️ This will remove the room from all calendars.\n\nNote: Existing bookings in this room will still exist but may not display correctly.`;
+      
+      if (!confirm(confirmMessage)) {
+        return;
+      }
+      
+      delete currentConfig[roomKey];
+      renderRoomsByLocation();
+      showStatus(`Room "${room.displayName}" deleted. Remember to save your changes.`, 'info');
+    }
+    
+    // ================================
     // SAVE
     // ================================
     async function saveSettings() {
@@ -668,6 +998,16 @@
     function hideStatus() {
       document.getElementById('statusMessage').classList.remove('show');
     }
+    
+    // Close modal when clicking outside
+    document.getElementById('addModal').addEventListener('click', function(e) {
+      if (e.target === this) {
+        closeAddModal();
+      }
+    });
+    
+    // Update preview when typing room name
+    document.getElementById('newRoomName').addEventListener('input', updateModalPreview);
   </script>
 </body>
 </html>
