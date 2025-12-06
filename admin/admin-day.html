@@ -33,6 +33,8 @@
       justify-content: space-between;
       align-items: center;
       box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+      flex-wrap: wrap;
+      gap: 15px;
     }
     
     .header-left {
@@ -50,9 +52,6 @@
       color: rgba(255, 255, 255, 0.7);
       text-decoration: none;
       font-size: 14px;
-      display: flex;
-      align-items: center;
-      gap: 5px;
     }
     
     .back-link:hover {
@@ -63,6 +62,7 @@
       display: flex;
       align-items: center;
       gap: 15px;
+      flex-wrap: wrap;
     }
     
     .date-nav {
@@ -95,10 +95,6 @@
       font-size: 14px;
     }
     
-    .date-nav input[type="date"]::-webkit-calendar-picker-indicator {
-      filter: invert(1);
-    }
-    
     .refresh-btn {
       background: #28a745;
       border: none;
@@ -107,7 +103,6 @@
       border-radius: 6px;
       cursor: pointer;
       font-size: 14px;
-      transition: background 0.2s;
     }
     
     .refresh-btn:hover {
@@ -138,12 +133,11 @@
       box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
     }
     
-    /* Calendar Grid */
+    /* Calendar Grid - columns set dynamically */
     .calendar-grid {
       display: grid;
-      grid-template-columns: 70px repeat(10, 1fr);
       font-size: 0.85em;
-      min-width: 1200px;
+      min-width: 1000px;
     }
     
     .grid-header {
@@ -159,11 +153,6 @@
       position: sticky;
       top: 0;
       z-index: 10;
-    }
-    
-    .grid-header.car-park {
-      background: #6c757d;
-      opacity: 0.7;
     }
     
     .time-header {
@@ -196,30 +185,14 @@
       background: #f0f7ff;
     }
     
-    .grid-cell.car-park {
+    .grid-cell.car-park-cell {
       background: #f5f5f5;
-      opacity: 0.6;
+      opacity: 0.7;
     }
     
-    .grid-cell.car-park:hover {
-      background: #eee;
-    }
-    
-    /* Room colour coding */
     .grid-cell.booked {
       cursor: pointer;
     }
-    
-    .grid-cell.booked.room-1 { background: #d4a5a5; border-left: 4px solid #b89090; }
-    .grid-cell.booked.room-2 { background: #b299d4; border-left: 4px solid #9680c0; }
-    .grid-cell.booked.room-4 { background: #a5d4a5; border-left: 4px solid #90b890; }
-    .grid-cell.booked.room-5 { background: #e57373; border-left: 4px solid #d32f2f; }
-    .grid-cell.booked.room-6 { background: #c8a882; border-left: 4px solid #b5946e; }
-    .grid-cell.booked.room-7 { background: #e6d45a; border-left: 4px solid #d4c347; }
-    .grid-cell.booked.room-8 { background: #80cbc4; border-left: 4px solid #4db6ac; }
-    .grid-cell.booked.room-9 { background: #ce93d8; border-left: 4px solid #ba68c8; }
-    .grid-cell.booked.online { background: #7dd87d; border-left: 4px solid #6bc46b; }
-    .grid-cell.booked.car-park { background: #bdbdbd; border-left: 4px solid #9e9e9e; opacity: 0.7; }
     
     .grid-cell.selected {
       box-shadow: 0 0 0 3px #007bff inset;
@@ -326,14 +299,6 @@
       border: 1px solid #ddd;
       border-radius: 6px;
       font-size: 14px;
-      transition: border-color 0.2s;
-    }
-    
-    .form-group select:focus,
-    .form-group input:focus {
-      outline: none;
-      border-color: #007bff;
-      box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
     }
     
     .form-actions {
@@ -376,11 +341,6 @@
       background: #c82333;
     }
     
-    .btn-danger:disabled {
-      background: #ccc;
-      cursor: not-allowed;
-    }
-    
     .status-message {
       padding: 12px;
       border-radius: 6px;
@@ -393,24 +353,20 @@
       display: block;
       background: #d4edda;
       color: #155724;
-      border: 1px solid #c3e6cb;
     }
     
     .status-message.error {
       display: block;
       background: #f8d7da;
       color: #721c24;
-      border: 1px solid #f5c6cb;
     }
     
     .status-message.info {
       display: block;
       background: #fff3cd;
       color: #856404;
-      border: 1px solid #ffeeba;
     }
     
-    /* No selection state */
     .no-selection {
       text-align: center;
       padding: 40px 20px;
@@ -422,12 +378,12 @@
       margin-bottom: 15px;
     }
     
-    /* Legend */
+    /* Legend - will be populated dynamically */
     .legend {
       display: flex;
       flex-wrap: wrap;
-      gap: 15px;
-      padding: 15px 20px;
+      gap: 12px;
+      padding: 12px 20px;
       background: white;
       border-radius: 8px;
       margin-bottom: 15px;
@@ -442,109 +398,87 @@
     }
     
     .legend-color {
-      width: 16px;
-      height: 16px;
+      width: 20px;
+      height: 20px;
       border-radius: 4px;
-    }
-    
-    .legend-color.room-1 { background: #d4a5a5; }
-    .legend-color.room-2 { background: #b299d4; }
-    .legend-color.room-4 { background: #a5d4a5; }
-    .legend-color.room-5 { background: #e57373; }
-    .legend-color.room-6 { background: #c8a882; }
-    .legend-color.room-7 { background: #e6d45a; }
-    .legend-color.room-8 { background: #80cbc4; }
-    .legend-color.room-9 { background: #ce93d8; }
-    .legend-color.online { background: #7dd87d; }
-    .legend-color.car-park { background: #bdbdbd; opacity: 0.7; }
-    
-    /* Data status */
-    .data-status {
-      font-size: 12px;
-      color: rgba(255, 255, 255, 0.7);
+      border: 2px solid;
     }
     
     /* Holding Room Section */
-    .holding-section {
+    .holding-room-section {
       background: #e3f2fd;
       border-radius: 8px;
-      padding: 15px;
+      padding: 15px 20px;
       margin-top: 15px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
     }
     
-    .holding-header {
+    .holding-info {
       display: flex;
       align-items: center;
-      gap: 10px;
-      margin-bottom: 10px;
-    }
-    
-    .holding-title {
-      font-weight: 600;
-      color: #1565c0;
+      gap: 15px;
     }
     
     .holding-count {
-      background: #1565c0;
+      background: #1976d2;
       color: white;
-      padding: 2px 10px;
-      border-radius: 10px;
-      font-size: 12px;
+      padding: 5px 12px;
+      border-radius: 15px;
+      font-weight: 600;
     }
     
     .holding-btn {
-      background: #1565c0;
+      background: #1976d2;
       color: white;
       border: none;
-      padding: 8px 15px;
+      padding: 10px 20px;
       border-radius: 6px;
       cursor: pointer;
-      font-size: 13px;
-      margin-top: 10px;
+      font-weight: 600;
     }
     
     .holding-btn:hover {
-      background: #0d47a1;
+      background: #1565c0;
     }
     
     .holding-btn:disabled {
       background: #90caf9;
       cursor: not-allowed;
     }
+    
+    /* Dynamic room styles will be injected here */
+    #dynamicStyles {
+    }
   </style>
 </head>
 <body>
+  <!-- Dynamic styles will be added here by JavaScript -->
+  <style id="dynamicStyles"></style>
+  
   <header class="admin-header">
     <div class="header-left">
       <a href="index.html" class="back-link">← Admin Portal</a>
-      <h1>📅 Day View - All Rooms</h1>
+      <h1>📅 Admin Day View</h1>
     </div>
     <div class="header-right">
       <div class="date-nav">
-        <button onclick="changeDay(-1)">← Previous</button>
-        <input type="date" id="dateSelector">
-        <button onclick="changeDay(1)">Next →</button>
+        <button onclick="changeDate(-1)">← Prev</button>
+        <input type="date" id="dateSelector" onchange="dateChanged()">
+        <button onclick="changeDate(1)">Next →</button>
         <button onclick="goToToday()">Today</button>
       </div>
       <button class="refresh-btn" onclick="refreshData()">↻ Refresh</button>
-      <span class="data-status" id="dataStatus"></span>
     </div>
   </header>
   
   <div class="main-container">
     <div class="calendar-section">
-      <!-- Legend -->
-      <div class="legend">
-        <div class="legend-item"><div class="legend-color room-1"></div>Room 1</div>
-        <div class="legend-item"><div class="legend-color room-2"></div>Room 2</div>
-        <div class="legend-item"><div class="legend-color room-4"></div>Room 4</div>
-        <div class="legend-item"><div class="legend-color room-5"></div>Room 5</div>
-        <div class="legend-item"><div class="legend-color room-6"></div>Room 6</div>
-        <div class="legend-item"><div class="legend-color room-7"></div>Room 7</div>
-        <div class="legend-item"><div class="legend-color room-8"></div>Room 8</div>
-        <div class="legend-item"><div class="legend-color room-9"></div>Room 9</div>
-        <div class="legend-item"><div class="legend-color online"></div>Online</div>
-        <div class="legend-item"><div class="legend-color car-park"></div>Car Park</div>
+      <!-- Legend - populated dynamically -->
+      <div class="legend" id="legendContainer">
+        Loading room configuration...
       </div>
       
       <div class="calendar-container">
@@ -554,14 +488,14 @@
       </div>
       
       <!-- Holding Room Section -->
-      <div class="holding-section">
-        <div class="holding-header">
-          <span class="holding-title">📦 Holding Room</span>
+      <div class="holding-room-section">
+        <div class="holding-info">
+          <span style="font-weight: 600; color: #1976d2;">📦 Holding Room</span>
           <span class="holding-count" id="holdingCount">0</span>
+          <span style="color: #666; font-size: 13px;">bookings available</span>
         </div>
-        <p style="font-size: 13px; color: #666;">Paid cancellations waiting to be rescheduled</p>
         <button class="holding-btn" id="holdingBtn" onclick="selectHoldingBooking()" disabled>
-          Select Holding Room Booking
+          Select Holding Booking
         </button>
       </div>
     </div>
@@ -570,7 +504,7 @@
     <div class="form-panel">
       <div class="form-header">
         <h2>Modify Booking</h2>
-        <p>Select a booking from the calendar to modify</p>
+        <p>Click any booking to select it</p>
       </div>
       
       <div class="form-content">
@@ -578,10 +512,9 @@
         <div class="no-selection" id="noSelection">
           <div class="no-selection-icon">👆</div>
           <p>Click on any booking in the calendar to select it for modification.</p>
-          <p style="margin-top: 10px; font-size: 12px; color: #999;">As an admin, you can modify any booking regardless of the 24-hour restriction.</p>
         </div>
         
-        <!-- Booking form (hidden until selection) -->
+        <!-- Booking form -->
         <div id="bookingForm" style="display: none;">
           <div class="booking-details">
             <div class="detail-row">
@@ -604,9 +537,9 @@
               <span class="detail-label">Current Time</span>
               <span class="detail-value" id="displayTime">-</span>
             </div>
-            <div class="detail-row" id="paidRow" style="display: none;">
+            <div class="detail-row">
               <span class="detail-label">Payment Status</span>
-              <span class="detail-value" id="displayPaid">-</span>
+              <span class="detail-value" id="displayPayment">-</span>
             </div>
           </div>
           
@@ -616,16 +549,7 @@
             <label>New Room</label>
             <select id="newRoom">
               <option value="">No change</option>
-              <option value="Room 1">Room 1</option>
-              <option value="Room 2">Room 2</option>
-              <option value="Room 4">Room 4</option>
-              <option value="Room 5">Room 5</option>
-              <option value="Room 6">Room 6</option>
-              <option value="Room 7">Room 7</option>
-              <option value="Room 8">Room 8</option>
-              <option value="Room 9">Room 9</option>
-              <option value="Online">Online</option>
-              <option value="Car Park">Car Park</option>
+              <!-- Options populated dynamically -->
             </select>
           </div>
           
@@ -688,25 +612,24 @@
     
     const WEBHOOK_URL = 'https://hook.eu2.make.com/p754q5eks857boisu6m3unr6qer6be4t';
     
-    // Room configuration
-    const rooms = [
-      { id: '1', name: 'Room 1', class: 'room-1', dbValues: ['Room_1', '1', 'Room 1'] },
-      { id: '2', name: 'Room 2', class: 'room-2', dbValues: ['Room_2', '2', 'Room 2'] },
-      { id: '4', name: 'Room 4', class: 'room-4', dbValues: ['Room_4', '4', 'Room 4'] },
-      { id: '5', name: 'Room 5', class: 'room-5', dbValues: ['Room_5', '5', 'Room 5'] },
-      { id: '6', name: 'Room 6', class: 'room-6', dbValues: ['Room_6', '6', 'Room 6'] },
-      { id: '7', name: 'Room 7', class: 'room-7', dbValues: ['Room_7', '7', 'Room 7'] },
-      { id: '8', name: 'Room 8', class: 'room-8', dbValues: ['Room_8', '8', 'Room 8'] },
-      { id: '9', name: 'Room 9', class: 'room-9', dbValues: ['Room_9', '9', 'Room 9'] },
-      { id: 'online', name: 'Online', class: 'online', dbValues: ['Online', 'Online Counselling'] },
-      { id: 'carpark', name: 'Car Park', class: 'car-park', dbValues: ['Car Park', 'Car_Park', '12'] }
-    ];
-    
     const ROOM_ID_MAPPING = {
       'Room_1': '3', 'Room_2': '7', 'Room_4': '8', 'Room_5': '13',
       'Room_6': '9', 'Room_7': '10', 'Room_8': '14', 'Room_9': '15',
-      'Car Park': '12', 'Online': '11', 'Online Counselling': '11',
-      'Henley_Holding_Room': '18'
+      'Car_Park': '12', 'Online': '11', 'Henley_Holding_Room': '18'
+    };
+    
+    // Default room config (fallback)
+    const defaultRoomConfig = {
+      'Room_1': { enabled: true, color: '#d4a5a5', borderColor: '#b89090', displayName: 'Room 1', location: 'henley', order: 1 },
+      'Room_2': { enabled: true, color: '#b299d4', borderColor: '#9680c0', displayName: 'Room 2', location: 'henley', order: 2 },
+      'Room_4': { enabled: true, color: '#a5d4a5', borderColor: '#90b890', displayName: 'Room 4', location: 'henley', order: 3 },
+      'Room_5': { enabled: true, color: '#e57373', borderColor: '#d32f2f', displayName: 'Room 5', location: 'henley', order: 4 },
+      'Room_6': { enabled: true, color: '#c8a882', borderColor: '#b5946e', displayName: 'Room 6', location: 'henley', order: 5 },
+      'Room_7': { enabled: true, color: '#e6d45a', borderColor: '#d4c347', displayName: 'Room 7', location: 'henley', order: 6 },
+      'Room_8': { enabled: true, color: '#80cbc4', borderColor: '#4db6ac', displayName: 'Room 8', location: 'henley', order: 7 },
+      'Room_9': { enabled: true, color: '#ce93d8', borderColor: '#ba68c8', displayName: 'Room 9', location: 'henley', order: 8 },
+      'Car_Park': { enabled: true, color: '#bdbdbd', borderColor: '#9e9e9e', displayName: 'Car Park', location: 'henley', order: 9 },
+      'Online': { enabled: true, color: '#7dd87d', borderColor: '#6bc46b', displayName: 'Online', location: 'buckhurst_hill', order: 1 }
     };
     
     const businessHours = [];
@@ -715,29 +638,182 @@
     }
     
     // State
+    let roomConfig = {};
+    let enabledRooms = [];
     let bookingData = [];
     let holdingRoomBookings = [];
-    let currentDate = new Date().toISOString().split('T')[0];
     let selectedBooking = null;
-    let isHoldingBooking = false;
+    let currentDate = new Date().toISOString().split('T')[0];
     
     // ================================
     // INITIALIZATION
     // ================================
-    document.addEventListener('DOMContentLoaded', () => {
-      // Auth check disabled for testing
-      sessionStorage.setItem('adminAuth', 'true');
-      
+    document.addEventListener('DOMContentLoaded', async () => {
       document.getElementById('dateSelector').value = currentDate;
-      createCalendarGrid();
-      loadBookingData();
       
-      // Set up date change listener
-      document.getElementById('dateSelector').addEventListener('change', (e) => {
-        currentDate = e.target.value;
-        populateCalendar();
-      });
+      // Load room config first, then bookings
+      await loadRoomConfig();
+      await loadBookingData();
     });
+    
+    // ================================
+    // ROOM CONFIGURATION
+    // ================================
+    async function loadRoomConfig() {
+      try {
+        const snapshot = await database.ref('room_config').once('value');
+        const config = snapshot.val();
+        
+        if (config && Object.keys(config).length > 0) {
+          roomConfig = config;
+        } else {
+          roomConfig = defaultRoomConfig;
+        }
+        
+        // Filter enabled rooms and sort by order
+        enabledRooms = Object.entries(roomConfig)
+          .filter(([key, room]) => room.enabled)
+          .sort((a, b) => (a[1].order || 99) - (b[1].order || 99))
+          .map(([key, room]) => ({ key, ...room }));
+        
+        // Generate dynamic CSS
+        generateDynamicStyles();
+        
+        // Generate legend
+        generateLegend();
+        
+        // Populate room dropdown
+        populateRoomDropdown();
+        
+        console.log(`Loaded ${enabledRooms.length} enabled rooms`);
+        
+      } catch (error) {
+        console.error('Error loading room config:', error);
+        roomConfig = defaultRoomConfig;
+        enabledRooms = Object.entries(defaultRoomConfig)
+          .filter(([key, room]) => room.enabled)
+          .sort((a, b) => (a[1].order || 99) - (b[1].order || 99))
+          .map(([key, room]) => ({ key, ...room }));
+        
+        generateDynamicStyles();
+        generateLegend();
+        populateRoomDropdown();
+      }
+    }
+    
+    function generateDynamicStyles() {
+      let css = '';
+      
+      enabledRooms.forEach(room => {
+        const className = room.key.toLowerCase().replace('_', '-');
+        
+        // Grid cell styles
+        css += `.grid-cell.booked.${className} { background: ${room.color}; border-left: 4px solid ${room.borderColor}; }\n`;
+        
+        // Car park special styling
+        if (room.key === 'Car_Park') {
+          css += `.grid-cell.booked.${className} { opacity: 0.7; }\n`;
+        }
+        
+        // Legend color
+        css += `.legend-color.${className} { background: ${room.color}; border-color: ${room.borderColor}; }\n`;
+      });
+      
+      document.getElementById('dynamicStyles').textContent = css;
+    }
+    
+    function generateLegend() {
+      const container = document.getElementById('legendContainer');
+      container.innerHTML = '';
+      
+      enabledRooms.forEach(room => {
+        const className = room.key.toLowerCase().replace('_', '-');
+        const item = document.createElement('div');
+        item.className = 'legend-item';
+        item.innerHTML = `
+          <div class="legend-color ${className}" style="background: ${room.color}; border-color: ${room.borderColor};"></div>
+          ${room.displayName}
+        `;
+        container.appendChild(item);
+      });
+    }
+    
+    function populateRoomDropdown() {
+      const select = document.getElementById('newRoom');
+      select.innerHTML = '<option value="">No change</option>';
+      
+      enabledRooms.forEach(room => {
+        const option = document.createElement('option');
+        option.value = room.displayName;
+        option.textContent = room.displayName;
+        select.appendChild(option);
+      });
+    }
+    
+    // ================================
+    // DATA LOADING
+    // ================================
+    async function loadBookingData() {
+      try {
+        const snapshot = await database.ref('bookings').once('value');
+        const data = snapshot.val() || [];
+        const allBookings = Array.isArray(data) ? data : Object.values(data);
+        
+        // Filter active bookings (not cancelled)
+        const activeBookings = allBookings.filter(b => 
+          b.status !== 'cancelled' && b.status !== 'cancel'
+        );
+        
+        // Separate holding room bookings
+        holdingRoomBookings = activeBookings.filter(b => 
+          b.room === 'Henley_Holding_Room' || 
+          b.room === '18' || 
+          b.date === '2030-01-01'
+        );
+        
+        // Regular bookings
+        bookingData = activeBookings.filter(b => 
+          b.room !== 'Henley_Holding_Room' && 
+          b.room !== '18' && 
+          b.date !== '2030-01-01'
+        );
+        
+        console.log(`Loaded ${bookingData.length} bookings, ${holdingRoomBookings.length} in holding room`);
+        
+        updateHoldingCount();
+        createCalendarGrid();
+        populateCalendar();
+        
+      } catch (error) {
+        console.error('Error loading bookings:', error);
+      }
+    }
+    
+    function refreshData() {
+      loadBookingData();
+    }
+    
+    // ================================
+    // DATE NAVIGATION
+    // ================================
+    function changeDate(delta) {
+      const date = new Date(currentDate);
+      date.setDate(date.getDate() + delta);
+      currentDate = date.toISOString().split('T')[0];
+      document.getElementById('dateSelector').value = currentDate;
+      populateCalendar();
+    }
+    
+    function dateChanged() {
+      currentDate = document.getElementById('dateSelector').value;
+      populateCalendar();
+    }
+    
+    function goToToday() {
+      currentDate = new Date().toISOString().split('T')[0];
+      document.getElementById('dateSelector').value = currentDate;
+      populateCalendar();
+    }
     
     // ================================
     // CALENDAR GRID
@@ -746,16 +822,20 @@
       const grid = document.getElementById('calendarGrid');
       grid.innerHTML = '';
       
+      // Set grid columns based on enabled rooms
+      const numRooms = enabledRooms.length;
+      grid.style.gridTemplateColumns = `70px repeat(${numRooms}, 1fr)`;
+      
       // Header row
       const timeHeader = document.createElement('div');
       timeHeader.className = 'grid-header';
       timeHeader.textContent = 'Time';
       grid.appendChild(timeHeader);
       
-      rooms.forEach(room => {
+      enabledRooms.forEach(room => {
         const header = document.createElement('div');
-        header.className = `grid-header ${room.id === 'carpark' ? 'car-park' : ''}`;
-        header.textContent = room.name;
+        header.className = 'grid-header';
+        header.textContent = room.displayName;
         grid.appendChild(header);
       });
       
@@ -766,104 +846,40 @@
         timeCell.textContent = time;
         grid.appendChild(timeCell);
         
-        rooms.forEach(room => {
+        enabledRooms.forEach(room => {
           const cell = document.createElement('div');
-          cell.className = `grid-cell ${room.id === 'carpark' ? 'car-park' : ''}`;
-          cell.id = `cell-${room.id}-${time}`;
-          cell.dataset.room = room.id;
-          cell.dataset.time = time;
+          cell.className = 'grid-cell';
+          cell.id = `cell-${room.key}-${time}`;
+          
+          // Special styling for car park
+          if (room.key === 'Car_Park') {
+            cell.classList.add('car-park-cell');
+          }
+          
           grid.appendChild(cell);
         });
       });
     }
     
-    // ================================
-    // DATA LOADING
-    // ================================
-    async function loadBookingData() {
-      const statusEl = document.getElementById('dataStatus');
-      statusEl.textContent = 'Loading...';
-      
-      try {
-        const snapshot = await database.ref('bookings').once('value');
-        const data = snapshot.val() || [];
-        const allBookings = Array.isArray(data) ? data : Object.values(data);
-        
-        // Filter active bookings
-        const activeBookings = allBookings.filter(b => 
-          b.status !== 'cancelled' && b.status !== 'cancel'
-        );
-        
-        // Separate holding room
-        holdingRoomBookings = activeBookings.filter(b => 
-          b.room === 'Henley_Holding_Room' || b.room === '18' || b.date === '2030-01-01'
-        );
-        
-        bookingData = activeBookings.filter(b => 
-          b.room !== 'Henley_Holding_Room' && b.room !== '18' && b.date !== '2030-01-01'
-        );
-        
-        updateHoldingCount();
-        populateCalendar();
-        
-        statusEl.textContent = `${bookingData.length} bookings loaded`;
-        setTimeout(() => { statusEl.textContent = ''; }, 3000);
-        
-        // Set up real-time listener
-        database.ref('bookings').on('value', (snapshot) => {
-          const data = snapshot.val() || [];
-          const allBookings = Array.isArray(data) ? data : Object.values(data);
-          const activeBookings = allBookings.filter(b => 
-            b.status !== 'cancelled' && b.status !== 'cancel'
-          );
-          
-          holdingRoomBookings = activeBookings.filter(b => 
-            b.room === 'Henley_Holding_Room' || b.room === '18' || b.date === '2030-01-01'
-          );
-          
-          bookingData = activeBookings.filter(b => 
-            b.room !== 'Henley_Holding_Room' && b.room !== '18' && b.date !== '2030-01-01'
-          );
-          
-          updateHoldingCount();
-          populateCalendar();
-        });
-        
-      } catch (error) {
-        console.error('Error loading data:', error);
-        statusEl.textContent = 'Error loading data';
-      }
-    }
-    
-    function refreshData() {
-      loadBookingData();
-    }
-    
-    function updateHoldingCount() {
-      const countEl = document.getElementById('holdingCount');
-      const btn = document.getElementById('holdingBtn');
-      
-      countEl.textContent = holdingRoomBookings.length;
-      btn.disabled = holdingRoomBookings.length === 0;
-    }
-    
-    // ================================
-    // CALENDAR POPULATION
-    // ================================
     function populateCalendar() {
       // Clear all cells
       document.querySelectorAll('.grid-cell').forEach(cell => {
         cell.innerHTML = '';
-        cell.classList.remove('booked', 'selected', ...rooms.map(r => r.class));
-        cell.onclick = null;
+        cell.className = 'grid-cell';
+        if (cell.id.includes('Car_Park')) {
+          cell.classList.add('car-park-cell');
+        }
       });
       
       // Filter bookings for current date
       const dayBookings = bookingData.filter(b => b.date === currentDate);
       
       dayBookings.forEach(booking => {
-        const room = getRoomConfig(booking);
-        if (!room) return;
+        const roomKey = getRoomKey(booking);
+        if (!roomKey) return;
+        
+        const roomConfig = enabledRooms.find(r => r.key === roomKey);
+        if (!roomConfig) return; // Room not enabled
         
         const startHour = parseInt(booking.start.split(':')[0]);
         const endHour = parseInt(booking.end.split(':')[0]);
@@ -871,129 +887,114 @@
         for (let hour = startHour; hour < endHour; hour++) {
           if (hour >= 8 && hour <= 20) {
             const timeStr = `${String(hour).padStart(2, '0')}:00`;
-            const cell = document.getElementById(`cell-${room.id}-${timeStr}`);
+            const cell = document.getElementById(`cell-${roomKey}-${timeStr}`);
             
             if (cell) {
-              cell.classList.add('booked', room.class);
+              const className = roomKey.toLowerCase().replace('_', '-');
+              cell.classList.add('booked', className);
+              
               cell.innerHTML = `
                 <div class="booking-content">
                   <div class="counsellor-name">${booking.client || 'Unknown'}</div>
-                  <div class="booking-code">${booking.bookingId || booking.code || ''}</div>
+                  <div class="booking-code">${booking.bookingId || ''}</div>
                 </div>
               `;
               
-              cell.onclick = () => selectBooking(booking, room);
+              cell.onclick = () => selectBooking(booking, roomConfig.displayName);
             }
           }
         }
       });
     }
     
-    function getRoomConfig(booking) {
-      for (const room of rooms) {
-        if (room.dbValues.includes(booking.room)) {
-          return room;
-        }
-        // Check for online in location
-        if (room.id === 'online' && booking.location && 
-            booking.location.toLowerCase().includes('online')) {
-          return room;
-        }
-      }
+    function getRoomKey(booking) {
+      // Map booking room value to config key
+      if (booking.room === 'Room_1' || booking.room === '1') return 'Room_1';
+      if (booking.room === 'Room_2' || booking.room === '2') return 'Room_2';
+      if (booking.room === 'Room_4' || booking.room === '4') return 'Room_4';
+      if (booking.room === 'Room_5' || booking.room === '5') return 'Room_5';
+      if (booking.room === 'Room_6' || booking.room === '6') return 'Room_6';
+      if (booking.room === 'Room_7' || booking.room === '7') return 'Room_7';
+      if (booking.room === 'Room_8' || booking.room === '8') return 'Room_8';
+      if (booking.room === 'Room_9' || booking.room === '9') return 'Room_9';
+      if (booking.room === 'Car_Park' || booking.room === 'Car Park') return 'Car_Park';
+      if (booking.location && booking.location.toLowerCase().includes('online')) return 'Online';
+      if (booking.room === 'Online') return 'Online';
       return null;
     }
     
     // ================================
-    // BOOKING SELECTION
+    // HOLDING ROOM
     // ================================
-    function selectBooking(booking, room) {
-      // Clear previous selection
-      document.querySelectorAll('.grid-cell.selected').forEach(c => c.classList.remove('selected'));
-      
-      // Highlight selected cells
-      const startHour = parseInt(booking.start.split(':')[0]);
-      const endHour = parseInt(booking.end.split(':')[0]);
-      
-      for (let hour = startHour; hour < endHour; hour++) {
-        const timeStr = `${String(hour).padStart(2, '0')}:00`;
-        const cell = document.getElementById(`cell-${room.id}-${timeStr}`);
-        if (cell) cell.classList.add('selected');
-      }
-      
-      selectedBooking = booking;
-      isHoldingBooking = false;
-      showBookingForm(booking, room);
+    function updateHoldingCount() {
+      const count = holdingRoomBookings.length;
+      document.getElementById('holdingCount').textContent = count;
+      document.getElementById('holdingBtn').disabled = count === 0;
     }
     
     function selectHoldingBooking() {
       if (holdingRoomBookings.length === 0) return;
       
-      // Get booking with lowest ID
+      // Select the oldest holding room booking
       const booking = holdingRoomBookings.reduce((min, b) => {
-        const currentId = parseInt(b.bookingId) || 999999;
         const minId = parseInt(min.bookingId) || 999999;
-        return currentId < minId ? b : min;
+        const bId = parseInt(b.bookingId) || 999999;
+        return bId < minId ? b : min;
       }, holdingRoomBookings[0]);
       
-      selectedBooking = booking;
-      isHoldingBooking = true;
-      showHoldingForm(booking);
+      selectBooking(booking, 'Holding Room');
     }
     
-    function showBookingForm(booking, room) {
-      document.getElementById('noSelection').style.display = 'none';
-      document.getElementById('bookingForm').style.display = 'block';
+    // ================================
+    // BOOKING SELECTION
+    // ================================
+    function selectBooking(booking, roomName) {
+      // Clear previous selection
+      document.querySelectorAll('.grid-cell.selected').forEach(c => c.classList.remove('selected'));
       
-      document.getElementById('displayCounsellor').textContent = booking.client || '-';
-      document.getElementById('displayCode').textContent = booking.bookingId || booking.code || '-';
-      document.getElementById('displayRoom').textContent = room.name;
-      document.getElementById('displayDate').textContent = booking.date;
-      document.getElementById('displayTime').textContent = `${booking.start} - ${booking.end}`;
-      
-      if (booking.isPaid) {
-        document.getElementById('paidRow').style.display = 'flex';
-        document.getElementById('displayPaid').textContent = 'Paid';
-        document.getElementById('displayPaid').style.color = '#28a745';
-      } else {
-        document.getElementById('paidRow').style.display = 'none';
+      // Highlight selected cells
+      if (booking.date !== '2030-01-01') {
+        const roomKey = getRoomKey(booking);
+        if (roomKey) {
+          const startHour = parseInt(booking.start.split(':')[0]);
+          const endHour = parseInt(booking.end.split(':')[0]);
+          
+          for (let hour = startHour; hour < endHour; hour++) {
+            const timeStr = `${String(hour).padStart(2, '0')}:00`;
+            const cell = document.getElementById(`cell-${roomKey}-${timeStr}`);
+            if (cell) cell.classList.add('selected');
+          }
+        }
       }
       
-      // Reset form fields
-      document.getElementById('newRoom').value = '';
-      document.getElementById('newDate').value = '';
-      document.getElementById('newTime').value = '';
-      
-      // Show cancel button for normal bookings
-      document.getElementById('cancelBtn').style.display = 'block';
-      document.getElementById('submitBtn').textContent = 'Submit Change';
-      
-      clearStatus();
+      selectedBooking = booking;
+      showBookingForm(booking, roomName);
     }
     
-    function showHoldingForm(booking) {
+    function showBookingForm(booking, roomName) {
       document.getElementById('noSelection').style.display = 'none';
       document.getElementById('bookingForm').style.display = 'block';
       
       document.getElementById('displayCounsellor').textContent = booking.client || '-';
-      document.getElementById('displayCode').textContent = booking.bookingId || booking.code || '-';
-      document.getElementById('displayRoom').textContent = 'Holding Room';
-      document.getElementById('displayDate').textContent = 'N/A (Holding)';
-      document.getElementById('displayTime').textContent = booking.start || '-';
+      document.getElementById('displayCode').textContent = booking.bookingId || '-';
+      document.getElementById('displayRoom').textContent = roomName;
+      document.getElementById('displayDate').textContent = booking.date === '2030-01-01' ? 'Holding Room' : booking.date;
+      document.getElementById('displayTime').textContent = `${booking.start} - ${booking.end}`;
+      document.getElementById('displayPayment').textContent = booking.isPaid ? '💳 Paid' : '📝 Unpaid';
       
-      document.getElementById('paidRow').style.display = 'flex';
-      document.getElementById('displayPaid').textContent = 'Paid (Credit Available)';
-      document.getElementById('displayPaid').style.color = '#007bff';
-      
-      // Reset form fields
+      // Clear form fields
       document.getElementById('newRoom').value = '';
       document.getElementById('newDate').value = '';
       document.getElementById('newTime').value = '';
       
-      // Hide cancel button for holding room bookings
-      document.getElementById('cancelBtn').style.display = 'none';
-      document.getElementById('submitBtn').textContent = 'Move from Holding Room';
-      
       clearStatus();
+    }
+    
+    function resetForm() {
+      selectedBooking = null;
+      document.getElementById('noSelection').style.display = 'block';
+      document.getElementById('bookingForm').style.display = 'none';
+      document.querySelectorAll('.grid-cell.selected').forEach(c => c.classList.remove('selected'));
     }
     
     // ================================
@@ -1009,16 +1010,9 @@
       const newDate = document.getElementById('newDate').value;
       const newTime = document.getElementById('newTime').value;
       
-      if (isHoldingBooking) {
-        if (!newRoom || !newDate || !newTime) {
-          showStatus('Please select room, date and time for holding room booking', 'error');
-          return;
-        }
-      } else {
-        if (!newRoom && !newDate && !newTime) {
-          showStatus('Please specify at least one change', 'error');
-          return;
-        }
+      if (!newRoom && !newDate && !newTime) {
+        showStatus('Please specify at least one change', 'error');
+        return;
       }
       
       const submitBtn = document.getElementById('submitBtn');
@@ -1027,40 +1021,36 @@
       showStatus('Sending change request...', 'info');
       
       try {
-        // Get counsellor ID
-        const counsellorId = selectedBooking.clientId || await lookupCounsellorId(selectedBooking.client);
+        const counsellorId = selectedBooking.clientId || '6';
+        const originalRoomKey = getRoomKey(selectedBooking) || 'Room_1';
+        const originalRoom = originalRoomKey;
         
-        if (!counsellorId) {
-          throw new Error('Could not find counsellor ID');
+        let requestedRoom = originalRoom;
+        if (newRoom) {
+          // Convert display name to key
+          const roomEntry = enabledRooms.find(r => r.displayName === newRoom);
+          if (roomEntry) {
+            requestedRoom = roomEntry.key;
+          }
         }
-        
-        // Build room values
-        const originalRoom = isHoldingBooking ? 'Henley_Holding_Room' : convertRoomName(getRoomConfig(selectedBooking)?.name || selectedBooking.room);
-        const requestedRoom = newRoom ? convertRoomName(newRoom) : originalRoom;
-        
-        const originalDate = isHoldingBooking ? '2030-01-01' : selectedBooking.date;
-        const originalTime = selectedBooking.start;
         
         const payload = {
           timestamp: new Date().toISOString(),
           action: 'modify',
           counsellor_id: counsellorId,
-          original_booking_code: selectedBooking.bookingId || selectedBooking.code,
+          original_booking_code: selectedBooking.bookingId,
           original_room: originalRoom,
           original_room_id: ROOM_ID_MAPPING[originalRoom] || '3',
           original_location_id: getLocationId(originalRoom),
-          original_datetime: `${originalDate}T${originalTime}:00`,
+          original_datetime: `${selectedBooking.date}T${selectedBooking.start}:00`,
           requested_room: requestedRoom,
           requested_room_id: ROOM_ID_MAPPING[requestedRoom] || '3',
           requested_location_id: getLocationId(requestedRoom),
-          requested_datetime: `${newDate || originalDate}T${newTime || originalTime}:00`,
+          requested_datetime: `${newDate || selectedBooking.date}T${newTime || selectedBooking.start}:00`,
           service_id: '2',
-          comments: selectedBooking.comments || '',
           is_paid: selectedBooking.isPaid ? 'True' : 'No',
           admin_override: 'true'
         };
-        
-        console.log('Webhook payload:', payload);
         
         const response = await fetch(WEBHOOK_URL, {
           method: 'POST',
@@ -1068,77 +1058,64 @@
           body: JSON.stringify(payload)
         });
         
-        if (!response.ok) {
-          throw new Error(`Server error: ${response.status}`);
-        }
+        if (!response.ok) throw new Error('Server error');
         
         showStatus('Change submitted successfully!', 'success');
-        
-        // Reset form after delay
-        setTimeout(() => {
-          resetForm();
-          refreshData();
-        }, 2000);
+        setTimeout(() => { resetForm(); refreshData(); }, 2000);
         
       } catch (error) {
-        console.error('Submit error:', error);
         showStatus(`Error: ${error.message}`, 'error');
       }
       
       submitBtn.disabled = false;
-      submitBtn.textContent = isHoldingBooking ? 'Move from Holding Room' : 'Submit Change';
+      submitBtn.textContent = 'Submit Change';
     }
     
     async function cancelBooking() {
-      if (!selectedBooking || isHoldingBooking) return;
+      if (!selectedBooking) return;
       
-      if (!confirm(`Cancel this booking?\n\nCounsellor: ${selectedBooking.client}\nDate: ${selectedBooking.date}\nTime: ${selectedBooking.start}\n\nThis cannot be undone.`)) {
+      if (!confirm(`Cancel this booking?\n\n${selectedBooking.client}\n${selectedBooking.date} ${selectedBooking.start}`)) {
         return;
       }
       
       const cancelBtn = document.getElementById('cancelBtn');
       cancelBtn.disabled = true;
-      cancelBtn.textContent = 'Cancelling...';
       showStatus('Processing cancellation...', 'info');
       
       try {
-        const counsellorId = selectedBooking.clientId || await lookupCounsellorId(selectedBooking.client);
-        const room = getRoomConfig(selectedBooking);
-        const roomName = convertRoomName(room?.name || selectedBooking.room);
+        const counsellorId = selectedBooking.clientId || '6';
+        const roomKey = getRoomKey(selectedBooking) || 'Room_1';
         
         let payload;
-        
         if (selectedBooking.isPaid) {
           // Move to holding room
           payload = {
             timestamp: new Date().toISOString(),
             action: 'modify',
             counsellor_id: counsellorId,
-            original_booking_code: selectedBooking.bookingId || selectedBooking.code,
-            original_room: roomName,
-            original_room_id: ROOM_ID_MAPPING[roomName] || '3',
-            original_location_id: getLocationId(roomName),
+            original_booking_code: selectedBooking.bookingId,
+            original_room: roomKey,
+            original_room_id: ROOM_ID_MAPPING[roomKey] || '3',
+            original_location_id: getLocationId(roomKey),
             original_datetime: `${selectedBooking.date}T${selectedBooking.start}:00`,
             requested_room: 'Henley_Holding_Room',
             requested_room_id: '18',
             requested_location_id: '2',
             requested_datetime: `2030-01-01T${selectedBooking.start}:00`,
             service_id: '2',
-            comments: selectedBooking.comments || '',
             is_paid: 'True',
             admin_override: 'true'
           };
         } else {
-          // Full cancellation
+          // Cancel directly
           payload = {
             timestamp: new Date().toISOString(),
             action: 'cancel',
             counsellor_id: counsellorId,
-            booking_code: selectedBooking.bookingId || selectedBooking.code,
+            booking_code: selectedBooking.bookingId,
             original_datetime: `${selectedBooking.date}T${selectedBooking.start}:00`,
-            original_room: roomName,
+            original_room: roomKey,
             service_id: '2',
-            comments: selectedBooking.comments || '',
             is_paid: 'No',
             admin_override: 'true'
           };
@@ -1150,49 +1127,23 @@
           body: JSON.stringify(payload)
         });
         
-        if (!response.ok) {
-          throw new Error(`Server error: ${response.status}`);
-        }
+        if (!response.ok) throw new Error('Server error');
         
-        showStatus(selectedBooking.isPaid ? 'Moved to holding room!' : 'Booking cancelled!', 'success');
-        
-        setTimeout(() => {
-          resetForm();
-          refreshData();
-        }, 2000);
+        showStatus('Booking cancelled!', 'success');
+        setTimeout(() => { resetForm(); refreshData(); }, 2000);
         
       } catch (error) {
-        console.error('Cancel error:', error);
         showStatus(`Error: ${error.message}`, 'error');
       }
       
       cancelBtn.disabled = false;
-      cancelBtn.textContent = 'Cancel Appointment';
     }
     
     // ================================
-    // UTILITY FUNCTIONS
+    // UTILITIES
     // ================================
-    function convertRoomName(name) {
-      if (name && name.startsWith('Room ')) {
-        return name.replace('Room ', 'Room_');
-      }
-      return name;
-    }
-    
-    function getLocationId(roomName) {
-      const onlineRooms = ['Online', 'Online Counselling'];
-      return onlineRooms.includes(roomName) ? '1' : '2';
-    }
-    
-    async function lookupCounsellorId(name) {
-      // Check booking data first
-      const booking = bookingData.find(b => b.client === name && b.clientId);
-      if (booking) return booking.clientId;
-      
-      // Fallback mapping
-      const mapping = { 'Barry Redman': '6' };
-      return mapping[name] || null;
+    function getLocationId(roomKey) {
+      return (roomKey === 'Online') ? '1' : '2';
     }
     
     function showStatus(message, type) {
@@ -1202,36 +1153,7 @@
     }
     
     function clearStatus() {
-      const el = document.getElementById('statusMessage');
-      el.className = 'status-message';
-      el.textContent = '';
-    }
-    
-    function resetForm() {
-      selectedBooking = null;
-      isHoldingBooking = false;
-      document.getElementById('noSelection').style.display = 'block';
-      document.getElementById('bookingForm').style.display = 'none';
-      document.querySelectorAll('.grid-cell.selected').forEach(c => c.classList.remove('selected'));
-    }
-    
-    // ================================
-    // NAVIGATION
-    // ================================
-    function changeDay(delta) {
-      const date = new Date(currentDate + 'T12:00:00');
-      date.setDate(date.getDate() + delta);
-      currentDate = date.toISOString().split('T')[0];
-      document.getElementById('dateSelector').value = currentDate;
-      populateCalendar();
-      resetForm();
-    }
-    
-    function goToToday() {
-      currentDate = new Date().toISOString().split('T')[0];
-      document.getElementById('dateSelector').value = currentDate;
-      populateCalendar();
-      resetForm();
+      document.getElementById('statusMessage').className = 'status-message';
     }
   </script>
 </body>
