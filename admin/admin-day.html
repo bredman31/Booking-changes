@@ -486,9 +486,10 @@
         font-size: 11px;
       }
       
-      /* Main Content */
+      /* Main Content - stack vertically */
       .main-content {
-        padding: 8px;
+        flex-direction: column;
+        padding: 0;
       }
       
       /* Controls */
@@ -522,10 +523,16 @@
         font-size: 11px;
       }
       
-      /* Calendar Grid */
+      /* Calendar Container */
+      .calendar-wrapper {
+        flex: 1;
+        overflow: hidden;
+      }
+      
       .calendar-container {
         overflow-x: auto;
         -webkit-overflow-scrolling: touch;
+        padding: 8px;
       }
       
       .calendar-grid {
@@ -584,14 +591,111 @@
         font-size: 11px;
       }
       
-      /* Booking Details Modal/Panel */
-      .booking-panel {
+      /* Form Panel - Slide up from bottom on mobile */
+      .form-panel {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
         width: 100%;
-        max-width: none;
+        max-height: 60vh;
+        border-left: none;
+        border-top: 2px solid #1a1a2e;
+        border-radius: 16px 16px 0 0;
+        box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.15);
+        transform: translateY(calc(100% - 50px));
+        transition: transform 0.3s ease;
+        z-index: 1000;
       }
       
-      .panel-content {
-        padding: 12px;
+      .form-panel.expanded {
+        transform: translateY(0);
+      }
+      
+      .form-header {
+        padding: 12px 15px;
+        cursor: pointer;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-radius: 16px 16px 0 0;
+      }
+      
+      .form-header::before {
+        content: '';
+        position: absolute;
+        top: 8px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 40px;
+        height: 4px;
+        background: rgba(255, 255, 255, 0.5);
+        border-radius: 2px;
+      }
+      
+      .form-header h2 {
+        font-size: 14px;
+      }
+      
+      .form-header p {
+        font-size: 11px;
+      }
+      
+      .form-content {
+        padding: 12px 15px;
+        overflow-y: auto;
+        max-height: calc(60vh - 60px);
+      }
+      
+      .booking-details {
+        padding: 10px;
+        margin-bottom: 12px;
+      }
+      
+      .detail-row {
+        padding: 5px 0;
+      }
+      
+      .detail-label, .detail-value {
+        font-size: 11px;
+      }
+      
+      .form-group {
+        margin-bottom: 10px;
+      }
+      
+      .form-group label {
+        font-size: 11px;
+        margin-bottom: 4px;
+      }
+      
+      .form-group select,
+      .form-group input {
+        padding: 8px;
+        font-size: 14px;
+      }
+      
+      .form-actions {
+        flex-direction: column;
+        gap: 8px;
+      }
+      
+      .form-actions .btn {
+        width: 100%;
+        padding: 10px;
+        font-size: 13px;
+      }
+      
+      .no-selection {
+        padding: 15px;
+      }
+      
+      .no-selection-icon {
+        font-size: 24px;
+      }
+      
+      .no-selection p {
+        font-size: 12px;
       }
     }
     
@@ -610,6 +714,14 @@
         width: 100%;
         text-align: center;
         order: -1;
+      }
+      
+      .form-panel {
+        max-height: 70vh;
+      }
+      
+      .form-content {
+        max-height: calc(70vh - 60px);
       }
     }
   </style>
@@ -1129,6 +1241,7 @@
       
       selectedBooking = booking;
       showBookingForm(booking, roomName);
+      expandMobilePanel(); // Expand panel on mobile when booking selected
     }
     
     function showBookingForm(booking, roomName) {
@@ -1315,6 +1428,45 @@
     function clearStatus() {
       document.getElementById('statusMessage').className = 'status-message';
     }
+    
+    // ================================
+    // MOBILE PANEL TOGGLE
+    // ================================
+    function initMobilePanel() {
+      const formPanel = document.querySelector('.form-panel');
+      const formHeader = document.querySelector('.form-header');
+      
+      if (!formPanel || !formHeader) return;
+      
+      // Toggle panel on header click (mobile only)
+      formHeader.addEventListener('click', function(e) {
+        if (window.innerWidth <= 768) {
+          formPanel.classList.toggle('expanded');
+        }
+      });
+      
+      // Collapse panel when clicking outside (mobile only)
+      document.addEventListener('click', function(e) {
+        if (window.innerWidth <= 768) {
+          if (!formPanel.contains(e.target) && formPanel.classList.contains('expanded')) {
+            formPanel.classList.remove('expanded');
+          }
+        }
+      });
+    }
+    
+    // Expand panel when booking selected (mobile)
+    function expandMobilePanel() {
+      if (window.innerWidth <= 768) {
+        const formPanel = document.querySelector('.form-panel');
+        if (formPanel) {
+          formPanel.classList.add('expanded');
+        }
+      }
+    }
+    
+    // Initialize mobile panel on load
+    document.addEventListener('DOMContentLoaded', initMobilePanel);
   </script>
 </body>
 </html>
