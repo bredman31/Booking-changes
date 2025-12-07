@@ -2,6 +2,7 @@
 <html>
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Cherry Tree Centre - Room Booking Calendar</title>
   
   <!-- ADD FIREBASE SCRIPTS HERE -->
@@ -277,6 +278,262 @@
       border-radius: 8px 8px 0 0;
       font-weight: bold;
       text-align: center;
+    }
+    
+    /* ================================ */
+    /* MOBILE STYLES                    */
+    /* ================================ */
+    @media (max-width: 900px) {
+      body {
+        height: auto;
+        min-height: 100vh;
+      }
+      
+      /* Header */
+      .header {
+        flex-direction: column;
+        gap: 10px;
+        padding: 10px 12px;
+        align-items: stretch;
+      }
+      
+      .header h2 {
+        font-size: 14px;
+        text-align: center;
+      }
+      
+      .view-selector {
+        justify-content: center;
+      }
+      
+      .view-btn {
+        padding: 8px 14px;
+        font-size: 12px;
+      }
+      
+      .counsellor-filter {
+        justify-content: center;
+        flex-wrap: wrap;
+      }
+      
+      .counsellor-filter select {
+        flex: 1;
+        min-width: 150px;
+      }
+      
+      /* Main layout - stack vertically */
+      .main-container {
+        flex-direction: column;
+        overflow: visible;
+      }
+      
+      /* Form container - full width on mobile */
+      .form-container {
+        width: 100%;
+        max-width: none;
+        border-right: none;
+        border-bottom: 1px solid #ccc;
+        padding: 10px;
+        order: 2; /* Move form below calendar on mobile */
+      }
+      
+      /* Calendar section */
+      .calendar-section {
+        order: 1;
+        min-height: 400px;
+      }
+      
+      .calendar-container {
+        padding: 8px;
+      }
+      
+      .controls {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 8px;
+      }
+      
+      .controls > div {
+        display: flex;
+        justify-content: center;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+      
+      .date-selector {
+        font-size: 12px;
+      }
+      
+      .controls input[type="date"] {
+        padding: 8px;
+        font-size: 14px;
+      }
+      
+      .controls button {
+        padding: 8px 12px;
+        font-size: 12px;
+      }
+      
+      .week-navigation {
+        flex-wrap: wrap;
+        justify-content: center;
+      }
+      
+      .week-navigation button {
+        padding: 8px 10px;
+        font-size: 11px;
+      }
+      
+      #weekDisplay {
+        width: 100%;
+        text-align: center;
+        order: -1;
+        font-size: 13px;
+      }
+      
+      /* Calendar Grid */
+      .calendar-grid {
+        font-size: 0.75em;
+        overflow-x: auto;
+        display: block;
+      }
+      
+      .calendar-grid.day-view {
+        display: grid;
+        grid-template-columns: 50px repeat(7, minmax(60px, 1fr));
+        min-width: 500px;
+      }
+      
+      .calendar-grid.week-view {
+        display: grid;
+        grid-template-columns: 60px repeat(7, minmax(55px, 1fr));
+        min-width: 450px;
+      }
+      
+      .grid-header {
+        font-size: 0.8em;
+        padding: 4px 2px;
+      }
+      
+      .time-header {
+        font-size: 0.75em;
+        padding: 2px;
+      }
+      
+      .grid-cell {
+        font-size: 0.7em;
+        padding: 2px;
+        min-height: 28px;
+      }
+      
+      .booking-info {
+        font-size: 0.75em;
+      }
+      
+      .client-name {
+        font-size: 0.65em;
+      }
+      
+      /* Holding Room Section */
+      .holding-room-section {
+        padding: 10px;
+      }
+      
+      .holding-room-header {
+        flex-wrap: wrap;
+        gap: 8px;
+        justify-content: center;
+      }
+      
+      .holding-room-title {
+        font-size: 14px;
+        width: 100%;
+        text-align: center;
+      }
+      
+      .select-holding-btn {
+        padding: 8px 14px;
+        font-size: 12px;
+      }
+      
+      .holding-room-info {
+        text-align: center;
+        font-size: 12px;
+      }
+      
+      /* Form Styling */
+      .form-container h3 {
+        font-size: 16px;
+      }
+      
+      .form-container p {
+        font-size: 12px;
+      }
+      
+      #currentBookingDisplay {
+        font-size: 12px;
+      }
+      
+      #currentBookingDisplay > div > div {
+        margin-bottom: 6px !important;
+      }
+      
+      .form-container label {
+        font-size: 12px !important;
+      }
+      
+      .form-container select,
+      .form-container input {
+        padding: 10px !important;
+        font-size: 14px !important;
+      }
+      
+      .form-container button[type="submit"],
+      #cancelBookingBtn {
+        padding: 12px 20px !important;
+        font-size: 14px !important;
+      }
+      
+      .counsellor-info {
+        padding: 8px;
+      }
+      
+      .counsellor-info h3 {
+        font-size: 14px;
+      }
+      
+      .counsellor-info p {
+        font-size: 12px;
+      }
+    }
+    
+    @media (max-width: 480px) {
+      .header h2 {
+        font-size: 12px;
+      }
+      
+      .view-btn {
+        padding: 6px 10px;
+        font-size: 11px;
+      }
+      
+      .calendar-grid.day-view {
+        grid-template-columns: 45px repeat(7, minmax(50px, 1fr));
+        min-width: 400px;
+      }
+      
+      .calendar-grid.week-view {
+        grid-template-columns: 50px repeat(7, minmax(45px, 1fr));
+        min-width: 380px;
+      }
+      
+      .grid-header {
+        font-size: 0.7em;
+      }
+      
+      .grid-cell {
+        min-height: 24px;
+      }
     }
   </style>
 </head>
@@ -1339,7 +1596,7 @@ function restoreSessionState() {
             timestamp: new Date().toISOString(),
             action: 'modify',
             counsellor_id: counsellorId,
-            original_booking_code: booking.bookingId || bookingCode,
+            booking_code: booking.bookingId || bookingCode,
             original_room: roomForWebhook,
             original_room_id: ROOM_MAPPING[roomForWebhook] || '3',
             original_location_id: getLocationIdFromRoom(roomForWebhook),
@@ -1458,7 +1715,7 @@ function restoreSessionState() {
           timestamp: new Date().toISOString(),
           action: 'modify',
           counsellor_id: counsellorId,
-          original_booking_code: booking ? booking.bookingId : changeData.originalBookingCode,
+          booking_code: booking ? booking.bookingId : changeData.originalBookingCode,
           original_room: originalRoomUnderscore,
           original_room_id: originalRoomId,
           original_location_id: originalLocationId,
