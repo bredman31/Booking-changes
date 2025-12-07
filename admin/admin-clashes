@@ -1,0 +1,780 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cherry Tree Centre - Clash Detection</title>
+  
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-database-compat.js"></script>
+  
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: #f5f5f5;
+      min-height: 100vh;
+    }
+    
+    /* Header */
+    .admin-header {
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+      color: white;
+      padding: 15px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+    }
+    
+    .header-left h1 {
+      font-size: 18px;
+      font-weight: 500;
+    }
+    
+    .back-link {
+      color: rgba(255,255,255,0.7);
+      text-decoration: none;
+      font-size: 13px;
+    }
+    
+    .back-link:hover {
+      color: white;
+    }
+    
+    /* Controls */
+    .controls-bar {
+      background: white;
+      padding: 15px 20px;
+      border-bottom: 1px solid #ddd;
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+    
+    .month-nav {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    
+    .month-nav button {
+      background: #f0f0f0;
+      border: 1px solid #ddd;
+      padding: 8px 16px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+      transition: all 0.2s;
+    }
+    
+    .month-nav button:hover {
+      background: #e0e0e0;
+    }
+    
+    .current-month {
+      font-weight: 600;
+      font-size: 18px;
+      color: #1a1a2e;
+      min-width: 180px;
+      text-align: center;
+    }
+    
+    .refresh-btn {
+      background: #0f3460;
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+    
+    .refresh-btn:hover {
+      background: #1a1a2e;
+    }
+    
+    /* Summary stats */
+    .summary-bar {
+      background: white;
+      padding: 15px 20px;
+      border-bottom: 1px solid #ddd;
+      display: flex;
+      gap: 30px;
+      flex-wrap: wrap;
+    }
+    
+    .summary-stat {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .summary-stat .icon {
+      font-size: 20px;
+    }
+    
+    .summary-stat .count {
+      font-size: 24px;
+      font-weight: 700;
+    }
+    
+    .summary-stat .label {
+      font-size: 12px;
+      color: #666;
+    }
+    
+    .summary-stat.room-clash .count { color: #dc3545; }
+    .summary-stat.counsellor-clash .count { color: #fd7e14; }
+    .summary-stat.no-clashes .count { color: #28a745; }
+    
+    /* Main content */
+    .main-content {
+      padding: 20px;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    
+    /* Clash sections */
+    .clash-section {
+      background: white;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+      overflow: hidden;
+    }
+    
+    .section-header {
+      padding: 15px 20px;
+      font-weight: 600;
+      font-size: 16px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      border-bottom: 1px solid #eee;
+    }
+    
+    .section-header.room-clash {
+      background: #fff5f5;
+      color: #dc3545;
+    }
+    
+    .section-header.counsellor-clash {
+      background: #fff8f0;
+      color: #fd7e14;
+    }
+    
+    .section-header .badge {
+      background: currentColor;
+      color: white;
+      padding: 2px 10px;
+      border-radius: 12px;
+      font-size: 13px;
+    }
+    
+    .clash-list {
+      padding: 0;
+    }
+    
+    .clash-item {
+      padding: 15px 20px;
+      border-bottom: 1px solid #f0f0f0;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    
+    .clash-item:last-child {
+      border-bottom: none;
+    }
+    
+    .clash-item:hover {
+      background: #fafafa;
+    }
+    
+    .clash-date {
+      font-weight: 600;
+      color: #1a1a2e;
+      font-size: 15px;
+    }
+    
+    .clash-time {
+      color: #666;
+      font-size: 14px;
+    }
+    
+    .clash-details {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    
+    .clash-booking {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 12px;
+      background: #f8f9fa;
+      border-radius: 6px;
+      font-size: 13px;
+      border-left: 4px solid #ccc;
+    }
+    
+    .clash-booking .room {
+      font-weight: 600;
+      min-width: 80px;
+    }
+    
+    .clash-booking .client {
+      flex: 1;
+    }
+    
+    .clash-booking .code {
+      color: #888;
+      font-size: 12px;
+    }
+    
+    /* No clashes message */
+    .no-clashes {
+      text-align: center;
+      padding: 60px 20px;
+      color: #28a745;
+    }
+    
+    .no-clashes-icon {
+      font-size: 48px;
+      margin-bottom: 15px;
+    }
+    
+    .no-clashes h2 {
+      font-size: 20px;
+      margin-bottom: 8px;
+    }
+    
+    .no-clashes p {
+      color: #666;
+      font-size: 14px;
+    }
+    
+    /* Loading */
+    .loading {
+      text-align: center;
+      padding: 60px 20px;
+      color: #666;
+    }
+    
+    .loading-spinner {
+      font-size: 32px;
+      animation: spin 1s linear infinite;
+      display: inline-block;
+    }
+    
+    @keyframes spin {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+    
+    /* Mobile styles */
+    @media (max-width: 768px) {
+      .admin-header {
+        padding: 12px 15px;
+      }
+      
+      .header-left {
+        width: 100%;
+        justify-content: space-between;
+      }
+      
+      .header-left h1 {
+        font-size: 16px;
+      }
+      
+      .controls-bar {
+        padding: 12px 15px;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 10px;
+      }
+      
+      .month-nav {
+        justify-content: space-between;
+      }
+      
+      .current-month {
+        font-size: 16px;
+        min-width: auto;
+      }
+      
+      .summary-bar {
+        padding: 12px 15px;
+        gap: 15px;
+      }
+      
+      .summary-stat .count {
+        font-size: 20px;
+      }
+      
+      .main-content {
+        padding: 15px;
+      }
+      
+      .clash-item {
+        padding: 12px 15px;
+      }
+      
+      .clash-booking {
+        flex-wrap: wrap;
+        gap: 5px;
+      }
+      
+      .clash-booking .room {
+        min-width: 70px;
+      }
+    }
+    
+    @media (max-width: 480px) {
+      .month-nav button {
+        padding: 8px 12px;
+        font-size: 12px;
+      }
+      
+      .summary-bar {
+        justify-content: space-around;
+      }
+      
+      .summary-stat {
+        flex-direction: column;
+        text-align: center;
+        gap: 2px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Header -->
+  <header class="admin-header">
+    <div class="header-left">
+      <a href="admin-index.html" class="back-link">← Admin Portal</a>
+      <h1>⚠️ Clash Detection</h1>
+    </div>
+  </header>
+  
+  <!-- Controls -->
+  <div class="controls-bar">
+    <div class="month-nav">
+      <button onclick="changeMonth(-1)">← Prev</button>
+      <span class="current-month" id="currentMonth">December 2025</span>
+      <button onclick="changeMonth(1)">Next →</button>
+    </div>
+    <button class="refresh-btn" onclick="refreshData()">↻ Refresh</button>
+  </div>
+  
+  <!-- Summary -->
+  <div class="summary-bar">
+    <div class="summary-stat room-clash">
+      <span class="icon">🚪</span>
+      <span class="count" id="roomClashCount">0</span>
+      <span class="label">Room Double-Bookings</span>
+    </div>
+    <div class="summary-stat counsellor-clash">
+      <span class="icon">👤</span>
+      <span class="count" id="counsellorClashCount">0</span>
+      <span class="label">Counsellor Conflicts</span>
+    </div>
+  </div>
+  
+  <!-- Main Content -->
+  <main class="main-content" id="mainContent">
+    <div class="loading">
+      <div class="loading-spinner">⏳</div>
+      <p>Loading bookings...</p>
+    </div>
+  </main>
+  
+  <script>
+    // Firebase configuration
+    const firebaseConfig = {
+      apiKey: "AIzaSyCVp4QDAnh5RcxGZIrEY2LriUWKQNcNbzE",
+      authDomain: "cherry-tree-bookings.firebaseapp.com",
+      databaseURL: "https://cherry-tree-bookings-default-rtdb.europe-west1.firebasedatabase.app",
+      projectId: "cherry-tree-bookings",
+      storageBucket: "cherry-tree-bookings.firebasestorage.app",
+      messagingSenderId: "280166213685",
+      appId: "1:280166213685:web:f80b11799f41f5f385297c"
+    };
+    
+    firebase.initializeApp(firebaseConfig);
+    const database = firebase.database();
+    
+    // State
+    let bookingData = [];
+    let currentMonth = new Date();
+    currentMonth.setDate(1); // First of current month
+    
+    // Room configuration for colours
+    let roomConfig = {};
+    
+    // Initialize
+    document.addEventListener('DOMContentLoaded', () => {
+      loadRoomConfig().then(() => {
+        loadBookingData();
+      });
+    });
+    
+    // Load room config from Firebase
+    async function loadRoomConfig() {
+      try {
+        const snapshot = await database.ref('room_config').once('value');
+        roomConfig = snapshot.val() || {};
+      } catch (e) {
+        console.error('Error loading room config:', e);
+      }
+    }
+    
+    // Get room colour
+    function getRoomColor(roomKey) {
+      const room = roomConfig[roomKey];
+      if (room) {
+        return room.borderColor || room.color || '#ccc';
+      }
+      
+      // Fallback colours
+      const fallback = {
+        'Room_1': '#b89090',
+        'Room_2': '#9680c0',
+        'Room_4': '#90b890',
+        'Room_5': '#d32f2f',
+        'Room_6': '#b5946e',
+        'Room_7': '#d4c347',
+        'Room_8': '#6b8e8e',
+        'Room_9': '#7b68a0',
+        'Car_Park': '#888',
+        'Online': '#6bc46b'
+      };
+      
+      return fallback[roomKey] || '#ccc';
+    }
+    
+    // Normalize room key
+    function getRoomKey(booking) {
+      if (booking.room === 'Room_1' || booking.room === '1') return 'Room_1';
+      if (booking.room === 'Room_2' || booking.room === '2') return 'Room_2';
+      if (booking.room === 'Room_4' || booking.room === '4') return 'Room_4';
+      if (booking.room === 'Room_5' || booking.room === '5') return 'Room_5';
+      if (booking.room === 'Room_6' || booking.room === '6') return 'Room_6';
+      if (booking.room === 'Room_7' || booking.room === '7') return 'Room_7';
+      if (booking.room === 'Room_8' || booking.room === '8') return 'Room_8';
+      if (booking.room === 'Room_9' || booking.room === '9') return 'Room_9';
+      if (booking.room === 'Car_Park' || booking.room === 'Car Park') return 'Car_Park';
+      if (booking.location && booking.location.toLowerCase().includes('online')) return 'Online';
+      if (booking.room === 'Online') return 'Online';
+      return booking.room || 'Unknown';
+    }
+    
+    // Get display name for room
+    function getRoomDisplayName(roomKey) {
+      const names = {
+        'Room_1': 'Room 1',
+        'Room_2': 'Room 2',
+        'Room_4': 'Room 4',
+        'Room_5': 'Room 5',
+        'Room_6': 'Room 6',
+        'Room_7': 'Room 7',
+        'Room_8': 'Room 8',
+        'Room_9': 'Room 9',
+        'Car_Park': 'Car Park',
+        'Online': 'Online'
+      };
+      return names[roomKey] || roomKey;
+    }
+    
+    // Load booking data
+    async function loadBookingData() {
+      try {
+        const snapshot = await database.ref('bookings').once('value');
+        const data = snapshot.val() || [];
+        const allBookings = Array.isArray(data) ? data : Object.values(data);
+        
+        // Filter active bookings (not cancelled, not in holding room)
+        bookingData = allBookings.filter(b => 
+          b.status !== 'cancelled' && 
+          b.status !== 'cancel' &&
+          b.date !== '2030-01-01' &&
+          b.room !== 'Henley_Holding_Room' &&
+          b.room !== '18'
+        );
+        
+        updateDisplay();
+        
+      } catch (error) {
+        console.error('Error loading bookings:', error);
+        document.getElementById('mainContent').innerHTML = `
+          <div class="loading">
+            <p style="color: #dc3545;">Error loading data. Please try refreshing.</p>
+          </div>
+        `;
+      }
+    }
+    
+    // Change month
+    function changeMonth(delta) {
+      currentMonth.setMonth(currentMonth.getMonth() + delta);
+      updateDisplay();
+    }
+    
+    // Refresh data
+    function refreshData() {
+      document.getElementById('mainContent').innerHTML = `
+        <div class="loading">
+          <div class="loading-spinner">⏳</div>
+          <p>Loading bookings...</p>
+        </div>
+      `;
+      loadBookingData();
+    }
+    
+    // Update display
+    function updateDisplay() {
+      // Update month display
+      const monthNames = ['January', 'February', 'March', 'April', 'May', 'June',
+                          'July', 'August', 'September', 'October', 'November', 'December'];
+      document.getElementById('currentMonth').textContent = 
+        `${monthNames[currentMonth.getMonth()]} ${currentMonth.getFullYear()}`;
+      
+      // Filter bookings for current month
+      const year = currentMonth.getFullYear();
+      const month = currentMonth.getMonth();
+      
+      const monthBookings = bookingData.filter(b => {
+        const d = new Date(b.date + 'T12:00:00');
+        return d.getFullYear() === year && d.getMonth() === month;
+      });
+      
+      // Detect clashes
+      const { roomClashes, counsellorClashes } = detectClashes(monthBookings);
+      
+      // Update summary counts
+      document.getElementById('roomClashCount').textContent = roomClashes.length;
+      document.getElementById('counsellorClashCount').textContent = counsellorClashes.length;
+      
+      // Build display
+      const container = document.getElementById('mainContent');
+      
+      if (roomClashes.length === 0 && counsellorClashes.length === 0) {
+        container.innerHTML = `
+          <div class="no-clashes">
+            <div class="no-clashes-icon">✅</div>
+            <h2>No Clashes Found</h2>
+            <p>There are no booking conflicts for ${monthNames[month]} ${year}</p>
+          </div>
+        `;
+        return;
+      }
+      
+      let html = '';
+      
+      // Room clashes section
+      if (roomClashes.length > 0) {
+        html += `
+          <div class="clash-section">
+            <div class="section-header room-clash">
+              <span>🚪 Room Double-Bookings</span>
+              <span class="badge">${roomClashes.length}</span>
+            </div>
+            <div class="clash-list">
+        `;
+        
+        roomClashes.forEach(clash => {
+          html += buildClashItem(clash, 'room');
+        });
+        
+        html += '</div></div>';
+      }
+      
+      // Counsellor clashes section
+      if (counsellorClashes.length > 0) {
+        html += `
+          <div class="clash-section">
+            <div class="section-header counsellor-clash">
+              <span>👤 Counsellor Conflicts</span>
+              <span class="badge">${counsellorClashes.length}</span>
+            </div>
+            <div class="clash-list">
+        `;
+        
+        counsellorClashes.forEach(clash => {
+          html += buildClashItem(clash, 'counsellor');
+        });
+        
+        html += '</div></div>';
+      }
+      
+      container.innerHTML = html;
+    }
+    
+    // Detect clashes
+    function detectClashes(bookings) {
+      const roomClashes = [];
+      const counsellorClashes = [];
+      
+      // Group bookings by date
+      const byDate = {};
+      bookings.forEach(b => {
+        if (!byDate[b.date]) byDate[b.date] = [];
+        byDate[b.date].push(b);
+      });
+      
+      // Check each date
+      Object.entries(byDate).forEach(([date, dayBookings]) => {
+        // Check for room double-bookings
+        const roomTimeMap = {}; // room -> time -> bookings
+        
+        dayBookings.forEach(booking => {
+          const roomKey = getRoomKey(booking);
+          const startHour = parseInt(booking.start.split(':')[0]);
+          const endHour = parseInt(booking.end.split(':')[0]);
+          
+          for (let h = startHour; h < endHour; h++) {
+            const key = `${roomKey}-${h}`;
+            if (!roomTimeMap[key]) roomTimeMap[key] = [];
+            roomTimeMap[key].push(booking);
+          }
+        });
+        
+        // Find room clashes
+        const seenRoomClashes = new Set();
+        Object.entries(roomTimeMap).forEach(([key, clashBookings]) => {
+          if (clashBookings.length > 1) {
+            // Create a unique key for this clash
+            const clashKey = clashBookings.map(b => b.bookingId || b.code).sort().join('-');
+            if (!seenRoomClashes.has(clashKey)) {
+              seenRoomClashes.add(clashKey);
+              const [roomKey, hour] = key.split('-');
+              roomClashes.push({
+                date: date,
+                time: `${hour.padStart(2, '0')}:00`,
+                room: roomKey,
+                bookings: clashBookings
+              });
+            }
+          }
+        });
+        
+        // Check for counsellor conflicts (same client, overlapping times)
+        const clientBookings = {};
+        dayBookings.forEach(booking => {
+          const client = (booking.client || '').toLowerCase().trim();
+          if (!client) return;
+          if (!clientBookings[client]) clientBookings[client] = [];
+          clientBookings[client].push(booking);
+        });
+        
+        // Find counsellor clashes
+        Object.entries(clientBookings).forEach(([client, clientBks]) => {
+          if (clientBks.length < 2) return;
+          
+          // Check each pair for overlap
+          for (let i = 0; i < clientBks.length; i++) {
+            for (let j = i + 1; j < clientBks.length; j++) {
+              const b1 = clientBks[i];
+              const b2 = clientBks[j];
+              
+              const start1 = parseInt(b1.start.split(':')[0]);
+              const end1 = parseInt(b1.end.split(':')[0]);
+              const start2 = parseInt(b2.start.split(':')[0]);
+              const end2 = parseInt(b2.end.split(':')[0]);
+              
+              // Check for overlap
+              if (start1 < end2 && start2 < end1) {
+                const room1 = getRoomKey(b1);
+                const room2 = getRoomKey(b2);
+                
+                // Check if both are rooms (not car park) or both are car park
+                const isRoom1CarPark = room1 === 'Car_Park';
+                const isRoom2CarPark = room2 === 'Car_Park';
+                
+                // Flag if: both rooms, or both car parks
+                if ((isRoom1CarPark && isRoom2CarPark) || (!isRoom1CarPark && !isRoom2CarPark)) {
+                  // Also flag room + car park as that's fine (intentional)
+                  // Actually user said: "two room bookings at same time OR two car park bookings"
+                  // So room + car park is OK, but room + room or carpark + carpark is a clash
+                  
+                  const overlapStart = Math.max(start1, start2);
+                  
+                  counsellorClashes.push({
+                    date: date,
+                    time: `${String(overlapStart).padStart(2, '0')}:00`,
+                    client: b1.client,
+                    bookings: [b1, b2]
+                  });
+                }
+              }
+            }
+          }
+        });
+      });
+      
+      // Sort by date
+      roomClashes.sort((a, b) => a.date.localeCompare(b.date) || a.time.localeCompare(b.time));
+      counsellorClashes.sort((a, b) => a.date.localeCompare(b.date) || a.time.localeCompare(b.time));
+      
+      return { roomClashes, counsellorClashes };
+    }
+    
+    // Build clash item HTML
+    function buildClashItem(clash, type) {
+      const dateObj = new Date(clash.date + 'T12:00:00');
+      const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+      const dayName = dayNames[dateObj.getDay()];
+      
+      const formattedDate = `${dayName} ${dateObj.getDate()}/${dateObj.getMonth() + 1}/${dateObj.getFullYear()}`;
+      
+      let bookingsHtml = clash.bookings.map(b => {
+        const roomKey = getRoomKey(b);
+        const roomColor = getRoomColor(roomKey);
+        const roomName = getRoomDisplayName(roomKey);
+        
+        return `
+          <div class="clash-booking" style="border-left-color: ${roomColor};">
+            <span class="room">${roomName}</span>
+            <span class="client">${b.client || 'Unknown'}</span>
+            <span class="code">${b.bookingId || b.code || ''}</span>
+            <span class="time">${b.start}-${b.end}</span>
+          </div>
+        `;
+      }).join('');
+      
+      let headerInfo = '';
+      if (type === 'room') {
+        headerInfo = `<span class="clash-time">Room: ${getRoomDisplayName(clash.room)} at ${clash.time}</span>`;
+      } else {
+        headerInfo = `<span class="clash-time">Counsellor: ${clash.client} at ${clash.time}</span>`;
+      }
+      
+      return `
+        <div class="clash-item">
+          <div class="clash-date">${formattedDate}</div>
+          ${headerInfo}
+          <div class="clash-details">
+            ${bookingsHtml}
+          </div>
+        </div>
+      `;
+    }
+  </script>
+</body>
+</html>
