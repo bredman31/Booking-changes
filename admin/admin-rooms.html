@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Admin Week View - Cherry Tree Centre</title>
+  <title>Room Configuration - Cherry Tree Centre</title>
   
   <!-- Firebase -->
   <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
@@ -20,8 +20,6 @@
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
       background: #f5f6fa;
       min-height: 100vh;
-      display: flex;
-      flex-direction: column;
     }
     
     /* Header */
@@ -62,317 +60,464 @@
       display: flex;
       align-items: center;
       gap: 15px;
-      flex-wrap: wrap;
     }
     
-    .counsellor-select {
+    .location-filter {
       padding: 10px 15px;
       border-radius: 6px;
       border: 1px solid rgba(255, 255, 255, 0.3);
       background: rgba(255, 255, 255, 0.1);
       color: white;
       font-size: 14px;
-      min-width: 200px;
+      min-width: 150px;
     }
     
-    .counsellor-select option {
+    .location-filter option {
       background: #1a1a2e;
       color: white;
     }
     
-    .week-nav {
+    .add-btn {
+      background: #007bff;
+      border: none;
+      color: white;
+      padding: 12px 25px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 600;
+      transition: background 0.2s;
+    }
+    
+    .add-btn:hover {
+      background: #0056b3;
+    }
+    
+    .save-btn {
+      background: #28a745;
+      border: none;
+      color: white;
+      padding: 12px 30px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 16px;
+      font-weight: 600;
+      transition: background 0.2s;
+    }
+    
+    .save-btn:hover {
+      background: #218838;
+    }
+    
+    .save-btn:disabled {
+      background: #6c757d;
+      cursor: not-allowed;
+    }
+    
+    /* Main Content */
+    .main-content {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 30px;
+    }
+    
+    /* Info Box */
+    .info-box {
+      background: white;
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 25px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+    }
+    
+    .info-box h2 {
+      color: #1a1a2e;
+      font-size: 18px;
+      margin-bottom: 10px;
+    }
+    
+    .info-box p {
+      color: #666;
+      font-size: 14px;
+      line-height: 1.6;
+      margin-bottom: 5px;
+    }
+    
+    /* Status Message */
+    .status-message {
+      padding: 15px 20px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      font-size: 14px;
+      display: none;
+    }
+    
+    .status-message.show {
+      display: block;
+    }
+    
+    .status-message.success {
+      background: #d4edda;
+      color: #155724;
+      border: 1px solid #c3e6cb;
+    }
+    
+    .status-message.error {
+      background: #f8d7da;
+      color: #721c24;
+      border: 1px solid #f5c6cb;
+    }
+    
+    .status-message.info {
+      background: #fff3cd;
+      color: #856404;
+      border: 1px solid #ffeeba;
+    }
+    
+    /* Location Section */
+    .location-section {
+      margin-bottom: 30px;
+    }
+    
+    .location-header {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 15px 20px;
+      border-radius: 12px 12px 0 0;
+      font-size: 18px;
+      font-weight: 600;
       display: flex;
       align-items: center;
       gap: 10px;
     }
     
-    .week-nav button {
-      background: rgba(255, 255, 255, 0.1);
-      border: 1px solid rgba(255, 255, 255, 0.3);
-      color: white;
-      padding: 8px 15px;
-      border-radius: 6px;
-      cursor: pointer;
-      font-size: 14px;
-      transition: all 0.2s;
+    .location-header.henley {
+      background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
     }
     
-    .week-nav button:hover {
-      background: rgba(255, 255, 255, 0.2);
+    .location-header.buckhurst-hill {
+      background: linear-gradient(135deg, #ee0979 0%, #ff6a00 100%);
     }
     
-    .week-display {
-      color: white;
-      font-weight: 600;
-      min-width: 200px;
-      text-align: center;
-    }
-    
-    .refresh-btn {
-      background: #28a745;
-      border: none;
-      color: white;
-      padding: 8px 20px;
-      border-radius: 6px;
-      cursor: pointer;
-      font-size: 14px;
-    }
-    
-    .refresh-btn:hover {
-      background: #218838;
-    }
-    
-    /* Main Content */
-    .main-container {
-      display: flex;
-      flex: 1;
-      overflow: hidden;
-    }
-    
-    /* Calendar Section */
-    .calendar-section {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      overflow: hidden;
-      padding: 20px;
-    }
-    
-    .counsellor-info {
-      background: white;
-      border-radius: 8px;
-      padding: 15px 20px;
-      margin-bottom: 15px;
-      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
-    }
-    
-    .counsellor-info h2 {
-      color: #1a1a2e;
-      font-size: 18px;
-      margin-bottom: 5px;
-    }
-    
-    .counsellor-info p {
-      color: #666;
-      font-size: 14px;
-    }
-    
-    .calendar-container {
-      flex: 1;
-      overflow: auto;
-      background: white;
-      border-radius: 12px;
-      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-    }
-    
-    /* Calendar Grid */
-    .calendar-grid {
+    /* Rooms Grid */
+    .rooms-grid {
       display: grid;
-      grid-template-columns: 70px repeat(7, 1fr);
-      font-size: 0.85em;
-      min-width: 900px;
-    }
-    
-    .grid-header {
-      background: #1a1a2e;
-      color: white;
-      font-weight: 600;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 12px 8px;
-      font-size: 0.85em;
-      border-right: 1px solid rgba(255, 255, 255, 0.1);
-      position: sticky;
-      top: 0;
-      z-index: 10;
-    }
-    
-    .time-header {
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 20px;
       background: #f8f9fa;
-      font-weight: 600;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 8px;
-      font-size: 0.8em;
-      border-bottom: 1px solid #eee;
-      border-right: 1px solid #ddd;
-      position: sticky;
-      left: 0;
-      z-index: 5;
+      padding: 20px;
+      border-radius: 0 0 12px 12px;
+      border: 1px solid #e0e0e0;
+      border-top: none;
     }
     
-    .grid-cell {
-      border-bottom: 1px solid #eee;
-      border-right: 1px solid #eee;
-      padding: 0;
-      min-height: 45px;
-      font-size: 0.75em;
-      position: relative;
-      cursor: pointer;
-      transition: background 0.2s;
-      display: flex;
-      flex-direction: column;
-    }
-    
-    .grid-cell:hover {
-      background: #f0f7ff;
-    }
-    
-    .grid-cell.booked {
-      cursor: pointer;
-      padding: 0;
-    }
-    
-    .grid-cell.selected {
-      box-shadow: 0 0 0 3px #007bff inset;
-      z-index: 2;
-    }
-    
-    .grid-cell.has-conflict {
-      box-shadow: 0 0 0 2px #dc3545 inset;
-    }
-    
-    /* Stacked booking segments */
-    .booking-segment {
-      flex: 1;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 2px 4px;
-      min-height: 20px;
-      cursor: pointer;
-      transition: opacity 0.2s;
-      border-left: 4px solid;
-    }
-    
-    .booking-segment:hover {
-      opacity: 0.85;
-    }
-    
-    .booking-segment .room-name {
-      font-weight: 600;
-      color: #1a1a2e;
-      font-size: 0.85em;
-      text-align: center;
-      white-space: nowrap;
+    .room-card {
+      background: white;
+      border-radius: 10px;
       overflow: hidden;
-      text-overflow: ellipsis;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+      transition: transform 0.2s, box-shadow 0.2s;
+      position: relative;
     }
     
-    /* Single booking - old style compatibility */
-    .booking-content {
-      height: 100%;
+    .room-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.12);
+    }
+    
+    .room-card.disabled {
+      opacity: 0.5;
+    }
+    
+    .room-card-header {
+      padding: 15px 18px;
       display: flex;
-      flex-direction: column;
-      justify-content: center;
-      padding: 4px;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid #eee;
     }
     
     .room-name {
+      font-size: 18px;
       font-weight: 600;
       color: #1a1a2e;
-      font-size: 0.9em;;
     }
     
-    .booking-code {
-      color: #555;
-      font-size: 0.8em;
-      margin-top: 2px;
-    }
-    
-    /* Form Panel */
-    .form-panel {
-      width: 350px;
-      background: white;
-      border-left: 1px solid #ddd;
+    .header-actions {
       display: flex;
-      flex-direction: column;
-      overflow-y: auto;
+      align-items: center;
+      gap: 10px;
     }
     
-    .form-header {
+    .delete-btn {
+      background: none;
+      border: none;
+      color: #dc3545;
+      cursor: pointer;
+      font-size: 18px;
+      padding: 5px;
+      border-radius: 4px;
+      transition: background 0.2s;
+    }
+    
+    .delete-btn:hover {
+      background: #fee;
+    }
+    
+    /* Toggle Switch */
+    .toggle-switch {
+      position: relative;
+      width: 50px;
+      height: 26px;
+    }
+    
+    .toggle-switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+    
+    .toggle-slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: #ccc;
+      transition: 0.3s;
+      border-radius: 26px;
+    }
+    
+    .toggle-slider:before {
+      position: absolute;
+      content: "";
+      height: 18px;
+      width: 18px;
+      left: 4px;
+      bottom: 4px;
+      background-color: white;
+      transition: 0.3s;
+      border-radius: 50%;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    }
+    
+    input:checked + .toggle-slider {
+      background-color: #28a745;
+    }
+    
+    input:checked + .toggle-slider:before {
+      transform: translateX(24px);
+    }
+    
+    .room-card-body {
+      padding: 18px;
+    }
+    
+    .color-group {
+      margin-bottom: 15px;
+    }
+    
+    .color-label {
+      display: block;
+      font-size: 12px;
+      font-weight: 600;
+      color: #666;
+      margin-bottom: 6px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    
+    .color-picker-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    
+    .color-picker {
+      width: 50px;
+      height: 36px;
+      border: 2px solid #ddd;
+      border-radius: 6px;
+      cursor: pointer;
+      padding: 0;
+    }
+    
+    .color-picker::-webkit-color-swatch-wrapper {
+      padding: 2px;
+    }
+    
+    .color-picker::-webkit-color-swatch {
+      border-radius: 3px;
+      border: none;
+    }
+    
+    .color-value {
+      font-family: 'Courier New', monospace;
+      font-size: 12px;
+      color: #666;
+      background: #f8f9fa;
+      padding: 8px 10px;
+      border-radius: 4px;
+      flex: 1;
+    }
+    
+    /* Preview */
+    .room-preview {
+      margin-top: 12px;
+      padding: 12px;
+      border-radius: 6px;
+      text-align: center;
+      font-weight: 600;
+      font-size: 13px;
+      border: 3px solid;
+    }
+    
+    /* Loading */
+    .loading {
+      text-align: center;
+      padding: 60px;
+      color: #666;
+    }
+    
+    .loading-spinner {
+      width: 50px;
+      height: 50px;
+      border: 4px solid #eee;
+      border-top-color: #1a1a2e;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 20px;
+    }
+    
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    
+    /* Modal */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.3s, visibility 0.3s;
+    }
+    
+    .modal-overlay.show {
+      opacity: 1;
+      visibility: visible;
+    }
+    
+    .modal {
+      background: white;
+      border-radius: 12px;
+      width: 90%;
+      max-width: 500px;
+      max-height: 90vh;
+      overflow-y: auto;
+      transform: scale(0.9);
+      transition: transform 0.3s;
+    }
+    
+    .modal-overlay.show .modal {
+      transform: scale(1);
+    }
+    
+    .modal-header {
       background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
       color: white;
       padding: 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
     }
     
-    .form-header h2 {
+    .modal-header h2 {
       font-size: 18px;
       font-weight: 500;
     }
     
-    .form-content {
-      padding: 20px;
-      flex: 1;
+    .modal-close {
+      background: none;
+      border: none;
+      color: white;
+      font-size: 24px;
+      cursor: pointer;
+      padding: 0;
+      line-height: 1;
     }
     
-    .booking-details {
-      background: #f8f9fa;
-      border-radius: 8px;
-      padding: 15px;
-      margin-bottom: 20px;
-    }
-    
-    .detail-row {
-      display: flex;
-      justify-content: space-between;
-      padding: 8px 0;
-      border-bottom: 1px solid #eee;
-    }
-    
-    .detail-row:last-child {
-      border-bottom: none;
-    }
-    
-    .detail-label {
-      color: #666;
-      font-size: 13px;
-    }
-    
-    .detail-value {
-      font-weight: 600;
-      color: #1a1a2e;
-      font-size: 13px;
+    .modal-body {
+      padding: 25px;
     }
     
     .form-group {
-      margin-bottom: 15px;
+      margin-bottom: 20px;
     }
     
     .form-group label {
       display: block;
       font-weight: 600;
-      margin-bottom: 6px;
+      margin-bottom: 8px;
       color: #333;
-      font-size: 13px;
+      font-size: 14px;
     }
     
-    .form-group select,
-    .form-group input {
+    .form-group input,
+    .form-group select {
       width: 100%;
-      padding: 10px 12px;
+      padding: 12px;
       border: 1px solid #ddd;
       border-radius: 6px;
       font-size: 14px;
     }
     
-    .form-actions {
+    .form-group input:focus,
+    .form-group select:focus {
+      outline: none;
+      border-color: #007bff;
+    }
+    
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 15px;
+    }
+    
+    .modal-footer {
+      padding: 20px 25px;
+      background: #f8f9fa;
       display: flex;
-      flex-direction: column;
+      justify-content: flex-end;
       gap: 10px;
-      margin-top: 20px;
+      border-top: 1px solid #eee;
     }
     
     .btn {
-      padding: 12px 20px;
+      padding: 12px 25px;
       border: none;
       border-radius: 6px;
       font-size: 14px;
       font-weight: 600;
       cursor: pointer;
-      transition: all 0.2s;
+      transition: background 0.2s;
+    }
+    
+    .btn-secondary {
+      background: #6c757d;
+      color: white;
+    }
+    
+    .btn-secondary:hover {
+      background: #5a6268;
     }
     
     .btn-primary {
@@ -384,92 +529,28 @@
       background: #0056b3;
     }
     
-    .btn-primary:disabled {
-      background: #ccc;
-      cursor: not-allowed;
-    }
-    
-    .btn-danger {
-      background: #dc3545;
-      color: white;
-    }
-    
-    .btn-danger:hover {
-      background: #c82333;
-    }
-    
-    .status-message {
-      padding: 12px;
-      border-radius: 6px;
-      font-size: 13px;
-      margin-top: 15px;
-      display: none;
-    }
-    
-    .status-message.success {
-      display: block;
-      background: #d4edda;
-      color: #155724;
-    }
-    
-    .status-message.error {
-      display: block;
-      background: #f8d7da;
-      color: #721c24;
-    }
-    
-    .status-message.info {
-      display: block;
-      background: #fff3cd;
-      color: #856404;
-    }
-    
-    .no-selection {
-      text-align: center;
-      padding: 40px 20px;
-      color: #666;
-    }
-    
-    .no-selection-icon {
-      font-size: 48px;
-      margin-bottom: 15px;
-    }
-    
-    .no-counsellor {
-      text-align: center;
-      padding: 60px 20px;
-      color: #666;
-    }
-    
-    .no-counsellor-icon {
-      font-size: 64px;
-      margin-bottom: 20px;
-    }
-    
-    /* Legend */
-    .legend {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 12px;
-      padding: 12px 20px;
-      background: white;
+    /* Preview in modal */
+    .preview-section {
+      background: #f8f9fa;
       border-radius: 8px;
-      margin-bottom: 15px;
-      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+      padding: 15px;
+      margin-top: 10px;
     }
     
-    .legend-item {
-      display: flex;
-      align-items: center;
-      gap: 6px;
+    .preview-label {
       font-size: 12px;
+      color: #666;
+      margin-bottom: 8px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
     }
     
-    .legend-color {
-      width: 16px;
-      height: 16px;
-      border-radius: 4px;
-      border: 2px solid;
+    .preview-box {
+      padding: 15px;
+      border-radius: 6px;
+      text-align: center;
+      font-weight: 600;
+      border: 3px solid;
     }
     
     /* ================================ */
@@ -478,8 +559,7 @@
     @media (max-width: 768px) {
       .admin-header {
         padding: 10px 12px;
-        flex-wrap: wrap;
-        gap: 8px;
+        gap: 10px;
       }
       
       .header-left {
@@ -488,408 +568,260 @@
       }
       
       .header-left h1 {
-        font-size: 14px;
+        font-size: 16px;
       }
       
       .back-link {
+        font-size: 12px;
+      }
+      
+      .header-controls {
+        width: 100%;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+      
+      .location-filter {
+        flex: 1;
+        min-width: 120px;
+        padding: 8px 10px;
+        font-size: 13px;
+      }
+      
+      .add-btn, .save-btn {
+        flex: 1;
+        padding: 10px 15px;
+        font-size: 13px;
+      }
+      
+      /* Main Content */
+      .main-content {
+        padding: 10px;
+      }
+      
+      /* Location Groups */
+      .location-group {
+        margin-bottom: 15px;
+      }
+      
+      .location-header {
+        padding: 10px 12px;
+        font-size: 14px;
+      }
+      
+      .location-header .room-count {
+        font-size: 11px;
+        padding: 3px 8px;
+      }
+      
+      /* Room Grid */
+      .room-grid {
+        grid-template-columns: 1fr;
+        gap: 10px;
+        padding: 10px;
+      }
+      
+      .room-card {
+        padding: 12px;
+      }
+      
+      .room-header {
+        margin-bottom: 10px;
+      }
+      
+      .room-name {
+        font-size: 15px;
+      }
+      
+      .room-order {
+        font-size: 11px;
+        padding: 3px 8px;
+      }
+      
+      .delete-btn {
+        width: 28px;
+        height: 28px;
+        font-size: 14px;
+      }
+      
+      .room-details {
+        gap: 8px;
+      }
+      
+      .room-detail {
         font-size: 11px;
       }
       
-      .header-nav {
-        width: 100%;
-        justify-content: center;
+      .room-controls {
+        gap: 8px;
       }
       
-      .nav-link {
+      .room-control label {
+        font-size: 11px;
+      }
+      
+      .room-control input[type="number"] {
+        padding: 6px;
+        font-size: 13px;
+      }
+      
+      .room-toggle {
         padding: 6px 12px;
         font-size: 11px;
       }
       
-      /* Main Content - stack vertically */
-      .main-content {
-        flex-direction: column;
-        padding: 0;
+      /* Modal */
+      .modal-content {
+        margin: 10px;
+        max-height: calc(100vh - 20px);
+        width: calc(100% - 20px);
       }
       
-      /* Controls */
-      .controls-bar {
-        padding: 8px 10px;
-        flex-direction: column;
-        gap: 8px;
-      }
-      
-      .week-nav {
-        width: 100%;
-        justify-content: space-between;
-      }
-      
-      .week-nav button {
-        padding: 8px 12px;
-        font-size: 11px;
-      }
-      
-      .current-week {
-        font-size: 12px;
-        text-align: center;
-      }
-      
-      .controls-right {
-        width: 100%;
-        flex-wrap: wrap;
-        gap: 8px;
-        justify-content: center;
-      }
-      
-      .counsellor-select {
-        width: 100%;
-        padding: 8px;
-        font-size: 13px;
-      }
-      
-      .refresh-btn {
-        padding: 8px 12px;
-        font-size: 11px;
-        flex: 1;
-      }
-      
-      /* Legend */
-      .room-legend {
-        padding: 8px 10px;
-        gap: 8px;
-        flex-wrap: wrap;
-        justify-content: center;
-      }
-      
-      .legend-item {
-        font-size: 10px;
-        gap: 4px;
-      }
-      
-      .legend-color {
-        width: 12px;
-        height: 12px;
-      }
-      
-      /* Calendar Grid */
-      .calendar-container {
-        overflow-x: auto;
-        -webkit-overflow-scrolling: touch;
-        padding: 8px;
-      }
-      
-      .calendar-grid {
-        min-width: 500px;
-      }
-      
-      .time-column {
-        min-width: 45px;
-      }
-      
-      .day-column {
-        min-width: 60px;
-      }
-      
-      .day-header {
-        font-size: 10px;
-        padding: 6px 4px;
-      }
-      
-      .day-header .day-name {
-        font-size: 9px;
-      }
-      
-      .day-header .day-date {
-        font-size: 11px;
-      }
-      
-      .time-slot {
-        font-size: 9px;
-        padding: 4px 2px;
-      }
-      
-      .grid-cell {
-        min-height: 28px;
-        font-size: 8px;
-      }
-      
-      .booking-segment {
-        min-height: 14px;
-        padding: 1px 2px;
-      }
-      
-      .booking-segment .room-name {
-        font-size: 7px;
-      }
-      
-      .booking-content .room-name {
-        font-size: 8px;
-      }
-      
-      .booking-cell .booking-room {
-        font-size: 8px;
-      }
-      
-      .booking-cell .booking-code {
-        font-size: 7px;
-      }
-      
-      /* Form Panel - Slide up from bottom on mobile */
-      .form-panel {
-        position: fixed;
-        bottom: 0;
-        left: 0;
-        right: 0;
-        width: 100%;
-        max-height: 60vh;
-        border-left: none;
-        border-top: 2px solid #1a1a2e;
-        border-radius: 16px 16px 0 0;
-        box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.15);
-        transform: translateY(calc(100% - 50px));
-        transition: transform 0.3s ease;
-        z-index: 1000;
-      }
-      
-      .form-panel.expanded {
-        transform: translateY(0);
-      }
-      
-      .form-header {
+      .modal-header {
         padding: 12px 15px;
-        cursor: pointer;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        border-radius: 16px 16px 0 0;
       }
       
-      .form-header::before {
-        content: '';
-        position: absolute;
-        top: 8px;
-        left: 50%;
-        transform: translateX(-50%);
-        width: 40px;
-        height: 4px;
-        background: rgba(255, 255, 255, 0.5);
-        border-radius: 2px;
+      .modal-header h2 {
+        font-size: 16px;
       }
       
-      .form-header h2 {
-        font-size: 14px;
-      }
-      
-      .form-header p {
-        font-size: 11px;
-      }
-      
-      .form-content {
-        padding: 12px 15px;
-        overflow-y: auto;
-        max-height: calc(60vh - 60px);
-      }
-      
-      .booking-details {
-        padding: 10px;
-        margin-bottom: 12px;
-      }
-      
-      .detail-row {
-        padding: 5px 0;
-      }
-      
-      .detail-label, .detail-value {
-        font-size: 11px;
-      }
-      
-      .form-group {
-        margin-bottom: 10px;
-      }
-      
-      .form-group label {
-        font-size: 11px;
-        margin-bottom: 4px;
-      }
-      
-      .form-group select,
-      .form-group input {
-        padding: 8px;
-        font-size: 14px;
-      }
-      
-      .form-actions {
-        flex-direction: column;
-        gap: 8px;
-      }
-      
-      .form-actions .btn {
-        width: 100%;
-        padding: 10px;
-        font-size: 13px;
-      }
-      
-      .no-selection {
+      .modal-body {
         padding: 15px;
       }
       
-      .no-selection-icon {
-        font-size: 24px;
+      .form-group {
+        margin-bottom: 12px;
       }
       
-      .no-selection p {
+      .form-group label {
         font-size: 12px;
+        margin-bottom: 4px;
+      }
+      
+      .form-group input,
+      .form-group select {
+        padding: 8px 10px;
+        font-size: 14px;
+      }
+      
+      .color-inputs {
+        flex-direction: column;
+        gap: 10px;
+      }
+      
+      .color-input-group {
+        flex-direction: row;
+        align-items: center;
+      }
+      
+      .modal-footer {
+        padding: 12px 15px;
+        gap: 8px;
+      }
+      
+      .modal-footer button {
+        padding: 10px 20px;
+        font-size: 13px;
       }
     }
     
     @media (max-width: 480px) {
-      .week-nav {
-        flex-wrap: wrap;
-        gap: 6px;
+      .header-controls {
+        flex-direction: column;
       }
       
-      .week-nav button {
-        flex: 1;
-        min-width: 70px;
-      }
-      
-      .current-week {
+      .location-filter,
+      .add-btn,
+      .save-btn {
         width: 100%;
-        order: -1;
-        margin-bottom: 4px;
       }
     }
   </style>
 </head>
 <body>
-  <!-- Dynamic styles -->
-  <style id="dynamicStyles"></style>
-  
   <header class="admin-header">
     <div class="header-left">
       <a href="admin-index.html" class="back-link">← Admin Portal</a>
-      <h1>📆 Counsellor Week View</h1>
+      <h1>🚪 Room Configuration</h1>
     </div>
     <div class="header-controls">
-      <select class="counsellor-select" id="counsellorSelect" onchange="changeCounsellor()">
-        <option value="">-- Select Counsellor --</option>
+      <select class="location-filter" id="locationFilter" onchange="filterByLocation()">
+        <option value="all">All Locations</option>
+        <option value="henley">Henley</option>
+        <option value="buckhurst_hill">Buckhurst Hill</option>
       </select>
-      <div class="week-nav">
-        <button onclick="changeWeek(-1)">← Prev</button>
-        <span class="week-display" id="weekDisplay"></span>
-        <button onclick="changeWeek(1)">Next →</button>
-      </div>
-      <button class="refresh-btn" onclick="refreshData()">↻ Refresh</button>
+      <button class="add-btn" onclick="openAddModal()">➕ Add Room</button>
+      <button class="save-btn" id="saveBtn" onclick="saveSettings()">💾 Save All Changes</button>
     </div>
   </header>
   
-  <div class="main-container">
-    <div class="calendar-section">
-      <!-- Counsellor Info -->
-      <div class="counsellor-info" id="counsellorInfo" style="display: none;">
-        <h2 id="counsellorName"></h2>
-        <p id="counsellorSummary"></p>
-      </div>
-      
-      <!-- Legend -->
-      <div class="legend" id="legendContainer">
-        Loading room configuration...
-      </div>
-      
-      <div class="calendar-container">
-        <!-- No counsellor message -->
-        <div class="no-counsellor" id="noCounsellor">
-          <div class="no-counsellor-icon">👆</div>
-          <h3>Select a Counsellor</h3>
-          <p>Choose a counsellor from the dropdown above to view their weekly schedule.</p>
-        </div>
-        
-        <div class="calendar-grid" id="calendarGrid" style="display: none;">
-          <!-- Grid will be populated by JavaScript -->
-        </div>
-      </div>
+  <main class="main-content">
+    <div class="info-box">
+      <h2>ℹ️ Room Configuration</h2>
+      <p><strong>Add Room:</strong> Click "Add Room" to create a new room for either location.</p>
+      <p><strong>Toggle Switch:</strong> Turn rooms on or off. Disabled rooms won't appear in booking calendars.</p>
+      <p><strong>Delete:</strong> Click the 🗑️ icon to remove a room (requires confirmation).</p>
+      <p><strong>Save:</strong> Click "Save All Changes" to apply your settings to all calendars.</p>
     </div>
     
-    <!-- Form Panel -->
-    <div class="form-panel">
-      <div class="form-header">
-        <h2>Modify Booking</h2>
+    <div class="status-message" id="statusMessage"></div>
+    
+    <div id="roomsContainer">
+      <div class="loading">
+        <div class="loading-spinner"></div>
+        Loading room configuration...
       </div>
-      
-      <div class="form-content">
-        <div class="no-selection" id="noSelection">
-          <div class="no-selection-icon">👆</div>
-          <p>Click on any booking in the calendar to select it for modification.</p>
+    </div>
+  </main>
+  
+  <!-- Add Room Modal -->
+  <div class="modal-overlay" id="addModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h2>➕ Add New Room</h2>
+        <button class="modal-close" onclick="closeAddModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label>Room Name *</label>
+          <input type="text" id="newRoomName" placeholder="e.g. Room 10, Meeting Room, etc.">
         </div>
         
-        <div id="bookingForm" style="display: none;">
-          <div class="booking-details">
-            <div class="detail-row">
-              <span class="detail-label">Counsellor</span>
-              <span class="detail-value" id="displayCounsellor">-</span>
-            </div>
-            <div class="detail-row">
-              <span class="detail-label">Booking Code</span>
-              <span class="detail-value" id="displayCode">-</span>
-            </div>
-            <div class="detail-row">
-              <span class="detail-label">Current Room</span>
-              <span class="detail-value" id="displayRoom">-</span>
-            </div>
-            <div class="detail-row">
-              <span class="detail-label">Current Date</span>
-              <span class="detail-value" id="displayDate">-</span>
-            </div>
-            <div class="detail-row">
-              <span class="detail-label">Current Time</span>
-              <span class="detail-value" id="displayTime">-</span>
-            </div>
-          </div>
-          
-          <h4 style="margin-bottom: 15px; color: #007bff;">Change To:</h4>
-          
-          <div class="form-group">
-            <label>New Room</label>
-            <select id="newRoom">
-              <option value="">No change</option>
-            </select>
-          </div>
-          
-          <div class="form-group">
-            <label>New Date</label>
-            <input type="date" id="newDate">
-          </div>
-          
-          <div class="form-group">
-            <label>New Time</label>
-            <select id="newTime">
-              <option value="">No change</option>
-              <option value="08:00">08:00</option>
-              <option value="09:00">09:00</option>
-              <option value="10:00">10:00</option>
-              <option value="11:00">11:00</option>
-              <option value="12:00">12:00</option>
-              <option value="13:00">13:00</option>
-              <option value="14:00">14:00</option>
-              <option value="15:00">15:00</option>
-              <option value="16:00">16:00</option>
-              <option value="17:00">17:00</option>
-              <option value="18:00">18:00</option>
-              <option value="19:00">19:00</option>
-              <option value="20:00">20:00</option>
-            </select>
-          </div>
-          
-          <div class="form-actions">
-            <button class="btn btn-primary" id="submitBtn" onclick="submitChange()">
-              Submit Change
-            </button>
-            <button class="btn btn-danger" id="cancelBtn" onclick="cancelBooking()">
-              Cancel Appointment
-            </button>
-          </div>
-          
-          <div class="status-message" id="statusMessage"></div>
+        <div class="form-group">
+          <label>Location *</label>
+          <select id="newRoomLocation">
+            <option value="henley">Henley</option>
+            <option value="buckhurst_hill">Buckhurst Hill</option>
+          </select>
         </div>
+        
+        <div class="form-row">
+          <div class="form-group">
+            <label>Background Colour</label>
+            <input type="color" id="newRoomColor" value="#90caf9" onchange="updateModalPreview()">
+          </div>
+          <div class="form-group">
+            <label>Border Colour</label>
+            <input type="color" id="newRoomBorder" value="#64b5f6" onchange="updateModalPreview()">
+          </div>
+        </div>
+        
+        <div class="form-group">
+          <label>Display Order</label>
+          <input type="number" id="newRoomOrder" value="10" min="1" max="99">
+          <small style="color: #666; font-size: 12px;">Lower numbers appear first</small>
+        </div>
+        
+        <div class="preview-section">
+          <div class="preview-label">Preview</div>
+          <div class="preview-box" id="modalPreview" style="background: #90caf9; border-color: #64b5f6; color: #333;">
+            New Room
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeAddModal()">Cancel</button>
+        <button class="btn btn-primary" onclick="addRoom()">Add Room</button>
       </div>
     </div>
   </div>
@@ -911,15 +843,7 @@
     firebase.initializeApp(firebaseConfig);
     const database = firebase.database();
     
-    const WEBHOOK_URL = 'https://hook.eu2.make.com/p754q5eks857boisu6m3unr6qer6be4t';
-    
-    const ROOM_ID_MAPPING = {
-      'Room_1': '3', 'Room_2': '7', 'Room_4': '8', 'Room_5': '13',
-      'Room_6': '9', 'Room_7': '10', 'Room_8': '14', 'Room_9': '15',
-      'Car_Park': '12', 'Online': '11', 'Henley_Holding_Room': '18'
-    };
-    
-    // Default room config
+    // Default room configuration with locations
     const defaultRoomConfig = {
       'Room_1': { enabled: true, color: '#d4a5a5', borderColor: '#b89090', displayName: 'Room 1', location: 'henley', order: 1 },
       'Room_2': { enabled: true, color: '#b299d4', borderColor: '#9680c0', displayName: 'Room 2', location: 'henley', order: 2 },
@@ -933,37 +857,23 @@
       'Online': { enabled: true, color: '#7dd87d', borderColor: '#6bc46b', displayName: 'Online', location: 'buckhurst_hill', order: 1 }
     };
     
-    const businessHours = [];
-    for (let h = 8; h <= 20; h++) {
-      businessHours.push(`${String(h).padStart(2, '0')}:00`);
-    }
+    const locationNames = {
+      'henley': 'Henley',
+      'buckhurst_hill': 'Buckhurst Hill'
+    };
     
-    // State
-    let roomConfig = {};
-    let enabledRooms = [];
-    let bookingData = [];
-    let selectedCounsellor = '';
-    let selectedBooking = null;
-    let currentWeekStart = new Date();
-    
-    // Set week to Monday
-    const today = new Date();
-    const dayOfWeek = today.getDay();
-    const daysToSubtract = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
-    currentWeekStart.setDate(today.getDate() - daysToSubtract);
-    currentWeekStart.setHours(0, 0, 0, 0);
+    let currentConfig = {};
+    let currentFilter = 'all';
     
     // ================================
     // INITIALIZATION
     // ================================
-    document.addEventListener('DOMContentLoaded', async () => {
-      updateWeekDisplay();
-      await loadRoomConfig();
-      await loadBookingData();
+    document.addEventListener('DOMContentLoaded', () => {
+      loadRoomConfig();
     });
     
     // ================================
-    // ROOM CONFIGURATION
+    // DATA LOADING
     // ================================
     async function loadRoomConfig() {
       try {
@@ -971,593 +881,317 @@
         const config = snapshot.val();
         
         if (config && Object.keys(config).length > 0) {
-          roomConfig = config;
-        } else {
-          roomConfig = defaultRoomConfig;
-        }
-        
-        enabledRooms = Object.entries(roomConfig)
-          .filter(([key, room]) => room.enabled)
-          .sort((a, b) => (a[1].order || 99) - (b[1].order || 99))
-          .map(([key, room]) => ({ key, ...room }));
-        
-        generateDynamicStyles();
-        generateLegend();
-        populateRoomDropdown();
-        
-      } catch (error) {
-        console.error('Error loading room config:', error);
-        roomConfig = defaultRoomConfig;
-        enabledRooms = Object.entries(defaultRoomConfig)
-          .filter(([key, room]) => room.enabled)
-          .sort((a, b) => (a[1].order || 99) - (b[1].order || 99))
-          .map(([key, room]) => ({ key, ...room }));
-        
-        generateDynamicStyles();
-        generateLegend();
-        populateRoomDropdown();
-      }
-    }
-    
-    function generateDynamicStyles() {
-      let css = '';
-      
-      enabledRooms.forEach(room => {
-        const className = room.key.toLowerCase().replace('_', '-');
-        css += `.grid-cell.booked.${className} { background: ${room.color}; border-left: 4px solid ${room.borderColor}; }\n`;
-      });
-      
-      document.getElementById('dynamicStyles').textContent = css;
-    }
-    
-    function generateLegend() {
-      const container = document.getElementById('legendContainer');
-      container.innerHTML = '';
-      
-      enabledRooms.forEach(room => {
-        const item = document.createElement('div');
-        item.className = 'legend-item';
-        item.innerHTML = `
-          <div class="legend-color" style="background: ${room.color}; border-color: ${room.borderColor};"></div>
-          ${room.displayName}
-        `;
-        container.appendChild(item);
-      });
-    }
-    
-    function populateRoomDropdown() {
-      const select = document.getElementById('newRoom');
-      select.innerHTML = '<option value="">No change</option>';
-      
-      enabledRooms.forEach(room => {
-        const option = document.createElement('option');
-        option.value = room.displayName;
-        option.textContent = room.displayName;
-        select.appendChild(option);
-      });
-    }
-    
-    // ================================
-    // DATA LOADING
-    // ================================
-    async function loadBookingData() {
-      try {
-        const snapshot = await database.ref('bookings').once('value');
-        const data = snapshot.val() || [];
-        const allBookings = Array.isArray(data) ? data : Object.values(data);
-        
-        bookingData = allBookings.filter(b => 
-          b.status !== 'cancelled' && 
-          b.status !== 'cancel' &&
-          b.room !== 'Henley_Holding_Room' &&
-          b.room !== '18' &&
-          b.date !== '2030-01-01'
-        );
-        
-        populateCounsellorDropdown();
-        
-        if (selectedCounsellor) {
-          populateCalendar();
-        }
-        
-      } catch (error) {
-        console.error('Error loading data:', error);
-      }
-    }
-    
-    function refreshData() {
-      loadBookingData();
-    }
-    
-    // ================================
-    // COUNSELLOR DROPDOWN
-    // ================================
-    function populateCounsellorDropdown() {
-      const select = document.getElementById('counsellorSelect');
-      const counsellors = new Set();
-      
-      bookingData.forEach(booking => {
-        if (booking.client && booking.client.trim()) {
-          counsellors.add(booking.client.trim());
-        }
-      });
-      
-      const currentValue = select.value;
-      select.innerHTML = '<option value="">-- Select Counsellor --</option>';
-      
-      Array.from(counsellors).sort().forEach(counsellor => {
-        const option = document.createElement('option');
-        option.value = counsellor;
-        option.textContent = counsellor;
-        if (counsellor === currentValue) {
-          option.selected = true;
-        }
-        select.appendChild(option);
-      });
-    }
-    
-    function changeCounsellor() {
-      selectedCounsellor = document.getElementById('counsellorSelect').value;
-      resetForm();
-      
-      if (selectedCounsellor) {
-        document.getElementById('noCounsellor').style.display = 'none';
-        document.getElementById('calendarGrid').style.display = 'grid';
-        document.getElementById('counsellorInfo').style.display = 'block';
-        
-        updateCounsellorInfo();
-        populateCalendar();
-      } else {
-        document.getElementById('noCounsellor').style.display = 'block';
-        document.getElementById('calendarGrid').style.display = 'none';
-        document.getElementById('counsellorInfo').style.display = 'none';
-      }
-    }
-    
-    function updateCounsellorInfo() {
-      const counsellorBookings = bookingData.filter(b => 
-        b.client && b.client.toLowerCase().includes(selectedCounsellor.toLowerCase())
-      );
-      
-      document.getElementById('counsellorName').textContent = selectedCounsellor;
-      document.getElementById('counsellorSummary').textContent = `${counsellorBookings.length} total bookings`;
-    }
-    
-    // ================================
-    // WEEK NAVIGATION
-    // ================================
-    function changeWeek(direction) {
-      currentWeekStart.setDate(currentWeekStart.getDate() + (direction * 7));
-      updateWeekDisplay();
-      if (selectedCounsellor) {
-        populateCalendar();
-      }
-    }
-    
-    function updateWeekDisplay() {
-      const weekEnd = new Date(currentWeekStart);
-      weekEnd.setDate(weekEnd.getDate() + 6);
-      
-      const startStr = currentWeekStart.toLocaleDateString('en-GB', {
-        day: '2-digit', month: 'short', year: 'numeric'
-      });
-      const endStr = weekEnd.toLocaleDateString('en-GB', {
-        day: '2-digit', month: 'short', year: 'numeric'
-      });
-      
-      document.getElementById('weekDisplay').textContent = `${startStr} - ${endStr}`;
-    }
-    
-    // ================================
-    // CALENDAR
-    // ================================
-    function createCalendarGrid() {
-      const grid = document.getElementById('calendarGrid');
-      grid.innerHTML = '';
-      
-      // Header row
-      const timeHeader = document.createElement('div');
-      timeHeader.className = 'grid-header';
-      timeHeader.textContent = 'Time';
-      grid.appendChild(timeHeader);
-      
-      const weekDays = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
-      for (let i = 0; i < 7; i++) {
-        const cellDate = new Date(currentWeekStart);
-        cellDate.setDate(currentWeekStart.getDate() + i);
-        
-        const header = document.createElement('div');
-        header.className = 'grid-header';
-        const dayNum = String(cellDate.getDate()).padStart(2, '0');
-        const monthNum = String(cellDate.getMonth() + 1).padStart(2, '0');
-        header.textContent = `${weekDays[i]} ${dayNum}/${monthNum}`;
-        grid.appendChild(header);
-      }
-      
-      // Time rows
-      businessHours.forEach(time => {
-        const timeCell = document.createElement('div');
-        timeCell.className = 'time-header';
-        timeCell.textContent = time;
-        grid.appendChild(timeCell);
-        
-        for (let day = 0; day < 7; day++) {
-          const cell = document.createElement('div');
-          cell.className = 'grid-cell';
-          cell.id = `week-cell-${day}-${time}`;
-          grid.appendChild(cell);
-        }
-      });
-    }
-    
-    function populateCalendar() {
-      createCalendarGrid();
-      
-      if (!selectedCounsellor) return;
-      
-      const filteredBookings = bookingData.filter(b => 
-        b.client && b.client.toLowerCase().includes(selectedCounsellor.toLowerCase())
-      );
-      
-      // Build a map of cellId -> array of bookings
-      const cellBookings = {};
-      
-      filteredBookings.forEach(booking => {
-        const bookingDate = new Date(booking.date + 'T12:00:00');
-        const weekStartNoon = new Date(currentWeekStart);
-        weekStartNoon.setHours(12, 0, 0, 0);
-        
-        const msPerDay = 24 * 60 * 60 * 1000;
-        const timeDiff = bookingDate.getTime() - weekStartNoon.getTime();
-        const daysDiff = Math.round(timeDiff / msPerDay);
-        
-        if (daysDiff >= 0 && daysDiff <= 6) {
-          const startHour = parseInt(booking.start.split(':')[0]);
-          const endHour = parseInt(booking.end.split(':')[0]);
+          currentConfig = {};
           
-          for (let hour = startHour; hour < endHour; hour++) {
-            if (hour >= 8 && hour <= 20) {
-              const timeStr = `${String(hour).padStart(2, '0')}:00`;
-              const cellId = `week-cell-${daysDiff}-${timeStr}`;
-              
-              if (!cellBookings[cellId]) {
-                cellBookings[cellId] = [];
-              }
-              
-              // Add booking info with room details
-              const roomKey = getRoomKey(booking);
-              const roomCfg = roomKey ? enabledRooms.find(r => r.key === roomKey) : null;
-              const roomName = roomCfg ? roomCfg.displayName : getRoomDisplayName(booking);
-              const color = roomCfg ? roomCfg.color : '#e0e0e0';
-              const borderColor = roomCfg ? roomCfg.borderColor : '#ccc';
-              
-              // Check if this booking is already added for this cell (avoid duplicates from same booking)
-              const existingIdx = cellBookings[cellId].findIndex(b => b.bookingId === booking.bookingId && b.roomKey === roomKey);
-              if (existingIdx === -1) {
-                cellBookings[cellId].push({
-                  booking: booking,
-                  roomKey: roomKey,
-                  roomName: roomName,
-                  color: color,
-                  borderColor: borderColor
-                });
-              }
-            }
-          }
-        }
-      });
-      
-      // Now populate cells
-      Object.entries(cellBookings).forEach(([cellId, bookings]) => {
-        const cell = document.getElementById(cellId);
-        if (!cell) return;
-        
-        cell.classList.add('booked');
-        
-        if (bookings.length > 1) {
-          // Multiple bookings - stack them
-          cell.classList.add('has-conflict');
-          cell.innerHTML = bookings.map((b, idx) => {
-            return `<div class="booking-segment" 
-                        style="background: ${b.color}; border-left-color: ${b.borderColor};"
-                        data-booking-idx="${idx}">
-                      <span class="room-name">${b.roomName}</span>
-                    </div>`;
-          }).join('');
-          
-          // Add click handlers to each segment
-          cell.querySelectorAll('.booking-segment').forEach((segment, idx) => {
-            segment.onclick = (e) => {
-              e.stopPropagation();
-              const bookingInfo = bookings[idx];
-              selectBooking(bookingInfo.booking, bookingInfo.roomName);
-            };
+          // Start with defaults
+          Object.keys(defaultRoomConfig).forEach(key => {
+            currentConfig[key] = { ...defaultRoomConfig[key] };
           });
           
+          // Override with Firebase values
+          Object.keys(config).forEach(key => {
+            if (currentConfig[key]) {
+              currentConfig[key] = { ...currentConfig[key], ...config[key] };
+            } else {
+              currentConfig[key] = config[key];
+            }
+            
+            // Ensure location field exists
+            if (!currentConfig[key].location) {
+              currentConfig[key].location = key === 'Online' ? 'buckhurst_hill' : 'henley';
+            }
+          });
+          
+          console.log('Loaded room config from Firebase');
         } else {
-          // Single booking
-          const b = bookings[0];
-          const className = b.roomKey ? b.roomKey.toLowerCase().replace('_', '-') : '';
-          if (className) {
-            cell.classList.add(className);
-          }
-          
-          cell.innerHTML = `
-            <div class="booking-content">
-              <div class="room-name">${b.roomName}</div>
-            </div>
-          `;
-          
-          cell.onclick = () => selectBooking(b.booking, b.roomName);
+          currentConfig = JSON.parse(JSON.stringify(defaultRoomConfig));
+          console.log('Using default room config');
         }
+        
+        renderRoomsByLocation();
+        
+      } catch (error) {
+        console.error('Error loading config:', error);
+        showStatus('Error loading configuration - using defaults', 'error');
+        currentConfig = JSON.parse(JSON.stringify(defaultRoomConfig));
+        renderRoomsByLocation();
+      }
+    }
+    
+    // ================================
+    // RENDERING
+    // ================================
+    function renderRoomsByLocation() {
+      const container = document.getElementById('roomsContainer');
+      container.innerHTML = '';
+      
+      // Group rooms by location
+      const roomsByLocation = {};
+      
+      Object.entries(currentConfig).forEach(([roomKey, room]) => {
+        const location = room.location || 'henley';
+        if (!roomsByLocation[location]) {
+          roomsByLocation[location] = [];
+        }
+        roomsByLocation[location].push({ key: roomKey, ...room });
+      });
+      
+      // Sort locations
+      const locationOrder = ['henley', 'buckhurst_hill'];
+      
+      locationOrder.forEach(location => {
+        if (!roomsByLocation[location]) return;
+        if (currentFilter !== 'all' && currentFilter !== location) return;
+        
+        const rooms = roomsByLocation[location].sort((a, b) => (a.order || 99) - (b.order || 99));
+        
+        // Create location section
+        const section = document.createElement('div');
+        section.className = 'location-section';
+        section.id = `location-${location}`;
+        
+        const locationClass = location === 'henley' ? 'henley' : 'buckhurst-hill';
+        
+        section.innerHTML = `
+          <div class="location-header ${locationClass}">
+            📍 ${locationNames[location] || location}
+            <span style="font-size: 14px; font-weight: normal; opacity: 0.9;">
+              (${rooms.length} rooms)
+            </span>
+          </div>
+          <div class="rooms-grid" id="grid-${location}"></div>
+        `;
+        
+        container.appendChild(section);
+        
+        // Add room cards
+        const grid = document.getElementById(`grid-${location}`);
+        rooms.forEach(room => {
+          const card = createRoomCard(room.key, room, location);
+          grid.appendChild(card);
+        });
       });
     }
     
-    function getRoomKey(booking) {
-      if (booking.room === 'Room_1' || booking.room === '1') return 'Room_1';
-      if (booking.room === 'Room_2' || booking.room === '2') return 'Room_2';
-      if (booking.room === 'Room_4' || booking.room === '4') return 'Room_4';
-      if (booking.room === 'Room_5' || booking.room === '5') return 'Room_5';
-      if (booking.room === 'Room_6' || booking.room === '6') return 'Room_6';
-      if (booking.room === 'Room_7' || booking.room === '7') return 'Room_7';
-      if (booking.room === 'Room_8' || booking.room === '8') return 'Room_8';
-      if (booking.room === 'Room_9' || booking.room === '9') return 'Room_9';
-      if (booking.room === 'Car_Park' || booking.room === 'Car Park') return 'Car_Park';
-      if (booking.location && booking.location.toLowerCase().includes('online')) return 'Online';
-      if (booking.room === 'Online') return 'Online';
-      return null;
-    }
-    
-    function getRoomDisplayName(booking) {
-      const key = getRoomKey(booking);
-      if (key) {
-        const room = enabledRooms.find(r => r.key === key);
-        if (room) return room.displayName;
-      }
-      return booking.room || 'Unknown';
-    }
-    
-    // ================================
-    // BOOKING SELECTION
-    // ================================
-    function selectBooking(booking, roomName) {
-      document.querySelectorAll('.grid-cell.selected').forEach(c => c.classList.remove('selected'));
+    function createRoomCard(roomKey, room, location) {
+      const card = document.createElement('div');
+      card.className = `room-card ${room.enabled ? '' : 'disabled'}`;
+      card.id = `card-${roomKey}`;
       
-      const startHour = parseInt(booking.start.split(':')[0]);
-      const endHour = parseInt(booking.end.split(':')[0]);
-      const bookingDate = new Date(booking.date + 'T12:00:00');
-      const weekStartNoon = new Date(currentWeekStart);
-      weekStartNoon.setHours(12, 0, 0, 0);
-      const daysDiff = Math.round((bookingDate - weekStartNoon) / (24 * 60 * 60 * 1000));
+      card.innerHTML = `
+        <div class="room-card-header">
+          <span class="room-name">${room.displayName}</span>
+          <div class="header-actions">
+            <button class="delete-btn" onclick="deleteRoom('${roomKey}')" title="Delete room">🗑️</button>
+            <label class="toggle-switch">
+              <input type="checkbox" ${room.enabled ? 'checked' : ''} 
+                     onchange="toggleRoom('${roomKey}')">
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+        </div>
+        
+        <div class="room-card-body">
+          <div class="color-group">
+            <label class="color-label">Background</label>
+            <div class="color-picker-row">
+              <input type="color" class="color-picker" value="${room.color}" 
+                     onchange="updateColor('${roomKey}', 'color', this.value)">
+              <span class="color-value" id="color-${roomKey}">${room.color}</span>
+            </div>
+          </div>
+          
+          <div class="color-group">
+            <label class="color-label">Border</label>
+            <div class="color-picker-row">
+              <input type="color" class="color-picker" value="${room.borderColor}" 
+                     onchange="updateColor('${roomKey}', 'borderColor', this.value)">
+              <span class="color-value" id="border-${roomKey}">${room.borderColor}</span>
+            </div>
+          </div>
+          
+          <div class="room-preview" id="preview-${roomKey}" 
+               style="background: ${room.color}; border-color: ${room.borderColor}; color: #333;">
+            ${room.displayName}
+          </div>
+        </div>
+      `;
       
-      for (let hour = startHour; hour < endHour; hour++) {
-        const timeStr = `${String(hour).padStart(2, '0')}:00`;
-        const cell = document.getElementById(`week-cell-${daysDiff}-${timeStr}`);
-        if (cell) cell.classList.add('selected');
-      }
-      
-      selectedBooking = booking;
-      showBookingForm(booking, roomName);
-      expandMobilePanel(); // Expand panel on mobile when booking selected
-    }
-    
-    function showBookingForm(booking, roomName) {
-      document.getElementById('noSelection').style.display = 'none';
-      document.getElementById('bookingForm').style.display = 'block';
-      
-      document.getElementById('displayCounsellor').textContent = booking.client || '-';
-      document.getElementById('displayCode').textContent = booking.bookingId || '-';
-      document.getElementById('displayRoom').textContent = roomName;
-      document.getElementById('displayDate').textContent = booking.date;
-      document.getElementById('displayTime').textContent = `${booking.start} - ${booking.end}`;
-      
-      document.getElementById('newRoom').value = '';
-      document.getElementById('newDate').value = '';
-      document.getElementById('newTime').value = '';
-      
-      clearStatus();
-    }
-    
-    function resetForm() {
-      selectedBooking = null;
-      document.getElementById('noSelection').style.display = 'block';
-      document.getElementById('bookingForm').style.display = 'none';
-      document.querySelectorAll('.grid-cell.selected').forEach(c => c.classList.remove('selected'));
+      return card;
     }
     
     // ================================
-    // BOOKING MODIFICATION
+    // FILTER
     // ================================
-    async function submitChange() {
-      if (!selectedBooking) {
-        showStatus('Please select a booking first', 'error');
-        return;
-      }
-      
-      const newRoom = document.getElementById('newRoom').value;
-      const newDate = document.getElementById('newDate').value;
-      const newTime = document.getElementById('newTime').value;
-      
-      if (!newRoom && !newDate && !newTime) {
-        showStatus('Please specify at least one change', 'error');
-        return;
-      }
-      
-      const submitBtn = document.getElementById('submitBtn');
-      submitBtn.disabled = true;
-      submitBtn.textContent = 'Processing...';
-      showStatus('Sending change request...', 'info');
-      
-      try {
-        const counsellorId = selectedBooking.clientId || '6';
-        const originalRoomKey = getRoomKey(selectedBooking) || 'Room_1';
-        
-        let requestedRoomKey = originalRoomKey;
-        if (newRoom) {
-          const roomEntry = enabledRooms.find(r => r.displayName === newRoom);
-          if (roomEntry) {
-            requestedRoomKey = roomEntry.key;
-          }
-        }
-        
-        const payload = {
-          timestamp: new Date().toISOString(),
-          action: 'modify',
-          counsellor_id: counsellorId,
-          original_booking_code: selectedBooking.bookingId,
-          original_room: originalRoomKey,
-          original_room_id: ROOM_ID_MAPPING[originalRoomKey] || '3',
-          original_location_id: getLocationId(originalRoomKey),
-          original_datetime: `${selectedBooking.date}T${selectedBooking.start}:00`,
-          requested_room: requestedRoomKey,
-          requested_room_id: ROOM_ID_MAPPING[requestedRoomKey] || '3',
-          requested_location_id: getLocationId(requestedRoomKey),
-          requested_datetime: `${newDate || selectedBooking.date}T${newTime || selectedBooking.start}:00`,
-          service_id: '2',
-          is_paid: selectedBooking.isPaid ? 'True' : 'No',
-          admin_override: 'true'
-        };
-        
-        const response = await fetch(WEBHOOK_URL, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload)
-        });
-        
-        if (!response.ok) throw new Error('Server error');
-        
-        showStatus('Change submitted successfully!', 'success');
-        setTimeout(() => { resetForm(); refreshData(); }, 2000);
-        
-      } catch (error) {
-        showStatus(`Error: ${error.message}`, 'error');
-      }
-      
-      submitBtn.disabled = false;
-      submitBtn.textContent = 'Submit Change';
+    function filterByLocation() {
+      currentFilter = document.getElementById('locationFilter').value;
+      renderRoomsByLocation();
     }
     
-    async function cancelBooking() {
-      if (!selectedBooking) return;
+    // ================================
+    // INTERACTIONS
+    // ================================
+    function toggleRoom(roomKey) {
+      currentConfig[roomKey].enabled = !currentConfig[roomKey].enabled;
       
-      if (!confirm(`Cancel this booking?\n\n${selectedBooking.client}\n${selectedBooking.date} ${selectedBooking.start}`)) {
-        return;
+      const card = document.getElementById(`card-${roomKey}`);
+      if (currentConfig[roomKey].enabled) {
+        card.classList.remove('disabled');
+      } else {
+        card.classList.add('disabled');
       }
+    }
+    
+    function updateColor(roomKey, colorType, value) {
+      currentConfig[roomKey][colorType] = value;
       
-      const cancelBtn = document.getElementById('cancelBtn');
-      cancelBtn.disabled = true;
-      showStatus('Processing cancellation...', 'info');
+      // Update display
+      const displayId = colorType === 'color' ? `color-${roomKey}` : `border-${roomKey}`;
+      const displayEl = document.getElementById(displayId);
+      if (displayEl) displayEl.textContent = value;
       
-      try {
-        const counsellorId = selectedBooking.clientId || '6';
-        const roomKey = getRoomKey(selectedBooking) || 'Room_1';
-        
-        let payload;
-        if (selectedBooking.isPaid) {
-          payload = {
-            timestamp: new Date().toISOString(),
-            action: 'modify',
-            counsellor_id: counsellorId,
-            original_booking_code: selectedBooking.bookingId,
-            original_room: roomKey,
-            original_room_id: ROOM_ID_MAPPING[roomKey] || '3',
-            original_location_id: getLocationId(roomKey),
-            original_datetime: `${selectedBooking.date}T${selectedBooking.start}:00`,
-            requested_room: 'Henley_Holding_Room',
-            requested_room_id: '18',
-            requested_location_id: '2',
-            requested_datetime: `2030-01-01T${selectedBooking.start}:00`,
-            service_id: '2',
-            is_paid: 'True',
-            admin_override: 'true'
-          };
+      // Update preview
+      const preview = document.getElementById(`preview-${roomKey}`);
+      if (preview) {
+        if (colorType === 'color') {
+          preview.style.background = value;
         } else {
-          payload = {
-            timestamp: new Date().toISOString(),
-            action: 'cancel',
-            counsellor_id: counsellorId,
-            booking_code: selectedBooking.bookingId,
-            original_datetime: `${selectedBooking.date}T${selectedBooking.start}:00`,
-            original_room: roomKey,
-            service_id: '2',
-            is_paid: 'No',
-            admin_override: 'true'
-          };
+          preview.style.borderColor = value;
         }
-        
-        const response = await fetch(WEBHOOK_URL, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload)
-        });
-        
-        if (!response.ok) throw new Error('Server error');
-        
-        showStatus('Booking cancelled!', 'success');
-        setTimeout(() => { resetForm(); refreshData(); }, 2000);
-        
-      } catch (error) {
-        showStatus(`Error: ${error.message}`, 'error');
+      }
+    }
+    
+    // ================================
+    // ADD ROOM
+    // ================================
+    function openAddModal() {
+      document.getElementById('addModal').classList.add('show');
+      document.getElementById('newRoomName').value = '';
+      document.getElementById('newRoomLocation').value = 'henley';
+      document.getElementById('newRoomColor').value = '#90caf9';
+      document.getElementById('newRoomBorder').value = '#64b5f6';
+      document.getElementById('newRoomOrder').value = '10';
+      updateModalPreview();
+    }
+    
+    function closeAddModal() {
+      document.getElementById('addModal').classList.remove('show');
+    }
+    
+    function updateModalPreview() {
+      const color = document.getElementById('newRoomColor').value;
+      const border = document.getElementById('newRoomBorder').value;
+      const name = document.getElementById('newRoomName').value || 'New Room';
+      
+      const preview = document.getElementById('modalPreview');
+      preview.style.background = color;
+      preview.style.borderColor = border;
+      preview.textContent = name;
+    }
+    
+    function addRoom() {
+      const name = document.getElementById('newRoomName').value.trim();
+      const location = document.getElementById('newRoomLocation').value;
+      const color = document.getElementById('newRoomColor').value;
+      const borderColor = document.getElementById('newRoomBorder').value;
+      const order = parseInt(document.getElementById('newRoomOrder').value) || 10;
+      
+      if (!name) {
+        alert('Please enter a room name');
+        return;
       }
       
-      cancelBtn.disabled = false;
+      // Generate a key from the name
+      const roomKey = name.replace(/\s+/g, '_').replace(/[^a-zA-Z0-9_]/g, '');
+      
+      // Check if key already exists
+      if (currentConfig[roomKey]) {
+        alert('A room with this name already exists. Please choose a different name.');
+        return;
+      }
+      
+      // Add the new room
+      currentConfig[roomKey] = {
+        enabled: true,
+        color: color,
+        borderColor: borderColor,
+        displayName: name,
+        location: location,
+        order: order
+      };
+      
+      closeAddModal();
+      renderRoomsByLocation();
+      showStatus(`Room "${name}" added successfully! Remember to save your changes.`, 'success');
     }
     
     // ================================
-    // UTILITIES
+    // DELETE ROOM
     // ================================
-    function getLocationId(roomKey) {
-      return (roomKey === 'Online') ? '1' : '2';
+    function deleteRoom(roomKey) {
+      const room = currentConfig[roomKey];
+      if (!room) return;
+      
+      const confirmMessage = `Are you sure you want to delete "${room.displayName}"?\n\n⚠️ This will remove the room from all calendars.\n\nNote: Existing bookings in this room will still exist but may not display correctly.`;
+      
+      if (!confirm(confirmMessage)) {
+        return;
+      }
+      
+      delete currentConfig[roomKey];
+      renderRoomsByLocation();
+      showStatus(`Room "${room.displayName}" deleted. Remember to save your changes.`, 'info');
     }
     
+    // ================================
+    // SAVE
+    // ================================
+    async function saveSettings() {
+      const saveBtn = document.getElementById('saveBtn');
+      saveBtn.disabled = true;
+      saveBtn.textContent = '⏳ Saving...';
+      showStatus('Saving room configuration...', 'info');
+      
+      try {
+        await database.ref('room_config').set(currentConfig);
+        
+        showStatus('✅ Settings saved successfully! Changes will appear on all calendars.', 'success');
+        
+        setTimeout(() => {
+          hideStatus();
+        }, 4000);
+        
+      } catch (error) {
+        console.error('Error saving:', error);
+        showStatus('❌ Error saving settings. Please try again.', 'error');
+      }
+      
+      saveBtn.disabled = false;
+      saveBtn.textContent = '💾 Save All Changes';
+    }
+    
+    // ================================
+    // STATUS MESSAGES
+    // ================================
     function showStatus(message, type) {
       const el = document.getElementById('statusMessage');
       el.textContent = message;
-      el.className = `status-message ${type}`;
+      el.className = `status-message show ${type}`;
     }
     
-    function clearStatus() {
-      document.getElementById('statusMessage').className = 'status-message';
+    function hideStatus() {
+      document.getElementById('statusMessage').classList.remove('show');
     }
     
-    // ================================
-    // MOBILE PANEL TOGGLE
-    // ================================
-    function initMobilePanel() {
-      const formPanel = document.querySelector('.form-panel');
-      const formHeader = document.querySelector('.form-header');
-      
-      if (!formPanel || !formHeader) return;
-      
-      // Toggle panel on header click (mobile only)
-      formHeader.addEventListener('click', function(e) {
-        if (window.innerWidth <= 768) {
-          formPanel.classList.toggle('expanded');
-        }
-      });
-      
-      // Collapse panel when clicking outside (mobile only)
-      document.addEventListener('click', function(e) {
-        if (window.innerWidth <= 768) {
-          if (!formPanel.contains(e.target) && formPanel.classList.contains('expanded')) {
-            formPanel.classList.remove('expanded');
-          }
-        }
-      });
-    }
-    
-    // Expand panel when booking selected (mobile)
-    function expandMobilePanel() {
-      if (window.innerWidth <= 768) {
-        const formPanel = document.querySelector('.form-panel');
-        if (formPanel) {
-          formPanel.classList.add('expanded');
-        }
+    // Close modal when clicking outside
+    document.getElementById('addModal').addEventListener('click', function(e) {
+      if (e.target === this) {
+        closeAddModal();
       }
-    }
+    });
     
-    // Initialize mobile panel on load
-    document.addEventListener('DOMContentLoaded', initMobilePanel);
+    // Update preview when typing room name
+    document.getElementById('newRoomName').addEventListener('input', updateModalPreview);
   </script>
 </body>
 </html>
