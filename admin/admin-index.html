@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Admin Day View - Cherry Tree Centre</title>
+  <title>Cherry Tree Centre - Admin Portal</title>
   
   <!-- Firebase -->
   <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
@@ -18,857 +18,465 @@
     
     body {
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background: #f5f6fa;
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
       min-height: 100vh;
       display: flex;
       flex-direction: column;
     }
     
-    /* Header */
-    .admin-header {
-      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
-      color: white;
-      padding: 15px 25px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
-      flex-wrap: wrap;
-      gap: 15px;
-    }
-    
-    .header-left {
-      display: flex;
-      align-items: center;
-      gap: 20px;
-    }
-    
-    .header-left h1 {
-      font-size: 20px;
-      font-weight: 500;
-    }
-    
-    .back-link {
-      color: rgba(255, 255, 255, 0.7);
-      text-decoration: none;
-      font-size: 14px;
-    }
-    
-    .back-link:hover {
-      color: white;
-    }
-    
-    .header-right {
-      display: flex;
-      align-items: center;
-      gap: 15px;
-      flex-wrap: wrap;
-    }
-    
-    .date-nav {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-    
-    .date-nav button {
-      background: rgba(255, 255, 255, 0.1);
-      border: 1px solid rgba(255, 255, 255, 0.3);
-      color: white;
-      padding: 8px 15px;
-      border-radius: 6px;
-      cursor: pointer;
-      font-size: 14px;
-      transition: all 0.2s;
-    }
-    
-    .date-nav button:hover {
-      background: rgba(255, 255, 255, 0.2);
-    }
-    
-    .date-nav input[type="date"] {
-      padding: 8px 12px;
-      border-radius: 6px;
-      border: 1px solid rgba(255, 255, 255, 0.3);
-      background: rgba(255, 255, 255, 0.1);
-      color: white;
-      font-size: 14px;
-    }
-    
-    .refresh-btn {
-      background: #28a745;
-      border: none;
-      color: white;
-      padding: 8px 20px;
-      border-radius: 6px;
-      cursor: pointer;
-      font-size: 14px;
-    }
-    
-    .refresh-btn:hover {
-      background: #218838;
-    }
-    
-    /* Main Content */
-    .main-container {
-      display: flex;
-      flex: 1;
-      overflow: hidden;
-    }
-    
-    /* Calendar Section */
-    .calendar-section {
+    /* Login Screen */
+    .login-screen {
       flex: 1;
       display: flex;
-      flex-direction: column;
-      overflow: hidden;
+      align-items: center;
+      justify-content: center;
       padding: 20px;
     }
     
-    .calendar-container {
-      flex: 1;
-      overflow: auto;
-      background: white;
-      border-radius: 12px;
-      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    .login-box {
+      background: rgba(255, 255, 255, 0.95);
+      padding: 40px;
+      border-radius: 16px;
+      box-shadow: 0 25px 50px rgba(0, 0, 0, 0.3);
+      max-width: 400px;
+      width: 100%;
+      text-align: center;
     }
     
-    /* Calendar Grid - columns set dynamically */
-    .calendar-grid {
-      display: grid;
-      font-size: 0.85em;
-      min-width: 1000px;
-    }
-    
-    .grid-header {
-      background: #1a1a2e;
-      color: white;
-      font-weight: 600;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 12px 8px;
-      font-size: 0.85em;
-      border-right: 1px solid rgba(255, 255, 255, 0.1);
-      position: sticky;
-      top: 0;
-      z-index: 10;
-    }
-    
-    .time-header {
-      background: #f8f9fa;
-      font-weight: 600;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 8px;
-      font-size: 0.8em;
-      border-bottom: 1px solid #eee;
-      border-right: 1px solid #ddd;
-      position: sticky;
-      left: 0;
-      z-index: 5;
-    }
-    
-    .grid-cell {
-      border-bottom: 1px solid #eee;
-      border-right: 1px solid #eee;
-      padding: 4px;
-      min-height: 50px;
-      font-size: 0.75em;
-      position: relative;
-      cursor: pointer;
-      transition: background 0.2s;
-    }
-    
-    .grid-cell:hover {
-      background: #f0f7ff;
-    }
-    
-    .grid-cell.car-park-cell {
-      background: #f5f5f5;
-      opacity: 0.7;
-    }
-    
-    .grid-cell.booked {
-      cursor: pointer;
-    }
-    
-    .grid-cell.selected {
-      box-shadow: 0 0 0 3px #007bff inset;
-      z-index: 2;
-    }
-    
-    .booking-content {
-      height: 100%;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-    }
-    
-    .counsellor-name {
-      font-weight: 600;
+    .login-box h1 {
       color: #1a1a2e;
-      font-size: 0.9em;
-      line-height: 1.2;
+      margin-bottom: 8px;
+      font-size: 24px;
     }
     
-    .booking-code {
-      color: #555;
-      font-size: 0.8em;
-      margin-top: 2px;
+    .login-box .subtitle {
+      color: #666;
+      margin-bottom: 30px;
+      font-size: 14px;
     }
     
-    /* Form Panel */
-    .form-panel {
-      width: 380px;
-      background: white;
-      border-left: 1px solid #ddd;
+    .pin-input-container {
       display: flex;
-      flex-direction: column;
-      overflow-y: auto;
-    }
-    
-    .form-header {
-      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
-      color: white;
-      padding: 20px;
-    }
-    
-    .form-header h2 {
-      font-size: 18px;
-      font-weight: 500;
-    }
-    
-    .form-header p {
-      font-size: 13px;
-      opacity: 0.8;
-      margin-top: 5px;
-    }
-    
-    .form-content {
-      padding: 20px;
-      flex: 1;
-    }
-    
-    .booking-details {
-      background: #f8f9fa;
-      border-radius: 8px;
-      padding: 15px;
+      gap: 10px;
+      justify-content: center;
       margin-bottom: 20px;
     }
     
-    .detail-row {
-      display: flex;
-      justify-content: space-between;
-      padding: 8px 0;
-      border-bottom: 1px solid #eee;
-    }
-    
-    .detail-row:last-child {
-      border-bottom: none;
-    }
-    
-    .detail-label {
-      color: #666;
-      font-size: 13px;
-    }
-    
-    .detail-value {
-      font-weight: 600;
-      color: #1a1a2e;
-      font-size: 13px;
-    }
-    
-    .form-group {
-      margin-bottom: 15px;
-    }
-    
-    .form-group label {
-      display: block;
-      font-weight: 600;
-      margin-bottom: 6px;
-      color: #333;
-      font-size: 13px;
-    }
-    
-    .form-group select,
-    .form-group input {
-      width: 100%;
-      padding: 10px 12px;
-      border: 1px solid #ddd;
-      border-radius: 6px;
-      font-size: 14px;
-    }
-    
-    .form-actions {
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-      margin-top: 20px;
-    }
-    
-    .btn {
-      padding: 12px 20px;
-      border: none;
-      border-radius: 6px;
-      font-size: 14px;
-      font-weight: 600;
-      cursor: pointer;
+    .pin-digit {
+      width: 50px;
+      height: 60px;
+      font-size: 24px;
+      text-align: center;
+      border: 2px solid #ddd;
+      border-radius: 8px;
       transition: all 0.2s;
     }
     
-    .btn-primary {
-      background: #007bff;
+    .pin-digit:focus {
+      border-color: #0f3460;
+      outline: none;
+      box-shadow: 0 0 0 3px rgba(15, 52, 96, 0.2);
+    }
+    
+    .login-btn {
+      background: #0f3460;
       color: white;
+      border: none;
+      padding: 14px 40px;
+      font-size: 16px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s;
+      width: 100%;
     }
     
-    .btn-primary:hover {
-      background: #0056b3;
+    .login-btn:hover {
+      background: #1a1a2e;
+      transform: translateY(-2px);
     }
     
-    .btn-primary:disabled {
+    .login-btn:disabled {
       background: #ccc;
       cursor: not-allowed;
+      transform: none;
     }
     
-    .btn-danger {
-      background: #dc3545;
-      color: white;
-    }
-    
-    .btn-danger:hover {
-      background: #c82333;
-    }
-    
-    .status-message {
-      padding: 12px;
-      border-radius: 6px;
-      font-size: 13px;
+    .login-error {
+      color: #dc3545;
       margin-top: 15px;
+      font-size: 14px;
       display: none;
     }
     
-    .status-message.success {
+    .login-error.show {
       display: block;
-      background: #d4edda;
-      color: #155724;
+      animation: shake 0.5s;
     }
     
-    .status-message.error {
-      display: block;
-      background: #f8d7da;
-      color: #721c24;
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-10px); }
+      75% { transform: translateX(10px); }
     }
     
-    .status-message.info {
-      display: block;
-      background: #fff3cd;
-      color: #856404;
+    /* Admin Dashboard */
+    .admin-container {
+      display: none;
+      flex-direction: column;
+      min-height: 100vh;
     }
     
-    .no-selection {
-      text-align: center;
-      padding: 40px 20px;
-      color: #666;
-    }
-    
-    .no-selection-icon {
-      font-size: 48px;
-      margin-bottom: 15px;
-    }
-    
-    /* Legend - will be populated dynamically */
-    .legend {
+    .admin-container.active {
       display: flex;
-      flex-wrap: wrap;
-      gap: 12px;
-      padding: 12px 20px;
-      background: white;
-      border-radius: 8px;
-      margin-bottom: 15px;
-      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
     }
     
-    .legend-item {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      font-size: 12px;
-    }
-    
-    .legend-color {
-      width: 20px;
-      height: 20px;
-      border-radius: 4px;
-      border: 2px solid;
-    }
-    
-    /* Holding Room Section */
-    .holding-room-section {
-      background: #e3f2fd;
-      border-radius: 8px;
-      padding: 15px 20px;
-      margin-top: 15px;
+    .admin-header {
+      background: rgba(255, 255, 255, 0.95);
+      padding: 20px 30px;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
     }
     
-    .holding-info {
-      display: flex;
-      align-items: center;
-      gap: 15px;
+    .admin-header h1 {
+      color: #1a1a2e;
+      font-size: 22px;
     }
     
-    .holding-count {
-      background: #1976d2;
-      color: white;
-      padding: 5px 12px;
-      border-radius: 15px;
-      font-weight: 600;
-    }
-    
-    .holding-btn {
-      background: #1976d2;
+    .admin-header .logout-btn {
+      background: #dc3545;
       color: white;
       border: none;
       padding: 10px 20px;
       border-radius: 6px;
       cursor: pointer;
+      font-size: 14px;
+      transition: background 0.2s;
+    }
+    
+    .admin-header .logout-btn:hover {
+      background: #c82333;
+    }
+    
+    .admin-content {
+      flex: 1;
+      padding: 40px;
+    }
+    
+    .dashboard-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 25px;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    
+    .dashboard-card {
+      background: rgba(255, 255, 255, 0.95);
+      border-radius: 12px;
+      padding: 30px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+      transition: all 0.3s;
+      text-decoration: none;
+      color: inherit;
+      display: block;
+    }
+    
+    .dashboard-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 15px 40px rgba(0, 0, 0, 0.2);
+    }
+    
+    .card-icon {
+      width: 60px;
+      height: 60px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 28px;
+      margin-bottom: 20px;
+    }
+    
+    .card-icon.day { background: #e3f2fd; }
+    .card-icon.week { background: #f3e5f5; }
+    .card-icon.reports { background: #e8f5e9; }
+    .card-icon.rooms { background: #fff3e0; }
+    
+    .dashboard-card h2 {
+      color: #1a1a2e;
+      font-size: 20px;
+      margin-bottom: 10px;
+    }
+    
+    .dashboard-card p {
+      color: #666;
+      font-size: 14px;
+      line-height: 1.5;
+    }
+    
+    .card-arrow {
+      margin-top: 20px;
+      color: #0f3460;
+      font-size: 14px;
       font-weight: 600;
     }
     
-    .holding-btn:hover {
-      background: #1565c0;
+    /* Quick Stats */
+    .quick-stats {
+      max-width: 1200px;
+      margin: 0 auto 40px auto;
     }
     
-    .holding-btn:disabled {
-      background: #90caf9;
-      cursor: not-allowed;
+    .quick-stats h3 {
+      color: white;
+      margin-bottom: 20px;
+      font-weight: 500;
     }
     
-    /* Dynamic room styles will be injected here */
-    #dynamicStyles {
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 20px;
+    }
+    
+    .stat-box {
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 10px;
+      padding: 20px;
+      text-align: center;
+      backdrop-filter: blur(10px);
+    }
+    
+    .stat-box .number {
+      font-size: 36px;
+      font-weight: bold;
+      color: white;
+    }
+    
+    .stat-box .label {
+      color: rgba(255, 255, 255, 0.7);
+      font-size: 14px;
+      margin-top: 5px;
+    }
+    
+    /* Footer link back to main calendar */
+    .admin-footer {
+      background: rgba(0, 0, 0, 0.2);
+      padding: 15px 30px;
+      text-align: center;
+    }
+    
+    .admin-footer a {
+      color: rgba(255, 255, 255, 0.7);
+      text-decoration: none;
+      font-size: 14px;
+    }
+    
+    .admin-footer a:hover {
+      color: white;
     }
     
     /* ================================ */
     /* MOBILE STYLES                    */
     /* ================================ */
     @media (max-width: 768px) {
+      .login-box {
+        padding: 25px 20px;
+        margin: 10px;
+      }
+      
+      .login-box h1 {
+        font-size: 20px;
+      }
+      
+      .pin-digit {
+        width: 45px;
+        height: 55px;
+        font-size: 22px;
+      }
+      
       .admin-header {
-        padding: 10px 12px;
-        flex-wrap: wrap;
-        gap: 8px;
-      }
-      
-      .header-left {
+        padding: 15px;
+        flex-direction: column;
         gap: 10px;
+        text-align: center;
+      }
+      
+      .admin-header h1 {
+        font-size: 18px;
+      }
+      
+      .admin-header .logout-btn {
         width: 100%;
       }
       
-      .header-left h1 {
-        font-size: 14px;
-      }
-      
-      .back-link {
-        font-size: 11px;
-      }
-      
-      .header-nav {
-        width: 100%;
-        justify-content: center;
-      }
-      
-      .nav-link {
-        padding: 6px 12px;
-        font-size: 11px;
-      }
-      
-      /* Main Content - stack vertically */
-      .main-content {
-        flex-direction: column;
-        padding: 0;
-      }
-      
-      /* Controls */
-      .controls-bar {
-        padding: 8px 10px;
-        flex-direction: column;
-        gap: 8px;
-      }
-      
-      .date-nav {
-        width: 100%;
-        justify-content: space-between;
-      }
-      
-      .date-nav button {
-        padding: 8px 12px;
-        font-size: 11px;
-      }
-      
-      .current-date {
-        font-size: 14px;
-      }
-      
-      .controls-right {
-        width: 100%;
-        justify-content: space-between;
-      }
-      
-      .refresh-btn {
-        padding: 8px 12px;
-        font-size: 11px;
-      }
-      
-      /* Calendar Container */
-      .calendar-wrapper {
-        flex: 1;
-        overflow: hidden;
-      }
-      
-      .calendar-container {
-        overflow-x: auto;
-        -webkit-overflow-scrolling: touch;
-        padding: 8px;
-      }
-      
-      .calendar-grid {
-        min-width: 600px;
-      }
-      
-      .time-column {
-        min-width: 50px;
-      }
-      
-      .room-column {
-        min-width: 70px;
-      }
-      
-      .room-header {
-        font-size: 10px;
-        padding: 6px 4px;
-      }
-      
-      .time-slot {
-        font-size: 9px;
-        padding: 4px 2px;
-      }
-      
-      .grid-cell {
-        min-height: 30px;
-        font-size: 9px;
-      }
-      
-      .booking-cell .booking-name {
-        font-size: 9px;
-      }
-      
-      .booking-cell .booking-code {
-        font-size: 8px;
-      }
-      
-      /* Holding Room */
-      .holding-room-bar {
-        padding: 8px 10px;
-        flex-wrap: wrap;
-        gap: 8px;
-      }
-      
-      .holding-info h3 {
-        font-size: 13px;
-      }
-      
-      .holding-count {
-        font-size: 12px;
-        padding: 4px 10px;
-      }
-      
-      .holding-btn {
-        padding: 8px 14px;
-        font-size: 11px;
-      }
-      
-      /* Form Panel - Slide up from bottom on mobile */
-      .form-panel {
-        position: fixed;
-        bottom: 0;
-        left: 0;
-        right: 0;
-        width: 100%;
-        max-height: 60vh;
-        border-left: none;
-        border-top: 2px solid #1a1a2e;
-        border-radius: 16px 16px 0 0;
-        box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.15);
-        transform: translateY(calc(100% - 50px));
-        transition: transform 0.3s ease;
-        z-index: 1000;
-      }
-      
-      .form-panel.expanded {
-        transform: translateY(0);
-      }
-      
-      .form-header {
-        padding: 12px 15px;
-        cursor: pointer;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        border-radius: 16px 16px 0 0;
-      }
-      
-      .form-header::before {
-        content: '';
-        position: absolute;
-        top: 8px;
-        left: 50%;
-        transform: translateX(-50%);
-        width: 40px;
-        height: 4px;
-        background: rgba(255, 255, 255, 0.5);
-        border-radius: 2px;
-      }
-      
-      .form-header h2 {
-        font-size: 14px;
-      }
-      
-      .form-header p {
-        font-size: 11px;
-      }
-      
-      .form-content {
-        padding: 12px 15px;
-        overflow-y: auto;
-        max-height: calc(60vh - 60px);
-      }
-      
-      .booking-details {
-        padding: 10px;
-        margin-bottom: 12px;
-      }
-      
-      .detail-row {
-        padding: 5px 0;
-      }
-      
-      .detail-label, .detail-value {
-        font-size: 11px;
-      }
-      
-      .form-group {
-        margin-bottom: 10px;
-      }
-      
-      .form-group label {
-        font-size: 11px;
-        margin-bottom: 4px;
-      }
-      
-      .form-group select,
-      .form-group input {
-        padding: 8px;
-        font-size: 14px;
-      }
-      
-      .form-actions {
-        flex-direction: column;
-        gap: 8px;
-      }
-      
-      .form-actions .btn {
-        width: 100%;
-        padding: 10px;
-        font-size: 13px;
-      }
-      
-      .no-selection {
+      .admin-content {
         padding: 15px;
       }
       
-      .no-selection-icon {
-        font-size: 24px;
+      .quick-stats {
+        margin-bottom: 25px;
       }
       
-      .no-selection p {
+      .quick-stats h3 {
+        font-size: 16px;
+        text-align: center;
+      }
+      
+      .stats-row {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+      }
+      
+      .stat-box {
+        padding: 15px 10px;
+      }
+      
+      .stat-box .number {
+        font-size: 28px;
+      }
+      
+      .stat-box .label {
+        font-size: 11px;
+      }
+      
+      .dashboard-grid {
+        grid-template-columns: 1fr;
+        gap: 15px;
+      }
+      
+      .dashboard-card {
+        padding: 20px;
+      }
+      
+      .card-icon {
+        width: 50px;
+        height: 50px;
+        font-size: 24px;
+        margin-bottom: 15px;
+      }
+      
+      .dashboard-card h2 {
+        font-size: 18px;
+      }
+      
+      .dashboard-card p {
+        font-size: 13px;
+      }
+      
+      .card-arrow {
+        margin-top: 15px;
+        font-size: 13px;
+      }
+      
+      .admin-footer {
+        padding: 12px 15px;
+      }
+      
+      .admin-footer a {
         font-size: 12px;
       }
     }
     
-    @media (max-width: 480px) {
-      .date-nav {
-        flex-wrap: wrap;
+    @media (max-width: 400px) {
+      .pin-input-container {
         gap: 6px;
       }
       
-      .date-nav button {
-        flex: 1;
-        min-width: 80px;
+      .pin-digit {
+        width: 40px;
+        height: 50px;
+        font-size: 20px;
       }
       
-      .current-date {
-        width: 100%;
-        text-align: center;
-        order: -1;
+      .stats-row {
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
       }
       
-      .form-panel {
-        max-height: 70vh;
+      .stat-box .number {
+        font-size: 24px;
       }
       
-      .form-content {
-        max-height: calc(70vh - 60px);
+      .stat-box .label {
+        font-size: 10px;
       }
     }
   </style>
 </head>
 <body>
-  <!-- Dynamic styles will be added here by JavaScript -->
-  <style id="dynamicStyles"></style>
-  
-  <header class="admin-header">
-    <div class="header-left">
-      <a href="index.html" class="back-link">← Admin Portal</a>
-      <h1>📅 Admin Day View</h1>
-    </div>
-    <div class="header-right">
-      <div class="date-nav">
-        <button onclick="changeDate(-1)">← Prev</button>
-        <input type="date" id="dateSelector" onchange="dateChanged()">
-        <button onclick="changeDate(1)">Next →</button>
-        <button onclick="goToToday()">Today</button>
-      </div>
-      <button class="refresh-btn" onclick="refreshData()">↻ Refresh</button>
-    </div>
-  </header>
-  
-  <div class="main-container">
-    <div class="calendar-section">
-      <!-- Legend - populated dynamically -->
-      <div class="legend" id="legendContainer">
-        Loading room configuration...
-      </div>
-      
-      <div class="calendar-container">
-        <div class="calendar-grid" id="calendarGrid">
-          <!-- Grid will be populated by JavaScript -->
-        </div>
-      </div>
-      
-      <!-- Holding Room Section -->
-      <div class="holding-room-section">
-        <div class="holding-info">
-          <span style="font-weight: 600; color: #1976d2;">📦 Holding Room</span>
-          <span class="holding-count" id="holdingCount">0</span>
-          <span style="color: #666; font-size: 13px;">bookings available</span>
-        </div>
-        <button class="holding-btn" id="holdingBtn" onclick="selectHoldingBooking()" disabled>
-          Select Holding Booking
-        </button>
-      </div>
-    </div>
+  <!-- Admin Dashboard - No login required during testing -->
+  <div class="admin-container active" id="adminContainer">
+    <header class="admin-header">
+      <h1>🌳 Cherry Tree Centre - Admin Portal</h1>
+      <button class="logout-btn" onclick="logout()">Logout</button>
+    </header>
     
-    <!-- Form Panel -->
-    <div class="form-panel">
-      <div class="form-header">
-        <h2>Modify Booking</h2>
-        <p>Click any booking to select it</p>
+    <main class="admin-content">
+      <!-- Quick Stats -->
+      <div class="quick-stats">
+        <h3>Today's Overview</h3>
+        <div class="stats-row">
+          <div class="stat-box">
+            <div class="number" id="todayBookings">-</div>
+            <div class="label">Bookings Today</div>
+          </div>
+          <div class="stat-box">
+            <div class="number" id="weekBookings">-</div>
+            <div class="label">This Week</div>
+          </div>
+          <div class="stat-box">
+            <div class="number" id="monthBookings">-</div>
+            <div class="label">This Month</div>
+          </div>
+          <div class="stat-box">
+            <div class="number" id="holdingCount">-</div>
+            <div class="label">In Holding Room</div>
+          </div>
+        </div>
       </div>
       
-      <div class="form-content">
-        <!-- No selection state -->
-        <div class="no-selection" id="noSelection">
-          <div class="no-selection-icon">👆</div>
-          <p>Click on any booking in the calendar to select it for modification.</p>
-        </div>
+      <!-- Navigation Cards -->
+      <div class="dashboard-grid">
+        <a href="admin-day.html" class="dashboard-card">
+          <div class="card-icon day">📅</div>
+          <h2>Day View</h2>
+          <p>Full daily calendar showing all rooms and counsellors. Modify any booking across all therapists.</p>
+          <div class="card-arrow">Open Day View →</div>
+        </a>
         
-        <!-- Booking form -->
-        <div id="bookingForm" style="display: none;">
-          <div class="booking-details">
-            <div class="detail-row">
-              <span class="detail-label">Counsellor</span>
-              <span class="detail-value" id="displayCounsellor">-</span>
-            </div>
-            <div class="detail-row">
-              <span class="detail-label">Booking Code</span>
-              <span class="detail-value" id="displayCode">-</span>
-            </div>
-            <div class="detail-row">
-              <span class="detail-label">Current Room</span>
-              <span class="detail-value" id="displayRoom">-</span>
-            </div>
-            <div class="detail-row">
-              <span class="detail-label">Current Date</span>
-              <span class="detail-value" id="displayDate">-</span>
-            </div>
-            <div class="detail-row">
-              <span class="detail-label">Current Time</span>
-              <span class="detail-value" id="displayTime">-</span>
-            </div>
-            <div class="detail-row">
-              <span class="detail-label">Payment Status</span>
-              <span class="detail-value" id="displayPayment">-</span>
-            </div>
-          </div>
-          
-          <h4 style="margin-bottom: 15px; color: #007bff;">Change To:</h4>
-          
-          <div class="form-group">
-            <label>New Room</label>
-            <select id="newRoom">
-              <option value="">No change</option>
-              <!-- Options populated dynamically -->
-            </select>
-          </div>
-          
-          <div class="form-group">
-            <label>New Date</label>
-            <input type="date" id="newDate">
-          </div>
-          
-          <div class="form-group">
-            <label>New Time</label>
-            <select id="newTime">
-              <option value="">No change</option>
-              <option value="08:00">08:00</option>
-              <option value="09:00">09:00</option>
-              <option value="10:00">10:00</option>
-              <option value="11:00">11:00</option>
-              <option value="12:00">12:00</option>
-              <option value="13:00">13:00</option>
-              <option value="14:00">14:00</option>
-              <option value="15:00">15:00</option>
-              <option value="16:00">16:00</option>
-              <option value="17:00">17:00</option>
-              <option value="18:00">18:00</option>
-              <option value="19:00">19:00</option>
-              <option value="20:00">20:00</option>
-            </select>
-          </div>
-          
-          <div class="form-actions">
-            <button class="btn btn-primary" id="submitBtn" onclick="submitChange()">
-              Submit Change
-            </button>
-            <button class="btn btn-danger" id="cancelBtn" onclick="cancelBooking()">
-              Cancel Appointment
-            </button>
-          </div>
-          
-          <div class="status-message" id="statusMessage"></div>
-        </div>
+        <a href="admin-week.html" class="dashboard-card">
+          <div class="card-icon week">📆</div>
+          <h2>Counsellor Week View</h2>
+          <p>View and manage a specific counsellor's full weekly schedule. Select from dropdown to focus on one therapist.</p>
+          <div class="card-arrow">Open Week View →</div>
+        </a>
+        
+        <a href="admin-reports.html" class="dashboard-card">
+          <div class="card-icon reports">📊</div>
+          <h2>Reports & Statistics</h2>
+          <p>Booking counts, room utilisation rates, and usage trends. Filter by day, week, or month.</p>
+          <div class="card-arrow">View Reports →</div>
+        </a>
+        
+        <a href="admin-rooms.html" class="dashboard-card">
+          <div class="card-icon rooms">🚪</div>
+          <h2>Room Configuration</h2>
+          <p>Enable/disable rooms, set display colours, manage room availability across the booking system.</p>
+          <div class="card-arrow">Configure Rooms →</div>
+        </a>
       </div>
-    </div>
+    </main>
+    
+    <footer class="admin-footer">
+      <a href="../index.html">← Back to Main Booking Calendar</a>
+    </footer>
   </div>
   
   <script>
-    // ================================
-    // CONFIGURATION
-    // ================================
+    // Firebase configuration
     const firebaseConfig = {
       apiKey: "AIzaSyCVp4QDAnh5RcxGZIrEY2LriUWKQNcNbzE",
       authDomain: "cherry-tree-bookings.firebaseapp.com",
@@ -882,591 +490,128 @@
     firebase.initializeApp(firebaseConfig);
     const database = firebase.database();
     
-    const WEBHOOK_URL = 'https://hook.eu2.make.com/p754q5eks857boisu6m3unr6qer6be4t';
+    // PIN input handling - DISABLED FOR TESTING
     
-    const ROOM_ID_MAPPING = {
-      'Room_1': '3', 'Room_2': '7', 'Room_4': '8', 'Room_5': '13',
-      'Room_6': '9', 'Room_7': '10', 'Room_8': '14', 'Room_9': '15',
-      'Car_Park': '12', 'Online': '11', 'Henley_Holding_Room': '18'
-    };
-    
-    // Default room config (fallback)
-    const defaultRoomConfig = {
-      'Room_1': { enabled: true, color: '#d4a5a5', borderColor: '#b89090', displayName: 'Room 1', location: 'henley', order: 1 },
-      'Room_2': { enabled: true, color: '#b299d4', borderColor: '#9680c0', displayName: 'Room 2', location: 'henley', order: 2 },
-      'Room_4': { enabled: true, color: '#a5d4a5', borderColor: '#90b890', displayName: 'Room 4', location: 'henley', order: 3 },
-      'Room_5': { enabled: true, color: '#e57373', borderColor: '#d32f2f', displayName: 'Room 5', location: 'henley', order: 4 },
-      'Room_6': { enabled: true, color: '#c8a882', borderColor: '#b5946e', displayName: 'Room 6', location: 'henley', order: 5 },
-      'Room_7': { enabled: true, color: '#e6d45a', borderColor: '#d4c347', displayName: 'Room 7', location: 'henley', order: 6 },
-      'Room_8': { enabled: true, color: '#80cbc4', borderColor: '#4db6ac', displayName: 'Room 8', location: 'henley', order: 7 },
-      'Room_9': { enabled: true, color: '#ce93d8', borderColor: '#ba68c8', displayName: 'Room 9', location: 'henley', order: 8 },
-      'Car_Park': { enabled: true, color: '#bdbdbd', borderColor: '#9e9e9e', displayName: 'Car Park', location: 'henley', order: 9 },
-      'Online': { enabled: true, color: '#7dd87d', borderColor: '#6bc46b', displayName: 'Online', location: 'buckhurst_hill', order: 1 }
-    };
-    
-    const businessHours = [];
-    for (let h = 8; h <= 20; h++) {
-      businessHours.push(`${String(h).padStart(2, '0')}:00`);
-    }
-    
-    // State
-    let roomConfig = {};
-    let enabledRooms = [];
-    let bookingData = [];
-    let holdingRoomBookings = [];
-    let selectedBooking = null;
-    let currentDate = new Date().toISOString().split('T')[0];
-    
-    // ================================
-    // INITIALIZATION
-    // ================================
-    document.addEventListener('DOMContentLoaded', async () => {
-      document.getElementById('dateSelector').value = currentDate;
-      
-      // Load room config first, then bookings
-      await loadRoomConfig();
-      await loadBookingData();
+    // Check if already authenticated - DISABLED FOR TESTING
+    document.addEventListener('DOMContentLoaded', () => {
+      // Skip authentication during testing
+      sessionStorage.setItem('adminAuth', 'true');
+      loadQuickStats();
     });
     
-    // ================================
-    // ROOM CONFIGURATION
-    // ================================
-    async function loadRoomConfig() {
-      try {
-        const snapshot = await database.ref('room_config').once('value');
-        const config = snapshot.val();
-        
-        if (config && Object.keys(config).length > 0) {
-          roomConfig = config;
-        } else {
-          roomConfig = defaultRoomConfig;
-        }
-        
-        // Filter enabled rooms and sort by order
-        enabledRooms = Object.entries(roomConfig)
-          .filter(([key, room]) => room.enabled)
-          .sort((a, b) => (a[1].order || 99) - (b[1].order || 99))
-          .map(([key, room]) => ({ key, ...room }));
-        
-        // Generate dynamic CSS
-        generateDynamicStyles();
-        
-        // Generate legend
-        generateLegend();
-        
-        // Populate room dropdown
-        populateRoomDropdown();
-        
-        console.log(`Loaded ${enabledRooms.length} enabled rooms`);
-        
-      } catch (error) {
-        console.error('Error loading room config:', error);
-        roomConfig = defaultRoomConfig;
-        enabledRooms = Object.entries(defaultRoomConfig)
-          .filter(([key, room]) => room.enabled)
-          .sort((a, b) => (a[1].order || 99) - (b[1].order || 99))
-          .map(([key, room]) => ({ key, ...room }));
-        
-        generateDynamicStyles();
-        generateLegend();
-        populateRoomDropdown();
+    // Verify PIN against Firebase
+    async function verifyPin() {
+      const pin = Array.from(pinInputs).map(input => input.value).join('');
+      
+      if (pin.length !== 4) {
+        showError();
+        return;
       }
-    }
-    
-    function generateDynamicStyles() {
-      let css = '';
       
-      enabledRooms.forEach(room => {
-        const className = room.key.toLowerCase().replace('_', '-');
+      const loginBtn = document.getElementById('loginBtn');
+      loginBtn.disabled = true;
+      loginBtn.textContent = 'Verifying...';
+      
+      try {
+        const snapshot = await database.ref('config/admin_pin').once('value');
+        const storedPin = snapshot.val();
         
-        // Grid cell styles
-        css += `.grid-cell.booked.${className} { background: ${room.color}; border-left: 4px solid ${room.borderColor}; }\n`;
-        
-        // Car park special styling
-        if (room.key === 'Car_Park') {
-          css += `.grid-cell.booked.${className} { opacity: 0.7; }\n`;
+        if (pin === storedPin) {
+          sessionStorage.setItem('adminAuth', 'true');
+          showDashboard();
+        } else {
+          showError();
+          pinInputs.forEach(input => input.value = '');
+          pinInputs[0].focus();
         }
-        
-        // Legend color
-        css += `.legend-color.${className} { background: ${room.color}; border-color: ${room.borderColor}; }\n`;
-      });
+      } catch (error) {
+        console.error('PIN verification error:', error);
+        showError();
+      }
       
-      document.getElementById('dynamicStyles').textContent = css;
+      loginBtn.disabled = false;
+      loginBtn.textContent = 'Enter Admin Portal';
     }
     
-    function generateLegend() {
-      const container = document.getElementById('legendContainer');
-      container.innerHTML = '';
+    function showError() {
+      const errorEl = document.getElementById('loginError');
+      errorEl.classList.add('show');
       
-      enabledRooms.forEach(room => {
-        const className = room.key.toLowerCase().replace('_', '-');
-        const item = document.createElement('div');
-        item.className = 'legend-item';
-        item.innerHTML = `
-          <div class="legend-color ${className}" style="background: ${room.color}; border-color: ${room.borderColor};"></div>
-          ${room.displayName}
-        `;
-        container.appendChild(item);
-      });
+      setTimeout(() => {
+        errorEl.classList.remove('show');
+      }, 3000);
     }
     
-    function populateRoomDropdown() {
-      const select = document.getElementById('newRoom');
-      select.innerHTML = '<option value="">No change</option>';
-      
-      enabledRooms.forEach(room => {
-        const option = document.createElement('option');
-        option.value = room.displayName;
-        option.textContent = room.displayName;
-        select.appendChild(option);
-      });
+    function showDashboard() {
+      document.getElementById('loginScreen').style.display = 'none';
+      document.getElementById('adminContainer').classList.add('active');
+      loadQuickStats();
     }
     
-    // ================================
-    // DATA LOADING
-    // ================================
-    async function loadBookingData() {
+    function logout() {
+      sessionStorage.removeItem('adminAuth');
+      location.reload();
+    }
+    
+    // Load quick statistics
+    async function loadQuickStats() {
       try {
         const snapshot = await database.ref('bookings').once('value');
         const data = snapshot.val() || [];
-        const allBookings = Array.isArray(data) ? data : Object.values(data);
+        const bookings = Array.isArray(data) ? data : Object.values(data);
         
-        // Filter active bookings (not cancelled)
-        const activeBookings = allBookings.filter(b => 
-          b.status !== 'cancelled' && b.status !== 'cancel'
-        );
-        
-        // Separate holding room bookings
-        holdingRoomBookings = activeBookings.filter(b => 
-          b.room === 'Henley_Holding_Room' || 
-          b.room === '18' || 
-          b.date === '2030-01-01'
-        );
-        
-        // Regular bookings
-        bookingData = activeBookings.filter(b => 
-          b.room !== 'Henley_Holding_Room' && 
-          b.room !== '18' && 
+        // Filter active bookings (not cancelled, not in holding room for display purposes)
+        const activeBookings = bookings.filter(b => 
+          b.status !== 'cancelled' && 
+          b.status !== 'cancel' &&
           b.date !== '2030-01-01'
         );
         
-        console.log(`Loaded ${bookingData.length} bookings, ${holdingRoomBookings.length} in holding room`);
+        const holdingBookings = bookings.filter(b => 
+          b.status !== 'cancelled' && 
+          b.status !== 'cancel' &&
+          (b.room === 'Henley_Holding_Room' || b.room === '18' || b.date === '2030-01-01')
+        );
         
-        updateHoldingCount();
-        createCalendarGrid();
-        populateCalendar();
+        const today = new Date().toISOString().split('T')[0];
+        const todayCount = activeBookings.filter(b => b.date === today).length;
         
-      } catch (error) {
-        console.error('Error loading bookings:', error);
-      }
-    }
-    
-    function refreshData() {
-      loadBookingData();
-    }
-    
-    // ================================
-    // DATE NAVIGATION
-    // ================================
-    function changeDate(delta) {
-      const date = new Date(currentDate);
-      date.setDate(date.getDate() + delta);
-      currentDate = date.toISOString().split('T')[0];
-      document.getElementById('dateSelector').value = currentDate;
-      populateCalendar();
-    }
-    
-    function dateChanged() {
-      currentDate = document.getElementById('dateSelector').value;
-      populateCalendar();
-    }
-    
-    function goToToday() {
-      currentDate = new Date().toISOString().split('T')[0];
-      document.getElementById('dateSelector').value = currentDate;
-      populateCalendar();
-    }
-    
-    // ================================
-    // CALENDAR GRID
-    // ================================
-    function createCalendarGrid() {
-      const grid = document.getElementById('calendarGrid');
-      grid.innerHTML = '';
-      
-      // Set grid columns based on enabled rooms
-      const numRooms = enabledRooms.length;
-      grid.style.gridTemplateColumns = `70px repeat(${numRooms}, 1fr)`;
-      
-      // Header row
-      const timeHeader = document.createElement('div');
-      timeHeader.className = 'grid-header';
-      timeHeader.textContent = 'Time';
-      grid.appendChild(timeHeader);
-      
-      enabledRooms.forEach(room => {
-        const header = document.createElement('div');
-        header.className = 'grid-header';
-        header.textContent = room.displayName;
-        grid.appendChild(header);
-      });
-      
-      // Time rows
-      businessHours.forEach(time => {
-        const timeCell = document.createElement('div');
-        timeCell.className = 'time-header';
-        timeCell.textContent = time;
-        grid.appendChild(timeCell);
+        // This week (Monday to Sunday)
+        const now = new Date();
+        const dayOfWeek = now.getDay();
+        const mondayOffset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+        const weekStart = new Date(now);
+        weekStart.setDate(now.getDate() + mondayOffset);
+        weekStart.setHours(0, 0, 0, 0);
         
-        enabledRooms.forEach(room => {
-          const cell = document.createElement('div');
-          cell.className = 'grid-cell';
-          cell.id = `cell-${room.key}-${time}`;
-          
-          // Special styling for car park
-          if (room.key === 'Car_Park') {
-            cell.classList.add('car-park-cell');
-          }
-          
-          grid.appendChild(cell);
-        });
-      });
-    }
-    
-    function populateCalendar() {
-      // Clear all cells
-      document.querySelectorAll('.grid-cell').forEach(cell => {
-        cell.innerHTML = '';
-        cell.className = 'grid-cell';
-        if (cell.id.includes('Car_Park')) {
-          cell.classList.add('car-park-cell');
-        }
-      });
-      
-      // Filter bookings for current date
-      const dayBookings = bookingData.filter(b => b.date === currentDate);
-      
-      dayBookings.forEach(booking => {
-        const roomKey = getRoomKey(booking);
-        if (!roomKey) return;
+        const weekEnd = new Date(weekStart);
+        weekEnd.setDate(weekStart.getDate() + 6);
+        weekEnd.setHours(23, 59, 59, 999);
         
-        const roomConfig = enabledRooms.find(r => r.key === roomKey);
-        if (!roomConfig) return; // Room not enabled
+        const weekCount = activeBookings.filter(b => {
+          const bookingDate = new Date(b.date + 'T12:00:00');
+          return bookingDate >= weekStart && bookingDate <= weekEnd;
+        }).length;
         
-        const startHour = parseInt(booking.start.split(':')[0]);
-        const endHour = parseInt(booking.end.split(':')[0]);
+        // This month
+        const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+        const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0);
         
-        for (let hour = startHour; hour < endHour; hour++) {
-          if (hour >= 8 && hour <= 20) {
-            const timeStr = `${String(hour).padStart(2, '0')}:00`;
-            const cell = document.getElementById(`cell-${roomKey}-${timeStr}`);
-            
-            if (cell) {
-              const className = roomKey.toLowerCase().replace('_', '-');
-              cell.classList.add('booked', className);
-              
-              cell.innerHTML = `
-                <div class="booking-content">
-                  <div class="counsellor-name">${booking.client || 'Unknown'}</div>
-                  <div class="booking-code">${booking.bookingId || ''}</div>
-                </div>
-              `;
-              
-              cell.onclick = () => selectBooking(booking, roomConfig.displayName);
-            }
-          }
-        }
-      });
-    }
-    
-    function getRoomKey(booking) {
-      // Map booking room value to config key
-      if (booking.room === 'Room_1' || booking.room === '1') return 'Room_1';
-      if (booking.room === 'Room_2' || booking.room === '2') return 'Room_2';
-      if (booking.room === 'Room_4' || booking.room === '4') return 'Room_4';
-      if (booking.room === 'Room_5' || booking.room === '5') return 'Room_5';
-      if (booking.room === 'Room_6' || booking.room === '6') return 'Room_6';
-      if (booking.room === 'Room_7' || booking.room === '7') return 'Room_7';
-      if (booking.room === 'Room_8' || booking.room === '8') return 'Room_8';
-      if (booking.room === 'Room_9' || booking.room === '9') return 'Room_9';
-      if (booking.room === 'Car_Park' || booking.room === 'Car Park') return 'Car_Park';
-      if (booking.location && booking.location.toLowerCase().includes('online')) return 'Online';
-      if (booking.room === 'Online') return 'Online';
-      return null;
-    }
-    
-    // ================================
-    // HOLDING ROOM
-    // ================================
-    function updateHoldingCount() {
-      const count = holdingRoomBookings.length;
-      document.getElementById('holdingCount').textContent = count;
-      document.getElementById('holdingBtn').disabled = count === 0;
-    }
-    
-    function selectHoldingBooking() {
-      if (holdingRoomBookings.length === 0) return;
-      
-      // Select the oldest holding room booking
-      const booking = holdingRoomBookings.reduce((min, b) => {
-        const minId = parseInt(min.bookingId) || 999999;
-        const bId = parseInt(b.bookingId) || 999999;
-        return bId < minId ? b : min;
-      }, holdingRoomBookings[0]);
-      
-      selectBooking(booking, 'Holding Room');
-    }
-    
-    // ================================
-    // BOOKING SELECTION
-    // ================================
-    function selectBooking(booking, roomName) {
-      // Clear previous selection
-      document.querySelectorAll('.grid-cell.selected').forEach(c => c.classList.remove('selected'));
-      
-      // Highlight selected cells
-      if (booking.date !== '2030-01-01') {
-        const roomKey = getRoomKey(booking);
-        if (roomKey) {
-          const startHour = parseInt(booking.start.split(':')[0]);
-          const endHour = parseInt(booking.end.split(':')[0]);
-          
-          for (let hour = startHour; hour < endHour; hour++) {
-            const timeStr = `${String(hour).padStart(2, '0')}:00`;
-            const cell = document.getElementById(`cell-${roomKey}-${timeStr}`);
-            if (cell) cell.classList.add('selected');
-          }
-        }
-      }
-      
-      selectedBooking = booking;
-      showBookingForm(booking, roomName);
-      expandMobilePanel(); // Expand panel on mobile when booking selected
-    }
-    
-    function showBookingForm(booking, roomName) {
-      document.getElementById('noSelection').style.display = 'none';
-      document.getElementById('bookingForm').style.display = 'block';
-      
-      document.getElementById('displayCounsellor').textContent = booking.client || '-';
-      document.getElementById('displayCode').textContent = booking.bookingId || '-';
-      document.getElementById('displayRoom').textContent = roomName;
-      document.getElementById('displayDate').textContent = booking.date === '2030-01-01' ? 'Holding Room' : booking.date;
-      document.getElementById('displayTime').textContent = `${booking.start} - ${booking.end}`;
-      document.getElementById('displayPayment').textContent = booking.isPaid ? '💳 Paid' : '📝 Unpaid';
-      
-      // Clear form fields
-      document.getElementById('newRoom').value = '';
-      document.getElementById('newDate').value = '';
-      document.getElementById('newTime').value = '';
-      
-      clearStatus();
-    }
-    
-    function resetForm() {
-      selectedBooking = null;
-      document.getElementById('noSelection').style.display = 'block';
-      document.getElementById('bookingForm').style.display = 'none';
-      document.querySelectorAll('.grid-cell.selected').forEach(c => c.classList.remove('selected'));
-    }
-    
-    // ================================
-    // BOOKING MODIFICATION
-    // ================================
-    async function submitChange() {
-      if (!selectedBooking) {
-        showStatus('Please select a booking first', 'error');
-        return;
-      }
-      
-      const newRoom = document.getElementById('newRoom').value;
-      const newDate = document.getElementById('newDate').value;
-      const newTime = document.getElementById('newTime').value;
-      
-      if (!newRoom && !newDate && !newTime) {
-        showStatus('Please specify at least one change', 'error');
-        return;
-      }
-      
-      const submitBtn = document.getElementById('submitBtn');
-      submitBtn.disabled = true;
-      submitBtn.textContent = 'Processing...';
-      showStatus('Sending change request...', 'info');
-      
-      try {
-        const counsellorId = selectedBooking.clientId || '6';
-        const originalRoomKey = getRoomKey(selectedBooking) || 'Room_1';
-        const originalRoom = originalRoomKey;
+        const monthCount = activeBookings.filter(b => {
+          const bookingDate = new Date(b.date + 'T12:00:00');
+          return bookingDate >= monthStart && bookingDate <= monthEnd;
+        }).length;
         
-        let requestedRoom = originalRoom;
-        if (newRoom) {
-          // Convert display name to key
-          const roomEntry = enabledRooms.find(r => r.displayName === newRoom);
-          if (roomEntry) {
-            requestedRoom = roomEntry.key;
-          }
-        }
-        
-        const payload = {
-          timestamp: new Date().toISOString(),
-          action: 'modify',
-          counsellor_id: counsellorId,
-          original_booking_code: selectedBooking.bookingId,
-          original_room: originalRoom,
-          original_room_id: ROOM_ID_MAPPING[originalRoom] || '3',
-          original_location_id: getLocationId(originalRoom),
-          original_datetime: `${selectedBooking.date}T${selectedBooking.start}:00`,
-          requested_room: requestedRoom,
-          requested_room_id: ROOM_ID_MAPPING[requestedRoom] || '3',
-          requested_location_id: getLocationId(requestedRoom),
-          requested_datetime: `${newDate || selectedBooking.date}T${newTime || selectedBooking.start}:00`,
-          service_id: '2',
-          is_paid: selectedBooking.isPaid ? 'True' : 'No',
-          admin_override: 'true'
-        };
-        
-        const response = await fetch(WEBHOOK_URL, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload)
-        });
-        
-        if (!response.ok) throw new Error('Server error');
-        
-        showStatus('Change submitted successfully!', 'success');
-        setTimeout(() => { resetForm(); refreshData(); }, 2000);
+        // Update display
+        document.getElementById('todayBookings').textContent = todayCount;
+        document.getElementById('weekBookings').textContent = weekCount;
+        document.getElementById('monthBookings').textContent = monthCount;
+        document.getElementById('holdingCount').textContent = holdingBookings.length;
         
       } catch (error) {
-        showStatus(`Error: ${error.message}`, 'error');
-      }
-      
-      submitBtn.disabled = false;
-      submitBtn.textContent = 'Submit Change';
-    }
-    
-    async function cancelBooking() {
-      if (!selectedBooking) return;
-      
-      if (!confirm(`Cancel this booking?\n\n${selectedBooking.client}\n${selectedBooking.date} ${selectedBooking.start}`)) {
-        return;
-      }
-      
-      const cancelBtn = document.getElementById('cancelBtn');
-      cancelBtn.disabled = true;
-      showStatus('Processing cancellation...', 'info');
-      
-      try {
-        const counsellorId = selectedBooking.clientId || '6';
-        const roomKey = getRoomKey(selectedBooking) || 'Room_1';
-        
-        let payload;
-        if (selectedBooking.isPaid) {
-          // Move to holding room
-          payload = {
-            timestamp: new Date().toISOString(),
-            action: 'modify',
-            counsellor_id: counsellorId,
-            original_booking_code: selectedBooking.bookingId,
-            original_room: roomKey,
-            original_room_id: ROOM_ID_MAPPING[roomKey] || '3',
-            original_location_id: getLocationId(roomKey),
-            original_datetime: `${selectedBooking.date}T${selectedBooking.start}:00`,
-            requested_room: 'Henley_Holding_Room',
-            requested_room_id: '18',
-            requested_location_id: '2',
-            requested_datetime: `2030-01-01T${selectedBooking.start}:00`,
-            service_id: '2',
-            is_paid: 'True',
-            admin_override: 'true'
-          };
-        } else {
-          // Cancel directly
-          payload = {
-            timestamp: new Date().toISOString(),
-            action: 'cancel',
-            counsellor_id: counsellorId,
-            booking_code: selectedBooking.bookingId,
-            original_datetime: `${selectedBooking.date}T${selectedBooking.start}:00`,
-            original_room: roomKey,
-            service_id: '2',
-            is_paid: 'No',
-            admin_override: 'true'
-          };
-        }
-        
-        const response = await fetch(WEBHOOK_URL, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload)
-        });
-        
-        if (!response.ok) throw new Error('Server error');
-        
-        showStatus('Booking cancelled!', 'success');
-        setTimeout(() => { resetForm(); refreshData(); }, 2000);
-        
-      } catch (error) {
-        showStatus(`Error: ${error.message}`, 'error');
-      }
-      
-      cancelBtn.disabled = false;
-    }
-    
-    // ================================
-    // UTILITIES
-    // ================================
-    function getLocationId(roomKey) {
-      return (roomKey === 'Online') ? '1' : '2';
-    }
-    
-    function showStatus(message, type) {
-      const el = document.getElementById('statusMessage');
-      el.textContent = message;
-      el.className = `status-message ${type}`;
-    }
-    
-    function clearStatus() {
-      document.getElementById('statusMessage').className = 'status-message';
-    }
-    
-    // ================================
-    // MOBILE PANEL TOGGLE
-    // ================================
-    function initMobilePanel() {
-      const formPanel = document.querySelector('.form-panel');
-      const formHeader = document.querySelector('.form-header');
-      
-      if (!formPanel || !formHeader) return;
-      
-      // Toggle panel on header click (mobile only)
-      formHeader.addEventListener('click', function(e) {
-        if (window.innerWidth <= 768) {
-          formPanel.classList.toggle('expanded');
-        }
-      });
-      
-      // Collapse panel when clicking outside (mobile only)
-      document.addEventListener('click', function(e) {
-        if (window.innerWidth <= 768) {
-          if (!formPanel.contains(e.target) && formPanel.classList.contains('expanded')) {
-            formPanel.classList.remove('expanded');
-          }
-        }
-      });
-    }
-    
-    // Expand panel when booking selected (mobile)
-    function expandMobilePanel() {
-      if (window.innerWidth <= 768) {
-        const formPanel = document.querySelector('.form-panel');
-        if (formPanel) {
-          formPanel.classList.add('expanded');
-        }
+        console.error('Error loading stats:', error);
       }
     }
-    
-    // Initialize mobile panel on load
-    document.addEventListener('DOMContentLoaded', initMobilePanel);
   </script>
 </body>
 </html>
