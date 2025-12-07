@@ -543,6 +543,18 @@
       height: 18px;
       border-radius: 2px;
       background: #e8e8e8;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    
+    .time-slot.has-conflict {
+      box-shadow: 0 0 0 1px #dc3545;
+    }
+    
+    .time-slot-segment {
+      flex: 1;
+      min-height: 6px;
     }
     
     .counsellor-stats {
@@ -800,6 +812,10 @@
         height: 14px;
       }
       
+      .time-slot-segment {
+        min-height: 4px;
+      }
+      
       .counsellor-stats {
         gap: 8px;
       }
@@ -1045,6 +1061,10 @@
       
       .time-slot {
         height: 14px;
+      }
+      
+      .time-slot-segment {
+        min-height: 4px;
       }
       
       .counsellor-stat {
@@ -1862,7 +1882,7 @@
             name: name,
             bookings: [],
             totalHours: 0,
-            timeSlots: {} // hour -> room info
+            timeSlots: {} // hour -> array of room infos
           };
         }
         
@@ -1878,9 +1898,16 @@
           roomInfo = enabledRooms.find(r => r.key === 'Online');
         }
         
-        // Track time slots with room colour
+        // Track time slots with room colour - now as array to support multiple bookings
         for (let h = startHour; h < endHour; h++) {
-          counsellorMap[name].timeSlots[h] = roomInfo;
+          if (!counsellorMap[name].timeSlots[h]) {
+            counsellorMap[name].timeSlots[h] = [];
+          }
+          // Only add if this room isn't already in the array for this hour
+          const roomKey = roomInfo ? roomInfo.key : 'unknown';
+          if (!counsellorMap[name].timeSlots[h].find(r => r && r.key === roomKey)) {
+            counsellorMap[name].timeSlots[h].push(roomInfo);
+          }
         }
       });
       
@@ -1917,9 +1944,28 @@
         // Build time bar (8am-8pm = 13 slots) with room colours
         let timeBarHtml = '';
         for (let h = 8; h <= 20; h++) {
-          const roomInfo = counsellor.timeSlots[h];
-          if (roomInfo) {
-            timeBarHtml += `<div class="time-slot" style="background: ${roomInfo.color}; border: 1px solid ${roomInfo.borderColor};" title="${h}:00 - ${roomInfo.name}"></div>`;
+          const roomInfos = counsellor.timeSlots[h];
+          if (roomInfos && roomInfos.length > 0) {
+            if (roomInfos.length === 1) {
+              // Single booking
+              const roomInfo = roomInfos[0];
+              if (roomInfo) {
+                timeBarHtml += `<div class="time-slot" style="background: ${roomInfo.color}; border: 1px solid ${roomInfo.borderColor};" title="${h}:00 - ${roomInfo.name}"></div>`;
+              } else {
+                timeBarHtml += `<div class="time-slot" style="background: #ccc;" title="${h}:00 - Unknown"></div>`;
+              }
+            } else {
+              // Multiple bookings - stack them
+              const roomNames = roomInfos.map(r => r ? r.name : 'Unknown').join(' + ');
+              let segmentsHtml = roomInfos.map(roomInfo => {
+                if (roomInfo) {
+                  return `<div class="time-slot-segment" style="background: ${roomInfo.color};"></div>`;
+                } else {
+                  return `<div class="time-slot-segment" style="background: #ccc;"></div>`;
+                }
+              }).join('');
+              timeBarHtml += `<div class="time-slot has-conflict" title="${h}:00 - ${roomNames}">${segmentsHtml}</div>`;
+            }
           } else {
             timeBarHtml += `<div class="time-slot" title="${h}:00"></div>`;
           }
