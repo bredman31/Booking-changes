@@ -582,13 +582,559 @@
     
     /* Dynamic room colours */
     #dynamicStyles {}
+    
+    /* ================================ */
+    /* MOBILE STYLES                    */
+    /* ================================ */
+    @media (max-width: 768px) {
+      html, body {
+        height: auto;
+        overflow: auto;
+      }
+      
+      .admin-header {
+        padding: 8px 12px;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+      
+      .header-left {
+        gap: 10px;
+      }
+      
+      .header-left h1 {
+        font-size: 14px;
+      }
+      
+      .back-link {
+        font-size: 11px;
+      }
+      
+      .main-content {
+        padding: 8px;
+        gap: 8px;
+      }
+      
+      /* Date Controls */
+      .date-controls {
+        padding: 8px 10px;
+      }
+      
+      .controls-row {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 8px;
+      }
+      
+      .quick-select {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 4px;
+      }
+      
+      .quick-btn {
+        padding: 8px 4px;
+        font-size: 11px;
+      }
+      
+      .refresh-btn {
+        width: 100%;
+        padding: 8px;
+        margin-left: 0;
+      }
+      
+      #customDateRange {
+        flex-direction: column !important;
+        gap: 6px !important;
+      }
+      
+      #customDateRange input[type="date"] {
+        width: 100%;
+      }
+      
+      /* Navigation */
+      .navigation-row {
+        flex-wrap: wrap;
+        gap: 6px;
+        justify-content: center;
+      }
+      
+      .nav-btn {
+        min-width: 80px;
+        padding: 6px 8px;
+        font-size: 10px;
+      }
+      
+      .period-display {
+        min-width: 100%;
+        order: -1;
+        margin-bottom: 4px;
+      }
+      
+      .period-value {
+        font-size: 14px;
+      }
+      
+      .today-btn {
+        padding: 6px 12px;
+      }
+      
+      /* Summary Strip */
+      .summary-strip {
+        padding: 8px 12px;
+        gap: 8px;
+        justify-content: space-around;
+      }
+      
+      .summary-item .number {
+        font-size: 16px;
+      }
+      
+      .summary-item .label {
+        font-size: 8px;
+      }
+      
+      .summary-divider {
+        height: 24px;
+      }
+      
+      /* Charts Grid - Stack vertically */
+      .charts-grid {
+        grid-template-columns: 1fr;
+        gap: 8px;
+      }
+      
+      .section-container {
+        min-height: 250px;
+      }
+      
+      .section-header {
+        font-size: 12px;
+        padding: 8px 10px;
+      }
+      
+      .section-body {
+        padding: 8px;
+      }
+      
+      /* Bar Chart */
+      .bar-chart-container {
+        min-height: 250px;
+      }
+      
+      /* Heat Map */
+      .heatmap-container {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+      }
+      
+      .heatmap-header-cell {
+        width: 36px;
+        font-size: 9px;
+      }
+      
+      .heatmap-cell {
+        width: 34px;
+        height: 20px;
+        font-size: 8px;
+      }
+      
+      .heatmap-time {
+        font-size: 9px;
+        width: 40px;
+      }
+      
+      .heatmap-total-cell {
+        width: 34px;
+        height: 24px;
+        font-size: 9px;
+      }
+      
+      .heatmap-legend {
+        flex-wrap: wrap;
+        gap: 8px;
+        font-size: 9px;
+      }
+      
+      .legend-box {
+        width: 12px;
+        height: 12px;
+      }
+      
+      /* Counsellor Cards */
+      .counsellor-summary {
+        justify-content: space-around;
+        padding: 6px 8px;
+      }
+      
+      .counsellor-summary .stat-num {
+        font-size: 16px;
+      }
+      
+      .counsellor-card {
+        flex-wrap: wrap;
+        padding: 6px;
+        gap: 6px;
+      }
+      
+      .counsellor-avatar {
+        width: 24px;
+        height: 24px;
+        font-size: 8px;
+      }
+      
+      .counsellor-name {
+        width: auto;
+        flex: 1;
+        font-size: 11px;
+        min-width: 80px;
+      }
+      
+      .counsellor-time-bar {
+        order: 3;
+        width: 100%;
+        gap: 1px;
+      }
+      
+      .time-slot {
+        height: 14px;
+      }
+      
+      .counsellor-stats {
+        gap: 8px;
+      }
+      
+      .counsellor-stat {
+        min-width: 24px;
+      }
+      
+      .counsellor-stat-value {
+        font-size: 11px;
+      }
+      
+      /* Daily Table */
+      .data-table {
+        font-size: 10px;
+      }
+      
+      .data-table th,
+      .data-table td {
+        padding: 5px 4px;
+      }
+    }
+    
+    /* Extra small screens */
+    @media (max-width: 480px) {
+      .summary-strip {
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 12px;
+      }
+      
+      .summary-divider {
+        display: none;
+      }
+      
+      .summary-item {
+        min-width: 60px;
+      }
+      
+      .nav-btn span {
+        display: none;
+      }
+      
+      .nav-btn::before {
+        content: '←';
+      }
+      
+      #nextBtn::before {
+        content: '';
+      }
+      
+      #nextBtn::after {
+        content: '→';
+      }
+    }
+    
+    /* ================================
+       MOBILE RESPONSIVE STYLES
+       ================================ */
+    @media (max-width: 768px) {
+      /* Header */
+      .admin-header {
+        padding: 8px 12px;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+      
+      .header-left {
+        gap: 10px;
+      }
+      
+      .header-left h1 {
+        font-size: 14px;
+      }
+      
+      .back-link {
+        font-size: 11px;
+      }
+      
+      /* Main content */
+      .main-content {
+        padding: 8px 10px;
+        gap: 8px;
+      }
+      
+      /* Date controls */
+      .date-controls {
+        padding: 8px 10px;
+      }
+      
+      .controls-row {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 8px;
+      }
+      
+      .controls-row label {
+        display: none;
+      }
+      
+      .quick-select {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 4px;
+      }
+      
+      .quick-btn {
+        padding: 8px 4px;
+        font-size: 11px;
+      }
+      
+      .refresh-btn {
+        width: 100%;
+        padding: 8px;
+        margin-left: 0;
+      }
+      
+      #customDateRange {
+        flex-direction: column !important;
+        gap: 6px !important;
+      }
+      
+      #customDateRange input {
+        width: 100%;
+      }
+      
+      /* Navigation row */
+      .navigation-row {
+        flex-wrap: wrap;
+        gap: 6px;
+        padding-top: 6px;
+        margin-top: 6px;
+      }
+      
+      .nav-btn {
+        min-width: 80px;
+        padding: 6px 8px;
+        font-size: 10px;
+      }
+      
+      .period-display {
+        min-width: 100%;
+        order: -1;
+        margin-bottom: 4px;
+      }
+      
+      .period-value {
+        font-size: 14px;
+      }
+      
+      .period-dates {
+        font-size: 11px;
+      }
+      
+      .today-btn {
+        position: absolute;
+        right: 10px;
+        top: 8px;
+      }
+      
+      /* Summary strip */
+      .summary-strip {
+        padding: 8px 12px;
+        justify-content: space-around;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+      
+      .summary-item .number {
+        font-size: 16px;
+      }
+      
+      .summary-item .label {
+        font-size: 8px;
+      }
+      
+      .summary-divider {
+        display: none;
+      }
+      
+      /* Charts grid - stack vertically */
+      .charts-grid {
+        grid-template-columns: 1fr;
+        gap: 8px;
+      }
+      
+      .section-container {
+        min-height: auto;
+      }
+      
+      .section-header {
+        font-size: 12px;
+        padding: 8px 10px;
+      }
+      
+      .section-body {
+        padding: 8px;
+      }
+      
+      /* Bar chart */
+      .bar-chart-container {
+        min-height: 180px;
+      }
+      
+      /* Counsellor day view */
+      .counsellor-summary {
+        padding: 6px 8px;
+        gap: 8px;
+        justify-content: space-around;
+      }
+      
+      .counsellor-summary .stat-num {
+        font-size: 16px;
+      }
+      
+      .counsellor-card {
+        flex-wrap: wrap;
+        padding: 6px;
+        gap: 6px;
+      }
+      
+      .counsellor-avatar {
+        width: 24px;
+        height: 24px;
+        font-size: 8px;
+      }
+      
+      .counsellor-name {
+        width: auto;
+        flex: 1;
+        font-size: 11px;
+      }
+      
+      .counsellor-stats {
+        order: 1;
+      }
+      
+      .counsellor-time-bar {
+        width: 100%;
+        order: 2;
+        gap: 1px;
+      }
+      
+      .time-slot {
+        height: 14px;
+      }
+      
+      .counsellor-stat {
+        min-width: 24px;
+      }
+      
+      .counsellor-stat-value {
+        font-size: 11px;
+      }
+      
+      /* Heat map */
+      .heatmap-container {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+      }
+      
+      .heatmap-grid {
+        min-width: 320px;
+      }
+      
+      .heatmap-header-cell {
+        width: 36px;
+        font-size: 9px;
+      }
+      
+      .heatmap-time {
+        width: 38px;
+        font-size: 9px;
+      }
+      
+      .heatmap-cell {
+        width: 34px;
+        height: 20px;
+        font-size: 8px;
+      }
+      
+      .heatmap-total-cell {
+        width: 34px;
+        height: 24px;
+        font-size: 9px;
+      }
+      
+      .heatmap-legend {
+        flex-wrap: wrap;
+        gap: 8px;
+        font-size: 9px;
+      }
+      
+      .legend-box {
+        width: 12px;
+        height: 12px;
+      }
+      
+      /* Daily table */
+      .data-table {
+        font-size: 10px;
+      }
+      
+      .data-table th,
+      .data-table td {
+        padding: 5px 4px;
+      }
+    }
+    
+    /* Extra small screens */
+    @media (max-width: 480px) {
+      .admin-header h1 {
+        font-size: 12px;
+      }
+      
+      .summary-item .number {
+        font-size: 14px;
+      }
+      
+      .counsellor-name {
+        font-size: 10px;
+      }
+      
+      .nav-btn {
+        min-width: 70px;
+        font-size: 9px;
+      }
+    }
   </style>
   <style id="dynamicStyles"></style>
 </head>
 <body>
   <header class="admin-header">
     <div class="header-left">
-      <a href="index.html" class="back-link">← Admin Portal</a>
+      <a href="admin-index.html" class="back-link">← Admin Portal</a>
       <h1>📊 Reports & Analytics</h1>
     </div>
   </header>
