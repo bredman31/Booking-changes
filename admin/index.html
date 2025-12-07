@@ -3,349 +3,462 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Cherry Tree Centre - Admin Portal</title>
+  <title>Cherry Tree Centre - Admin Panel</title>
   
-  <!-- Firebase -->
+  <!-- Firebase Scripts -->
   <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-database-compat.js"></script>
   
   <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
-    
     body {
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #f5f5f5;
     }
     
-    /* Login Screen */
-    .login-screen {
-      flex: 1;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 20px;
-    }
-    
-    .login-box {
-      background: rgba(255, 255, 255, 0.95);
-      padding: 40px;
-      border-radius: 16px;
-      box-shadow: 0 25px 50px rgba(0, 0, 0, 0.3);
-      max-width: 400px;
-      width: 100%;
-      text-align: center;
-    }
-    
-    .login-box h1 {
-      color: #1a1a2e;
-      margin-bottom: 8px;
-      font-size: 24px;
-    }
-    
-    .login-box .subtitle {
-      color: #666;
-      margin-bottom: 30px;
-      font-size: 14px;
-    }
-    
-    .pin-input-container {
-      display: flex;
-      gap: 10px;
-      justify-content: center;
-      margin-bottom: 20px;
-    }
-    
-    .pin-digit {
-      width: 50px;
-      height: 60px;
-      font-size: 24px;
-      text-align: center;
-      border: 2px solid #ddd;
-      border-radius: 8px;
-      transition: all 0.2s;
-    }
-    
-    .pin-digit:focus {
-      border-color: #0f3460;
-      outline: none;
-      box-shadow: 0 0 0 3px rgba(15, 52, 96, 0.2);
-    }
-    
-    .login-btn {
-      background: #0f3460;
+    .header {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
       color: white;
-      border: none;
-      padding: 14px 40px;
-      font-size: 16px;
-      border-radius: 8px;
-      cursor: pointer;
-      transition: all 0.2s;
-      width: 100%;
-    }
-    
-    .login-btn:hover {
-      background: #1a1a2e;
-      transform: translateY(-2px);
-    }
-    
-    .login-btn:disabled {
-      background: #ccc;
-      cursor: not-allowed;
-      transform: none;
-    }
-    
-    .login-error {
-      color: #dc3545;
-      margin-top: 15px;
-      font-size: 14px;
-      display: none;
-    }
-    
-    .login-error.show {
-      display: block;
-      animation: shake 0.5s;
-    }
-    
-    @keyframes shake {
-      0%, 100% { transform: translateX(0); }
-      25% { transform: translateX(-10px); }
-      75% { transform: translateX(10px); }
-    }
-    
-    /* Admin Dashboard */
-    .admin-container {
-      display: none;
-      flex-direction: column;
-      min-height: 100vh;
-    }
-    
-    .admin-container.active {
-      display: flex;
-    }
-    
-    .admin-header {
-      background: rgba(255, 255, 255, 0.95);
       padding: 20px 30px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    
+    .header h1 {
+      margin: 0 0 5px 0;
+      font-size: 24px;
+    }
+    
+    .header p {
+      margin: 0;
+      opacity: 0.9;
+      font-size: 14px;
+    }
+    
+    .controls-bar {
+      background: white;
+      padding: 15px 30px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.05);
       display: flex;
       justify-content: space-between;
       align-items: center;
-      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      flex-wrap: wrap;
+      gap: 15px;
     }
     
-    .admin-header h1 {
-      color: #1a1a2e;
-      font-size: 22px;
+    .control-group {
+      display: flex;
+      align-items: center;
+      gap: 10px;
     }
     
-    .admin-header .logout-btn {
-      background: #dc3545;
+    .control-group label {
+      font-weight: bold;
+      color: #333;
+    }
+    
+    select, button {
+      padding: 10px 15px;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      font-size: 14px;
+      cursor: pointer;
+    }
+    
+    select {
+      min-width: 200px;
+      background: white;
+    }
+    
+    button {
+      background: #667eea;
       color: white;
       border: none;
-      padding: 10px 20px;
-      border-radius: 6px;
-      cursor: pointer;
-      font-size: 14px;
-      transition: background 0.2s;
+      font-weight: bold;
+      transition: background 0.3s;
     }
     
-    .admin-header .logout-btn:hover {
-      background: #c82333;
+    button:hover {
+      background: #5568d3;
     }
     
-    .admin-content {
-      flex: 1;
-      padding: 40px;
+    .settings-btn {
+      background: #48bb78;
     }
     
-    .dashboard-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-      gap: 25px;
-      max-width: 1200px;
+    .settings-btn:hover {
+      background: #38a169;
+    }
+    
+    .refresh-btn {
+      background: #4299e1;
+    }
+    
+    .refresh-btn:hover {
+      background: #3182ce;
+    }
+    
+    .calendar-container {
+      padding: 20px 30px;
+      max-width: 1400px;
       margin: 0 auto;
     }
     
-    .dashboard-card {
-      background: rgba(255, 255, 255, 0.95);
-      border-radius: 12px;
-      padding: 30px;
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
-      transition: all 0.3s;
-      text-decoration: none;
-      color: inherit;
-      display: block;
+    .info-card {
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.05);
     }
     
-    .dashboard-card:hover {
-      transform: translateY(-5px);
-      box-shadow: 0 15px 40px rgba(0, 0, 0, 0.2);
+    .info-card h3 {
+      margin: 0 0 10px 0;
+      color: #667eea;
     }
     
-    .card-icon {
-      width: 60px;
-      height: 60px;
-      border-radius: 12px;
+    .week-navigation {
       display: flex;
       align-items: center;
-      justify-content: center;
-      font-size: 28px;
+      gap: 15px;
       margin-bottom: 20px;
     }
     
-    .card-icon.day { background: #e3f2fd; }
-    .card-icon.week { background: #f3e5f5; }
-    .card-icon.reports { background: #e8f5e9; }
-    .card-icon.rooms { background: #fff3e0; }
-    
-    .dashboard-card h2 {
-      color: #1a1a2e;
-      font-size: 20px;
-      margin-bottom: 10px;
-    }
-    
-    .dashboard-card p {
-      color: #666;
-      font-size: 14px;
-      line-height: 1.5;
-    }
-    
-    .card-arrow {
-      margin-top: 20px;
-      color: #0f3460;
-      font-size: 14px;
-      font-weight: 600;
-    }
-    
-    /* Quick Stats */
-    .quick-stats {
-      max-width: 1200px;
-      margin: 0 auto 40px auto;
-    }
-    
-    .quick-stats h3 {
-      color: white;
-      margin-bottom: 20px;
-      font-weight: 500;
-    }
-    
-    .stats-row {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 20px;
-    }
-    
-    .stat-box {
-      background: rgba(255, 255, 255, 0.1);
-      border-radius: 10px;
-      padding: 20px;
-      text-align: center;
-      backdrop-filter: blur(10px);
-    }
-    
-    .stat-box .number {
-      font-size: 36px;
+    .week-display {
       font-weight: bold;
+      font-size: 16px;
+      color: #333;
+    }
+    
+    .calendar-grid {
+      display: grid;
+      grid-template-columns: 80px repeat(7, 1fr);
+      border: 1px solid #ddd;
+      background: white;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    }
+    
+    .grid-header {
+      background: #667eea;
       color: white;
-    }
-    
-    .stat-box .label {
-      color: rgba(255, 255, 255, 0.7);
-      font-size: 14px;
-      margin-top: 5px;
-    }
-    
-    /* Footer link back to main calendar */
-    .admin-footer {
-      background: rgba(0, 0, 0, 0.2);
-      padding: 15px 30px;
+      font-weight: bold;
+      padding: 10px;
       text-align: center;
+      border: 1px solid #5568d3;
+      font-size: 13px;
     }
     
-    .admin-footer a {
-      color: rgba(255, 255, 255, 0.7);
-      text-decoration: none;
+    .time-header {
+      background: #f7fafc;
+      font-weight: bold;
+      padding: 8px;
+      text-align: center;
+      border: 1px solid #e2e8f0;
+      font-size: 12px;
+      color: #4a5568;
+    }
+    
+    .grid-cell {
+      border: 1px solid #e2e8f0;
+      padding: 4px;
+      min-height: 40px;
+      font-size: 11px;
+      background: white;
+      position: relative;
+    }
+    
+    .grid-cell.booked {
+      border: 2px solid #333;
+    }
+    
+    .grid-cell.booked.room-1 { background: #d4a5a5; border-color: #b89090; }
+    .grid-cell.booked.room-2 { background: #b299d4; border-color: #9680c0; }
+    .grid-cell.booked.room-4 { background: #a5d4a5; border-color: #90b890; }
+    .grid-cell.booked.room-5 { background: #e57373; border-color: #d32f2f; }
+    .grid-cell.booked.room-6 { background: #c8a882; border-color: #b5946e; }
+    .grid-cell.booked.room-7 { background: #e6d45a; border-color: #d4c347; }
+    .grid-cell.booked.room-8 { background: #90caf9; border-color: #64b5f6; }
+    .grid-cell.booked.room-9 { background: #ce93d8; border-color: #ba68c8; }
+    .grid-cell.booked.online { background: #7dd87d; border-color: #6bc46b; }
+    
+    .booking-info {
+      font-weight: bold;
+      color: #2d3748;
+      margin-bottom: 2px;
+    }
+    
+    .booking-details {
+      color: #4a5568;
+      font-size: 10px;
+    }
+    
+    .status-message {
+      padding: 10px 15px;
+      border-radius: 5px;
+      margin-bottom: 15px;
       font-size: 14px;
     }
     
-    .admin-footer a:hover {
-      color: white;
+    .status-loading {
+      background: #bee3f8;
+      color: #2c5282;
+    }
+    
+    .status-success {
+      background: #c6f6d5;
+      color: #22543d;
+    }
+    
+    .status-error {
+      background: #fed7d7;
+      color: #742a2a;
+    }
+    
+    .legend {
+      display: flex;
+      gap: 20px;
+      flex-wrap: wrap;
+      margin-top: 20px;
+      padding: 15px;
+      background: #f7fafc;
+      border-radius: 5px;
+    }
+    
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .legend-color {
+      width: 30px;
+      height: 20px;
+      border: 2px solid #333;
+      border-radius: 3px;
+    }
+    
+    .hidden {
+      display: none;
+    }
+    
+    /* ================================ */
+    /* MOBILE STYLES                    */
+    /* ================================ */
+    @media (max-width: 768px) {
+      .header {
+        padding: 15px;
+      }
+      
+      .header h1 {
+        font-size: 18px;
+      }
+      
+      .header p {
+        font-size: 12px;
+      }
+      
+      .controls-bar {
+        padding: 10px 15px;
+        flex-direction: column;
+        align-items: stretch;
+      }
+      
+      .control-group {
+        width: 100%;
+        flex-wrap: wrap;
+      }
+      
+      .control-group label {
+        width: 100%;
+        margin-bottom: 5px;
+        font-size: 13px;
+      }
+      
+      select {
+        width: 100%;
+        min-width: auto;
+        padding: 10px;
+      }
+      
+      button {
+        width: 100%;
+        padding: 12px;
+      }
+      
+      .calendar-container {
+        padding: 10px;
+        overflow-x: auto;
+      }
+      
+      .calendar-header {
+        flex-direction: column;
+        gap: 10px;
+        text-align: center;
+      }
+      
+      .calendar-header h2 {
+        font-size: 16px;
+      }
+      
+      .nav-buttons {
+        justify-content: center;
+      }
+      
+      .nav-buttons button {
+        width: auto;
+        padding: 8px 15px;
+        font-size: 13px;
+      }
+      
+      /* Calendar grid */
+      .day-view-grid,
+      .week-view-grid {
+        min-width: 600px;
+        font-size: 12px;
+      }
+      
+      .time-column {
+        min-width: 50px;
+      }
+      
+      .room-column,
+      .day-column {
+        min-width: 70px;
+      }
+      
+      .grid-header {
+        padding: 8px 4px;
+        font-size: 11px;
+      }
+      
+      .time-cell {
+        padding: 4px;
+        font-size: 10px;
+      }
+      
+      .booking-cell {
+        font-size: 10px;
+        padding: 4px;
+      }
+      
+      /* Stats panel */
+      .stats-panel {
+        flex-direction: column;
+      }
+      
+      .stat-card {
+        text-align: center;
+      }
+      
+      /* Legend */
+      .room-legend {
+        padding: 10px;
+        gap: 10px;
+        justify-content: center;
+      }
+      
+      .legend-item {
+        font-size: 11px;
+      }
+      
+      .legend-color {
+        width: 20px;
+        height: 14px;
+      }
+    }
+    
+    @media (max-width: 480px) {
+      .header h1 {
+        font-size: 16px;
+      }
+      
+      .day-view-grid,
+      .week-view-grid {
+        min-width: 500px;
+      }
     }
   </style>
 </head>
 <body>
-  <!-- Admin Dashboard - No login required during testing -->
-  <div class="admin-container active" id="adminContainer">
-    <header class="admin-header">
-      <h1>🌳 Cherry Tree Centre - Admin Portal</h1>
-      <button class="logout-btn" onclick="logout()">Logout</button>
-    </header>
+  <!-- Admin Content - Now shown directly without auth check -->
+  <div id="adminContent">
+    <div class="header">
+      <h1>🔧 Cherry Tree Centre - Admin Panel</h1>
+      <p>Administrative view of counselor bookings</p>
+    </div>
     
-    <main class="admin-content">
-      <!-- Quick Stats -->
-      <div class="quick-stats">
-        <h3>Today's Overview</h3>
-        <div class="stats-row">
-          <div class="stat-box">
-            <div class="number" id="todayBookings">-</div>
-            <div class="label">Bookings Today</div>
-          </div>
-          <div class="stat-box">
-            <div class="number" id="weekBookings">-</div>
-            <div class="label">This Week</div>
-          </div>
-          <div class="stat-box">
-            <div class="number" id="monthBookings">-</div>
-            <div class="label">This Month</div>
-          </div>
-          <div class="stat-box">
-            <div class="number" id="holdingCount">-</div>
-            <div class="label">In Holding Room</div>
-          </div>
-        </div>
+    <div class="controls-bar">
+      <div class="control-group">
+        <label for="counsellorSelect">Select Counselor:</label>
+        <select id="counsellorSelect" onchange="changeCounsellor()">
+          <option value="">-- Choose a Counselor --</option>
+        </select>
       </div>
       
-      <!-- Navigation Cards -->
-      <div class="dashboard-grid">
-        <a href="admin-day.html" class="dashboard-card">
-          <div class="card-icon day">📅</div>
-          <h2>Day View</h2>
-          <p>Full daily calendar showing all rooms and counsellors. Modify any booking across all therapists.</p>
-          <div class="card-arrow">Open Day View →</div>
-        </a>
-        
-        <a href="admin-week.html" class="dashboard-card">
-          <div class="card-icon week">📆</div>
-          <h2>Counsellor Week View</h2>
-          <p>View and manage a specific counsellor's full weekly schedule. Select from dropdown to focus on one therapist.</p>
-          <div class="card-arrow">Open Week View →</div>
-        </a>
-        
-        <a href="admin-reports.html" class="dashboard-card">
-          <div class="card-icon reports">📊</div>
-          <h2>Reports & Statistics</h2>
-          <p>Booking counts, room utilisation rates, and usage trends. Filter by day, week, or month.</p>
-          <div class="card-arrow">View Reports →</div>
-        </a>
-        
-        <a href="admin-rooms.html" class="dashboard-card">
-          <div class="card-icon rooms">🚪</div>
-          <h2>Room Configuration</h2>
-          <p>Enable/disable rooms, set display colours, manage room availability across the booking system.</p>
-          <div class="card-arrow">Configure Rooms →</div>
-        </a>
+      <div class="control-group">
+        <button class="refresh-btn" onclick="refreshData()">🔄 Refresh Data</button>
+        <button class="settings-btn" onclick="goToSettings()">⚙️ Room Settings</button>
       </div>
-    </main>
+    </div>
     
-    <footer class="admin-footer">
-      <a href="../index.html">← Back to Main Booking Calendar</a>
-    </footer>
+    <div class="calendar-container">
+      <div id="statusMessage" class="status-message hidden"></div>
+      
+      <div class="info-card">
+        <h3 id="counsellorName">Select a counselor to view bookings</h3>
+        <p id="counsellorSummary"></p>
+      </div>
+      
+      <div class="week-navigation">
+        <button onclick="changeWeek(-1)">← Previous Week</button>
+        <span class="week-display" id="weekDisplay"></span>
+        <button onclick="changeWeek(1)">Next Week →</button>
+      </div>
+      
+      <div class="calendar-grid" id="calendarGrid">
+        <!-- Dynamic grid will be inserted here -->
+      </div>
+      
+      <div class="legend">
+        <div class="legend-item">
+          <div class="legend-color" style="background: #d4a5a5; border-color: #b89090;"></div>
+          <span>Room 1</span>
+        </div>
+        <div class="legend-item">
+          <div class="legend-color" style="background: #b299d4; border-color: #9680c0;"></div>
+          <span>Room 2</span>
+        </div>
+        <div class="legend-item">
+          <div class="legend-color" style="background: #a5d4a5; border-color: #90b890;"></div>
+          <span>Room 4</span>
+        </div>
+        <div class="legend-item">
+          <div class="legend-color" style="background: #e57373; border-color: #d32f2f;"></div>
+          <span>Room 5</span>
+        </div>
+        <div class="legend-item">
+          <div class="legend-color" style="background: #c8a882; border-color: #b5946e;"></div>
+          <span>Room 6</span>
+        </div>
+        <div class="legend-item">
+          <div class="legend-color" style="background: #e6d45a; border-color: #d4c347;"></div>
+          <span>Room 7</span>
+        </div>
+        <div class="legend-item">
+          <div class="legend-color" style="background: #90caf9; border-color: #64b5f6;"></div>
+          <span>Room 8</span>
+        </div>
+        <div class="legend-item">
+          <div class="legend-color" style="background: #ce93d8; border-color: #ba68c8;"></div>
+          <span>Room 9</span>
+        </div>
+        <div class="legend-item">
+          <div class="legend-color" style="background: #7dd87d; border-color: #6bc46b;"></div>
+          <span>Online</span>
+        </div>
+      </div>
+    </div>
   </div>
   
   <script>
@@ -363,128 +476,273 @@
     firebase.initializeApp(firebaseConfig);
     const database = firebase.database();
     
-    // PIN input handling - DISABLED FOR TESTING
+    // Global variables
+    let bookingData = [];
+    let selectedCounsellor = '';
+    let currentWeekStart = new Date();
+    const businessHours = Array.from({length: 13}, (_, i) => `${String(i + 8).padStart(2, '0')}:00`);
     
-    // Check if already authenticated - DISABLED FOR TESTING
-    document.addEventListener('DOMContentLoaded', () => {
-      // Skip authentication during testing
-      sessionStorage.setItem('adminAuth', 'true');
-      loadQuickStats();
-    });
+    // Set week to start on Monday
+    const today = new Date();
+    const dayOfWeek = today.getDay();
+    const daysToSubtract = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+    currentWeekStart = new Date(today);
+    currentWeekStart.setDate(today.getDate() - daysToSubtract);
+    currentWeekStart.setHours(0, 0, 0, 0);
     
-    // Verify PIN against Firebase
-    async function verifyPin() {
-      const pin = Array.from(pinInputs).map(input => input.value).join('');
+    // Show status message
+    function showStatus(message, type) {
+      const statusDiv = document.getElementById('statusMessage');
+      statusDiv.textContent = message;
+      statusDiv.className = `status-message status-${type}`;
+      statusDiv.classList.remove('hidden');
       
-      if (pin.length !== 4) {
-        showError();
-        return;
+      if (type === 'success' || type === 'loading') {
+        setTimeout(() => {
+          statusDiv.classList.add('hidden');
+        }, 3000);
       }
-      
-      const loginBtn = document.getElementById('loginBtn');
-      loginBtn.disabled = true;
-      loginBtn.textContent = 'Verifying...';
-      
-      try {
-        const snapshot = await database.ref('config/admin_pin').once('value');
-        const storedPin = snapshot.val();
-        
-        if (pin === storedPin) {
-          sessionStorage.setItem('adminAuth', 'true');
-          showDashboard();
-        } else {
-          showError();
-          pinInputs.forEach(input => input.value = '');
-          pinInputs[0].focus();
-        }
-      } catch (error) {
-        console.error('PIN verification error:', error);
-        showError();
-      }
-      
-      loginBtn.disabled = false;
-      loginBtn.textContent = 'Enter Admin Portal';
     }
     
-    function showError() {
-      const errorEl = document.getElementById('loginError');
-      errorEl.classList.add('show');
+    // Load booking data
+    async function loadBookingData() {
+      showStatus('Loading booking data...', 'loading');
       
-      setTimeout(() => {
-        errorEl.classList.remove('show');
-      }, 3000);
-    }
-    
-    function showDashboard() {
-      document.getElementById('loginScreen').style.display = 'none';
-      document.getElementById('adminContainer').classList.add('active');
-      loadQuickStats();
-    }
-    
-    function logout() {
-      sessionStorage.removeItem('adminAuth');
-      location.reload();
-    }
-    
-    // Load quick statistics
-    async function loadQuickStats() {
       try {
         const snapshot = await database.ref('bookings').once('value');
-        const data = snapshot.val() || [];
-        const bookings = Array.isArray(data) ? data : Object.values(data);
+        const jsonData = snapshot.val() || [];
+        const bookingArray = Array.isArray(jsonData) ? jsonData : Object.values(jsonData);
         
-        // Filter active bookings (not cancelled, not in holding room for display purposes)
-        const activeBookings = bookings.filter(b => 
-          b.status !== 'cancelled' && 
-          b.status !== 'cancel' &&
-          b.date !== '2030-01-01'
+        // Filter out cancelled and holding room bookings
+        bookingData = bookingArray.filter(booking => 
+          booking.status !== 'cancelled' && 
+          booking.status !== 'cancel' &&
+          booking.room !== 'Henley_Holding_Room' && 
+          booking.room !== '18' &&
+          booking.date !== '2030-01-01'
         );
         
-        const holdingBookings = bookings.filter(b => 
-          b.status !== 'cancelled' && 
-          b.status !== 'cancel' &&
-          (b.room === 'Henley_Holding_Room' || b.room === '18' || b.date === '2030-01-01')
-        );
+        console.log(`Loaded ${bookingData.length} bookings`);
+        showStatus(`Loaded ${bookingData.length} bookings`, 'success');
         
-        const today = new Date().toISOString().split('T')[0];
-        const todayCount = activeBookings.filter(b => b.date === today).length;
-        
-        // This week (Monday to Sunday)
-        const now = new Date();
-        const dayOfWeek = now.getDay();
-        const mondayOffset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
-        const weekStart = new Date(now);
-        weekStart.setDate(now.getDate() + mondayOffset);
-        weekStart.setHours(0, 0, 0, 0);
-        
-        const weekEnd = new Date(weekStart);
-        weekEnd.setDate(weekStart.getDate() + 6);
-        weekEnd.setHours(23, 59, 59, 999);
-        
-        const weekCount = activeBookings.filter(b => {
-          const bookingDate = new Date(b.date + 'T12:00:00');
-          return bookingDate >= weekStart && bookingDate <= weekEnd;
-        }).length;
-        
-        // This month
-        const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
-        const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0);
-        
-        const monthCount = activeBookings.filter(b => {
-          const bookingDate = new Date(b.date + 'T12:00:00');
-          return bookingDate >= monthStart && bookingDate <= monthEnd;
-        }).length;
-        
-        // Update display
-        document.getElementById('todayBookings').textContent = todayCount;
-        document.getElementById('weekBookings').textContent = weekCount;
-        document.getElementById('monthBookings').textContent = monthCount;
-        document.getElementById('holdingCount').textContent = holdingBookings.length;
+        populateCounsellorDropdown();
         
       } catch (error) {
-        console.error('Error loading stats:', error);
+        console.error('Error loading bookings:', error);
+        showStatus('Error loading booking data', 'error');
       }
     }
+    
+    // Populate counsellor dropdown
+    function populateCounsellorDropdown() {
+      const select = document.getElementById('counsellorSelect');
+      const counsellors = new Set();
+      
+      bookingData.forEach(booking => {
+        if (booking.client && booking.client.trim()) {
+          counsellors.add(booking.client.trim());
+        }
+      });
+      
+      select.innerHTML = '<option value="">-- Choose a Counselor --</option>';
+      
+      Array.from(counsellors).sort().forEach(counsellor => {
+        const option = document.createElement('option');
+        option.value = counsellor;
+        option.textContent = counsellor;
+        select.appendChild(option);
+      });
+    }
+    
+    // Change counsellor selection
+    function changeCounsellor() {
+      selectedCounsellor = document.getElementById('counsellorSelect').value;
+      updateCounsellorInfo();
+      populateCalendar();
+    }
+    
+    // Update counsellor info display
+    function updateCounsellorInfo() {
+      const nameDiv = document.getElementById('counsellorName');
+      const summaryDiv = document.getElementById('counsellorSummary');
+      
+      if (selectedCounsellor) {
+        const counsellorBookings = bookingData.filter(booking => 
+          booking.client && booking.client.toLowerCase().includes(selectedCounsellor.toLowerCase())
+        );
+        
+        nameDiv.textContent = selectedCounsellor;
+        summaryDiv.textContent = `Total bookings: ${counsellorBookings.length}`;
+      } else {
+        nameDiv.textContent = 'Select a counselor to view bookings';
+        summaryDiv.textContent = '';
+      }
+    }
+    
+    // Change week
+    function changeWeek(direction) {
+      currentWeekStart.setDate(currentWeekStart.getDate() + (direction * 7));
+      updateWeekDisplay();
+      populateCalendar();
+    }
+    
+    // Update week display
+    function updateWeekDisplay() {
+      const weekEnd = new Date(currentWeekStart);
+      weekEnd.setDate(weekEnd.getDate() + 6);
+      
+      const startStr = currentWeekStart.toLocaleDateString('en-GB', {
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric'
+      });
+      const endStr = weekEnd.toLocaleDateString('en-GB', {
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric'
+      });
+      
+      document.getElementById('weekDisplay').textContent = `${startStr} - ${endStr}`;
+    }
+    
+    // Create calendar grid
+    function createCalendarGrid() {
+      const grid = document.getElementById('calendarGrid');
+      grid.innerHTML = '';
+      
+      // Time header
+      const emptyCell = document.createElement('div');
+      emptyCell.className = 'grid-header';
+      emptyCell.textContent = 'Time';
+      grid.appendChild(emptyCell);
+      
+      // Day headers
+      const weekDays = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+      for (let i = 0; i < 7; i++) {
+        const cellDate = new Date(currentWeekStart);
+        cellDate.setDate(currentWeekStart.getDate() + i);
+        
+        const header = document.createElement('div');
+        header.className = 'grid-header';
+        const dayNum = String(cellDate.getDate()).padStart(2, '0');
+        const monthNum = String(cellDate.getMonth() + 1).padStart(2, '0');
+        header.textContent = `${weekDays[i]} ${dayNum}/${monthNum}`;
+        grid.appendChild(header);
+      }
+      
+      // Time slots and cells
+      businessHours.forEach(time => {
+        const timeCell = document.createElement('div');
+        timeCell.className = 'time-header';
+        timeCell.textContent = time;
+        grid.appendChild(timeCell);
+        
+        for (let day = 0; day < 7; day++) {
+          const cell = document.createElement('div');
+          cell.className = 'grid-cell';
+          cell.id = `week-cell-${day}-${time}`;
+          grid.appendChild(cell);
+        }
+      });
+    }
+    
+    // Populate calendar
+    function populateCalendar() {
+      createCalendarGrid();
+      
+      if (!selectedCounsellor) return;
+      
+      const filteredBookings = bookingData.filter(booking => 
+        booking.client && booking.client.toLowerCase().includes(selectedCounsellor.toLowerCase())
+      );
+      
+      filteredBookings.forEach(booking => {
+        const bookingDate = new Date(booking.date + 'T12:00:00');
+        const weekStartNoon = new Date(currentWeekStart);
+        weekStartNoon.setHours(12, 0, 0, 0);
+        
+        const msPerDay = 24 * 60 * 60 * 1000;
+        const timeDiff = bookingDate.getTime() - weekStartNoon.getTime();
+        const daysDiff = Math.round(timeDiff / msPerDay);
+        
+        if (daysDiff >= 0 && daysDiff <= 6) {
+          const startHour = parseInt(booking.start.split(':')[0]);
+          const endHour = parseInt(booking.end.split(':')[0]);
+          
+          for (let hour = startHour; hour < endHour; hour++) {
+            if (hour >= 8 && hour <= 20) {
+              const timeString = `${String(hour).padStart(2, '0')}:00`;
+              const cellId = `week-cell-${daysDiff}-${timeString}`;
+              const cell = document.getElementById(cellId);
+              
+              if (cell) {
+                const roomDisplayName = getRoomDisplayName(booking);
+                const roomClass = getRoomClass(booking);
+                
+                cell.classList.add('booked', roomClass);
+                
+                const bookingCode = booking.bookingId || booking.code || '';
+                const paymentIndicator = booking.isPaid ? '💳' : '📝';
+                
+                cell.innerHTML = `
+                  <div class="booking-info">${roomDisplayName}</div>
+                  <div class="booking-details">${paymentIndicator} ${bookingCode}</div>
+                `;
+              }
+            }
+          }
+        }
+      });
+    }
+    
+    // Get room display name
+    function getRoomDisplayName(booking) {
+      if (booking.room === 'Room_1' || booking.room === '1') return 'Room 1';
+      if (booking.room === 'Room_2' || booking.room === '2') return 'Room 2';
+      if (booking.room === 'Room_4' || booking.room === '4') return 'Room 4';
+      if (booking.room === 'Room_5' || booking.room === '5') return 'Room 5';
+      if (booking.room === 'Room_6' || booking.room === '6') return 'Room 6';
+      if (booking.room === 'Room_7' || booking.room === '7') return 'Room 7';
+      if (booking.room === 'Room_8' || booking.room === '8') return 'Room 8';
+      if (booking.room === 'Room_9' || booking.room === '9') return 'Room 9';
+      if (booking.location && booking.location.toLowerCase().includes('online')) return 'Online';
+      return booking.room || 'Unknown';
+    }
+    
+    // Get room CSS class
+    function getRoomClass(booking) {
+      if (booking.room === 'Room_1' || booking.room === '1') return 'room-1';
+      if (booking.room === 'Room_2' || booking.room === '2') return 'room-2';
+      if (booking.room === 'Room_4' || booking.room === '4') return 'room-4';
+      if (booking.room === 'Room_5' || booking.room === '5') return 'room-5';
+      if (booking.room === 'Room_6' || booking.room === '6') return 'room-6';
+      if (booking.room === 'Room_7' || booking.room === '7') return 'room-7';
+      if (booking.room === 'Room_8' || booking.room === '8') return 'room-8';
+      if (booking.room === 'Room_9' || booking.room === '9') return 'room-9';
+      if (booking.location && booking.location.toLowerCase().includes('online')) return 'online';
+      return '';
+    }
+    
+    // Refresh data
+    function refreshData() {
+      loadBookingData().then(() => {
+        if (selectedCounsellor) {
+          populateCalendar();
+        }
+      });
+    }
+    
+    // Go to settings page - NO TOKEN NEEDED FOR TESTING
+    function goToSettings() {
+      window.location.href = 'admin-settings.html';
+    }
+    
+    // Initialize - NO AUTH CHECK FOR TESTING
+    document.addEventListener('DOMContentLoaded', async function() {
+      console.log('Admin panel loading - auth disabled for testing');
+      updateWeekDisplay();
+      await loadBookingData();
+    });
   </script>
 </body>
 </html>
