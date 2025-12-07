@@ -353,11 +353,15 @@
         gap: 8px;
       }
       
-      .controls > div {
+      .controls > div:not(.hidden) {
         display: flex;
         justify-content: center;
         gap: 8px;
         flex-wrap: wrap;
+      }
+      
+      .controls > div.hidden {
+        display: none !important;
       }
       
       .date-selector {
@@ -400,8 +404,8 @@
       
       .calendar-grid.day-view {
         display: grid;
-        grid-template-columns: 50px repeat(7, minmax(60px, 1fr));
-        min-width: 500px;
+        grid-template-columns: 50px repeat(9, minmax(55px, 1fr));
+        min-width: 550px;
       }
       
       .calendar-grid.week-view {
@@ -518,8 +522,8 @@
       }
       
       .calendar-grid.day-view {
-        grid-template-columns: 45px repeat(7, minmax(50px, 1fr));
-        min-width: 400px;
+        grid-template-columns: 40px repeat(9, minmax(45px, 1fr));
+        min-width: 450px;
       }
       
       .calendar-grid.week-view {
