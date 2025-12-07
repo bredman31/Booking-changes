@@ -206,12 +206,14 @@
     .grid-cell {
       border-bottom: 1px solid #eee;
       border-right: 1px solid #eee;
-      padding: 4px;
+      padding: 0;
       min-height: 45px;
       font-size: 0.75em;
       position: relative;
       cursor: pointer;
       transition: background 0.2s;
+      display: flex;
+      flex-direction: column;
     }
     
     .grid-cell:hover {
@@ -220,6 +222,7 @@
     
     .grid-cell.booked {
       cursor: pointer;
+      padding: 0;
     }
     
     .grid-cell.selected {
@@ -227,17 +230,50 @@
       z-index: 2;
     }
     
+    .grid-cell.has-conflict {
+      box-shadow: 0 0 0 2px #dc3545 inset;
+    }
+    
+    /* Stacked booking segments */
+    .booking-segment {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 2px 4px;
+      min-height: 20px;
+      cursor: pointer;
+      transition: opacity 0.2s;
+      border-left: 4px solid;
+    }
+    
+    .booking-segment:hover {
+      opacity: 0.85;
+    }
+    
+    .booking-segment .room-name {
+      font-weight: 600;
+      color: #1a1a2e;
+      font-size: 0.85em;
+      text-align: center;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    
+    /* Single booking - old style compatibility */
     .booking-content {
       height: 100%;
       display: flex;
       flex-direction: column;
       justify-content: center;
+      padding: 4px;
     }
     
     .room-name {
       font-weight: 600;
       color: #1a1a2e;
-      font-size: 0.9em;
+      font-size: 0.9em;;
     }
     
     .booking-code {
@@ -573,6 +609,19 @@
       
       .grid-cell {
         min-height: 28px;
+        font-size: 8px;
+      }
+      
+      .booking-segment {
+        min-height: 14px;
+        padding: 1px 2px;
+      }
+      
+      .booking-segment .room-name {
+        font-size: 7px;
+      }
+      
+      .booking-content .room-name {
         font-size: 8px;
       }
       
@@ -1150,6 +1199,9 @@
         b.client && b.client.toLowerCase().includes(selectedCounsellor.toLowerCase())
       );
       
+      // Build a map of cellId -> array of bookings
+      const cellBookings = {};
+      
       filteredBookings.forEach(booking => {
         const bookingDate = new Date(booking.date + 'T12:00:00');
         const weekStartNoon = new Date(currentWeekStart);
@@ -1166,29 +1218,77 @@
           for (let hour = startHour; hour < endHour; hour++) {
             if (hour >= 8 && hour <= 20) {
               const timeStr = `${String(hour).padStart(2, '0')}:00`;
-              const cell = document.getElementById(`week-cell-${daysDiff}-${timeStr}`);
+              const cellId = `week-cell-${daysDiff}-${timeStr}`;
               
-              if (cell) {
-                const roomKey = getRoomKey(booking);
-                const roomCfg = roomKey ? enabledRooms.find(r => r.key === roomKey) : null;
-                const roomName = roomCfg ? roomCfg.displayName : getRoomDisplayName(booking);
-                const className = roomKey ? roomKey.toLowerCase().replace('_', '-') : '';
-                
-                if (className) {
-                  cell.classList.add('booked', className);
-                }
-                
-                cell.innerHTML = `
-                  <div class="booking-content">
-                    <div class="room-name">${roomName}</div>
-                    <div class="booking-code">${booking.bookingId || ''}</div>
-                  </div>
-                `;
-                
-                cell.onclick = () => selectBooking(booking, roomName);
+              if (!cellBookings[cellId]) {
+                cellBookings[cellId] = [];
+              }
+              
+              // Add booking info with room details
+              const roomKey = getRoomKey(booking);
+              const roomCfg = roomKey ? enabledRooms.find(r => r.key === roomKey) : null;
+              const roomName = roomCfg ? roomCfg.displayName : getRoomDisplayName(booking);
+              const color = roomCfg ? roomCfg.color : '#e0e0e0';
+              const borderColor = roomCfg ? roomCfg.borderColor : '#ccc';
+              
+              // Check if this booking is already added for this cell (avoid duplicates from same booking)
+              const existingIdx = cellBookings[cellId].findIndex(b => b.bookingId === booking.bookingId && b.roomKey === roomKey);
+              if (existingIdx === -1) {
+                cellBookings[cellId].push({
+                  booking: booking,
+                  roomKey: roomKey,
+                  roomName: roomName,
+                  color: color,
+                  borderColor: borderColor
+                });
               }
             }
           }
+        }
+      });
+      
+      // Now populate cells
+      Object.entries(cellBookings).forEach(([cellId, bookings]) => {
+        const cell = document.getElementById(cellId);
+        if (!cell) return;
+        
+        cell.classList.add('booked');
+        
+        if (bookings.length > 1) {
+          // Multiple bookings - stack them
+          cell.classList.add('has-conflict');
+          cell.innerHTML = bookings.map((b, idx) => {
+            return `<div class="booking-segment" 
+                        style="background: ${b.color}; border-left-color: ${b.borderColor};"
+                        data-booking-idx="${idx}">
+                      <span class="room-name">${b.roomName}</span>
+                    </div>`;
+          }).join('');
+          
+          // Add click handlers to each segment
+          cell.querySelectorAll('.booking-segment').forEach((segment, idx) => {
+            segment.onclick = (e) => {
+              e.stopPropagation();
+              const bookingInfo = bookings[idx];
+              selectBooking(bookingInfo.booking, bookingInfo.roomName);
+            };
+          });
+          
+        } else {
+          // Single booking
+          const b = bookings[0];
+          const className = b.roomKey ? b.roomKey.toLowerCase().replace('_', '-') : '';
+          if (className) {
+            cell.classList.add(className);
+          }
+          
+          cell.innerHTML = `
+            <div class="booking-content">
+              <div class="room-name">${b.roomName}</div>
+            </div>
+          `;
+          
+          cell.onclick = () => selectBooking(b.booking, b.roomName);
         }
       });
     }
