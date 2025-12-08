@@ -2,7 +2,6 @@
 <html>
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Cherry Tree Centre - Room Booking Calendar</title>
   
   <!-- ADD FIREBASE SCRIPTS HERE -->
@@ -139,7 +138,7 @@
       min-height: 400px;
     }
     .calendar-grid.day-view {
-      grid-template-columns: 60px repeat(9, 1fr);
+      grid-template-columns: 60px repeat(7, 1fr);
       grid-auto-rows: 35px;
     }
     .calendar-grid.week-view {
@@ -201,14 +200,6 @@
     .grid-cell.booked.room-7 {
       background: #e6d45a;
       border-color: #d4c347;
-    }
-    .grid-cell.booked.room-8 {
-      background: #80cbc4;
-      border-color: #4db6ac;
-    }
-    .grid-cell.booked.room-9 {
-      background: #ce93d8;
-      border-color: #ba68c8;
     }
     .grid-cell.booked.online {
       background: #7dd87d;
@@ -278,266 +269,6 @@
       border-radius: 8px 8px 0 0;
       font-weight: bold;
       text-align: center;
-    }
-    
-    /* ================================ */
-    /* MOBILE STYLES                    */
-    /* ================================ */
-    @media (max-width: 900px) {
-      body {
-        height: auto;
-        min-height: 100vh;
-      }
-      
-      /* Header */
-      .header {
-        flex-direction: column;
-        gap: 10px;
-        padding: 10px 12px;
-        align-items: stretch;
-      }
-      
-      .header h2 {
-        font-size: 14px;
-        text-align: center;
-      }
-      
-      .view-selector {
-        justify-content: center;
-      }
-      
-      .view-btn {
-        padding: 8px 14px;
-        font-size: 12px;
-      }
-      
-      .counsellor-filter {
-        justify-content: center;
-        flex-wrap: wrap;
-      }
-      
-      .counsellor-filter select {
-        flex: 1;
-        min-width: 150px;
-      }
-      
-      /* Main layout - stack vertically */
-      .main-container {
-        flex-direction: column;
-        overflow: visible;
-      }
-      
-      /* Form container - full width on mobile */
-      .form-container {
-        width: 100%;
-        max-width: none;
-        border-right: none;
-        border-bottom: 1px solid #ccc;
-        padding: 10px;
-        order: 2; /* Move form below calendar on mobile */
-      }
-      
-      /* Calendar section */
-      .calendar-section {
-        order: 1;
-        min-height: 400px;
-      }
-      
-      .calendar-container {
-        padding: 8px;
-      }
-      
-      .controls {
-        flex-direction: column;
-        align-items: stretch;
-        gap: 8px;
-      }
-      
-      .controls > div:not(.hidden) {
-        display: flex;
-        justify-content: center;
-        gap: 8px;
-        flex-wrap: wrap;
-      }
-      
-      .controls > div.hidden {
-        display: none !important;
-      }
-      
-      .date-selector {
-        font-size: 12px;
-      }
-      
-      .controls input[type="date"] {
-        padding: 8px;
-        font-size: 14px;
-      }
-      
-      .controls button {
-        padding: 8px 12px;
-        font-size: 12px;
-      }
-      
-      .week-navigation {
-        flex-wrap: wrap;
-        justify-content: center;
-      }
-      
-      .week-navigation button {
-        padding: 8px 10px;
-        font-size: 11px;
-      }
-      
-      #weekDisplay {
-        width: 100%;
-        text-align: center;
-        order: -1;
-        font-size: 13px;
-      }
-      
-      /* Calendar Grid */
-      .calendar-grid {
-        font-size: 0.75em;
-        overflow-x: auto;
-        display: block;
-      }
-      
-      .calendar-grid.day-view {
-        display: grid;
-        grid-template-columns: 50px repeat(9, minmax(55px, 1fr));
-        min-width: 550px;
-      }
-      
-      .calendar-grid.week-view {
-        display: grid;
-        grid-template-columns: 60px repeat(7, minmax(55px, 1fr));
-        min-width: 450px;
-      }
-      
-      .grid-header {
-        font-size: 0.8em;
-        padding: 4px 2px;
-      }
-      
-      .time-header {
-        font-size: 0.75em;
-        padding: 2px;
-      }
-      
-      .grid-cell {
-        font-size: 0.7em;
-        padding: 2px;
-        min-height: 28px;
-      }
-      
-      .booking-info {
-        font-size: 0.75em;
-      }
-      
-      .client-name {
-        font-size: 0.65em;
-      }
-      
-      /* Holding Room Section */
-      .holding-room-section {
-        padding: 10px;
-      }
-      
-      .holding-room-header {
-        flex-wrap: wrap;
-        gap: 8px;
-        justify-content: center;
-      }
-      
-      .holding-room-title {
-        font-size: 14px;
-        width: 100%;
-        text-align: center;
-      }
-      
-      .select-holding-btn {
-        padding: 8px 14px;
-        font-size: 12px;
-      }
-      
-      .holding-room-info {
-        text-align: center;
-        font-size: 12px;
-      }
-      
-      /* Form Styling */
-      .form-container h3 {
-        font-size: 16px;
-      }
-      
-      .form-container p {
-        font-size: 12px;
-      }
-      
-      #currentBookingDisplay {
-        font-size: 12px;
-      }
-      
-      #currentBookingDisplay > div > div {
-        margin-bottom: 6px !important;
-      }
-      
-      .form-container label {
-        font-size: 12px !important;
-      }
-      
-      .form-container select,
-      .form-container input {
-        padding: 10px !important;
-        font-size: 14px !important;
-      }
-      
-      .form-container button[type="submit"],
-      #cancelBookingBtn {
-        padding: 12px 20px !important;
-        font-size: 14px !important;
-      }
-      
-      .counsellor-info {
-        padding: 8px;
-      }
-      
-      .counsellor-info h3 {
-        font-size: 14px;
-      }
-      
-      .counsellor-info p {
-        font-size: 12px;
-      }
-    }
-    
-    @media (max-width: 480px) {
-      .header h2 {
-        font-size: 12px;
-      }
-      
-      .view-btn {
-        padding: 6px 10px;
-        font-size: 11px;
-      }
-      
-      .calendar-grid.day-view {
-        grid-template-columns: 40px repeat(9, minmax(45px, 1fr));
-        min-width: 450px;
-      }
-      
-      .calendar-grid.week-view {
-        grid-template-columns: 50px repeat(7, minmax(45px, 1fr));
-        min-width: 380px;
-      }
-      
-      .grid-header {
-        font-size: 0.7em;
-      }
-      
-      .grid-cell {
-        min-height: 24px;
-      }
     }
   </style>
 </head>
@@ -623,8 +354,6 @@
               <option value="Room 5">Room 5</option>
               <option value="Room 6">Room 6</option>
               <option value="Room 7">Room 7</option>
-              <option value="Room 8">Room 8</option>
-              <option value="Room 9">Room 9</option>
               <option value="Online">Online</option>
             </select>
           </div>
@@ -725,8 +454,8 @@
     firebase.initializeApp(firebaseConfig);
     const database = firebase.database();
     
-    // Constants for rooms and business hours - INCLUDES ROOMS 5, 8, 9
-    const rooms = ["Room 1", "Room 2", "Room 4", "Room 5", "Room 6", "Room 7", "Room 8", "Room 9", "Online"];
+    // Constants for rooms and business hours - ADDED ROOM 5
+    const rooms = ["Room 1", "Room 2", "Room 4", "Room 5", "Room 6", "Room 7", "Online"];
     const businessHours = Array.from({length: 13}, (_, i) => `${String(i + 8).padStart(2, '0')}:00`);
     const weekDays = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
     
@@ -783,9 +512,9 @@
       
       return `${date}T${formattedTime}`;
     }
-    // Get location ID from room name - INCLUDES ROOMS 8, 9
+    // Get location ID from room name - ADDED ROOM 5
     function getLocationIdFromRoom(roomName) {
-      const henleyRooms = ['Room_1', 'Room 1', 'Room_2', 'Room 2', 'Room_4', 'Room 4', 'Room_5', 'Room 5', 'Room_6', 'Room 6', 'Room_7', 'Room 7', 'Room_8', 'Room 8', 'Room_9', 'Room 9', 'Car Park', 'Henley_Holding_Room'];
+      const henleyRooms = ['Room_1', 'Room 1', 'Room_2', 'Room 2', 'Room_4', 'Room 4', 'Room_5', 'Room 5', 'Room_6', 'Room 6', 'Room_7', 'Room 7', 'Car Park', 'Henley_Holding_Room'];
       
       if (henleyRooms.includes(roomName)) {
         return '2';
@@ -793,12 +522,12 @@
         return '1';
       }
     }
-    // Get available rooms for a specific location - INCLUDES ROOMS 8, 9
+    // Get available rooms for a specific location - ADDED ROOM 5
     function getRoomsForLocation(locationId) {
       if (locationId === '1') {
         return ['Online'];
       } else if (locationId === '2') {
-        return ['Room 1', 'Room 2', 'Room 4', 'Room 5', 'Room 6', 'Room 7', 'Room 8', 'Room 9', 'Car Park'];
+        return ['Room 1', 'Room 2', 'Room 4', 'Room 5', 'Room 6', 'Room 7', 'Car Park'];
       }
       return [];
     }
@@ -1182,7 +911,7 @@ function restoreSessionState() {
       initializeWithReadOnlyAccess();
     }
     
-    // Populate room dropdown based on current booking's location - INCLUDES ROOMS 8, 9
+    // Populate room dropdown based on current booking's location - ADDED ROOM 5
     function populateRoomDropdown(currentRoom) {
       const newRoomInput = document.getElementById('newRoomInput');
       const roomLabel = document.getElementById('roomChangeLabel');
@@ -1193,7 +922,7 @@ function restoreSessionState() {
         newRoomInput.innerHTML = '<option value="">Select a room (required)</option>';
         
         // Add all rooms from both locations
-        ['Room 1', 'Room 2', 'Room 4', 'Room 5', 'Room 6', 'Room 7', 'Room 8', 'Room 9', 'Online'].forEach(roomName => {
+        ['Room 1', 'Room 2', 'Room 4', 'Room 5', 'Room 6', 'Room 7', 'Online'].forEach(roomName => {
           const option = document.createElement('option');
           option.value = roomName;
           option.textContent = roomName;
@@ -1261,7 +990,7 @@ function restoreSessionState() {
       return `${year}-${month}-${day}`;
     }
     
-    // Get room display name from booking data - INCLUDES ROOMS 8, 9
+    // Get room display name from booking data - ADDED ROOM 5
     function getRoomDisplayName(booking) {
       if (booking.room === 'Room_1' || booking.room === '1') return 'Room 1';
       if (booking.room === 'Room_2' || booking.room === '2') return 'Room 2';
@@ -1269,14 +998,12 @@ function restoreSessionState() {
       if (booking.room === 'Room_5' || booking.room === '5') return 'Room 5';
       if (booking.room === 'Room_6' || booking.room === '6') return 'Room 6';
       if (booking.room === 'Room_7' || booking.room === '7') return 'Room 7';
-      if (booking.room === 'Room_8' || booking.room === '8') return 'Room 8';
-      if (booking.room === 'Room_9' || booking.room === '9') return 'Room 9';
       if (booking.room === 'Henley_Holding_Room' || booking.room === '18') return 'Holding Room';
       if (booking.location && booking.location.toLowerCase().includes('online')) return 'Online';
       return booking.room || 'Unknown';
     }
     
-    // Get room mapping for CSS classes - INCLUDES ROOMS 8, 9
+    // Get room mapping for CSS classes - ADDED ROOM 5
     function getRoomMapping(booking) {
       let roomNumber, roomClass;
       
@@ -1292,10 +1019,6 @@ function restoreSessionState() {
         roomNumber = '6'; roomClass = 'room-6';
       } else if (booking.room === 'Room_7' || booking.room === '7') {
         roomNumber = '7'; roomClass = 'room-7';
-      } else if (booking.room === 'Room_8' || booking.room === '8') {
-        roomNumber = '8'; roomClass = 'room-8';
-      } else if (booking.room === 'Room_9' || booking.room === '9') {
-        roomNumber = '9'; roomClass = 'room-9';
       } else if (booking.location && booking.location.toLowerCase().includes('online')) {
         roomNumber = 'online'; roomClass = 'online';
       }
@@ -1525,7 +1248,7 @@ function restoreSessionState() {
       document.getElementById('submitChangeBtn').textContent = 'Submit Change Request';
     }
     
-    // Handle booking cancellation - UPDATED ROOM MAPPING WITH ROOMS 8, 9
+    // Handle booking cancellation - UPDATED ROOM MAPPING WITH ROOM 5
     async function cancelBooking() {
       const bookingCode = document.getElementById('bookingCodeInput').value;
       const room = document.getElementById('currentRoomInput').value;
@@ -1588,8 +1311,6 @@ function restoreSessionState() {
             'Room_5': '13',
             'Room_6': '9',
             'Room_7': '10',
-            'Room_8': '14',
-            'Room_9': '15',
             'Car Park': '12',
             'Online': '11',
             'Online Counselling': '11',
@@ -1600,7 +1321,7 @@ function restoreSessionState() {
             timestamp: new Date().toISOString(),
             action: 'modify',
             counsellor_id: counsellorId,
-            booking_code: booking.bookingId || bookingCode,
+            original_booking_code: booking.bookingId || bookingCode,  // FIXED: Prefer bookingId
             original_room: roomForWebhook,
             original_room_id: ROOM_MAPPING[roomForWebhook] || '3',
             original_location_id: getLocationIdFromRoom(roomForWebhook),
@@ -1618,7 +1339,7 @@ function restoreSessionState() {
             timestamp: new Date().toISOString(),
             action: 'cancel',
             counsellor_id: counsellorId,
-            booking_code: booking.bookingId || bookingCode,
+            booking_code: booking.bookingId || bookingCode,  // FIXED: Prefer bookingId
             original_datetime: `${date}T${time}:00`,
             original_room: roomForWebhook,
             service_id: '2',
@@ -1661,7 +1382,7 @@ function restoreSessionState() {
       }
     }
     
-    // Submit booking change request - UPDATED ROOM MAPPING WITH ROOMS 8, 9
+    // Submit booking change request - UPDATED ROOM MAPPING WITH ROOM 5
     async function submitBookingChange(changeData) {
       const statusDiv = document.getElementById('submitStatus');
       const isHoldingRoom = document.getElementById('isHoldingRoomBooking').value === 'true';
@@ -1697,8 +1418,6 @@ function restoreSessionState() {
           'Room_5': '13',
           'Room_6': '9',
           'Room_7': '10',
-          'Room_8': '14',
-          'Room_9': '15',
           'Car Park': '12',
           'Online': '11',
           'Online Counselling': '11',
@@ -1719,7 +1438,7 @@ function restoreSessionState() {
           timestamp: new Date().toISOString(),
           action: 'modify',
           counsellor_id: counsellorId,
-          booking_code: booking ? booking.bookingId : changeData.originalBookingCode,
+          original_booking_code: booking ? booking.bookingId : changeData.originalBookingCode,  // FIXED: Use bookingId from booking object
           original_room: originalRoomUnderscore,
           original_room_id: originalRoomId,
           original_location_id: originalLocationId,
@@ -2031,7 +1750,7 @@ function restoreSessionState() {
       }
     }
     
-    // Create day view grid - INCLUDES ROOMS 8, 9
+    // Create day view grid - ADDED ROOM 5
     function createDayGrid(grid) {
       const emptyCell = document.createElement("div");
       emptyCell.className = "grid-header";
@@ -2062,8 +1781,6 @@ function restoreSessionState() {
           else if (room === "Room 5") roomId = "5";
           else if (room === "Room 6") roomId = "6";
           else if (room === "Room 7") roomId = "7";
-          else if (room === "Room 8") roomId = "8";
-          else if (room === "Room 9") roomId = "9";
           else if (room === "Online") roomId = "online";
           
           cell.id = `cell-${roomId}-${time}`;
@@ -2117,7 +1834,7 @@ function restoreSessionState() {
       
       cells.forEach(cell => {
         cell.innerHTML = '';
-        cell.classList.remove('booked', 'room-1', 'room-2', 'room-4', 'room-5', 'room-6', 'room-7', 'room-8', 'room-9', 'online', 'selected-booking', 'past-booking');
+        cell.classList.remove('booked', 'room-1', 'room-2', 'room-4', 'room-5', 'room-6', 'room-7', 'online', 'selected-booking', 'past-booking');
       });
       
       // Filter out holding room bookings from regular calendar display
@@ -2143,13 +1860,17 @@ function restoreSessionState() {
       }
     }
     
-    // Populate day view
+    // UPDATED: Populate day view - NOW WITH CLICK HANDLERS FOR OWN BOOKINGS
     function populateDayView(filteredBookings) {
       const selectedDate = document.getElementById('dateSelector').value;
       
       const dayBookings = filteredBookings.filter(booking => {
         return booking.date === selectedDate;
       });
+      
+      // Get logged-in counsellor name for ownership check
+      const loggedInCounsellor = selectedCounsellor || sessionStorage.getItem('counsellorName') || '';
+      const hasValidToken = !!sessionStorage.getItem('accessToken');
       
       dayBookings.forEach(booking => {
         const startHour = parseInt(booking.start.split(':')[0]);
@@ -2159,6 +1880,10 @@ function restoreSessionState() {
         if (!roomNumber) return;
         
         const isWithin24Hours = isBookingWithin24Hours(booking.date, booking.start);
+        
+        // Check if this booking belongs to the logged-in counsellor
+        const isOwnBooking = loggedInCounsellor && booking.client && 
+          booking.client.toLowerCase().includes(loggedInCounsellor.toLowerCase());
         
         for (let hour = startHour; hour < endHour; hour++) {
           if (hour >= 8 && hour <= 20) {
@@ -2183,13 +1908,56 @@ function restoreSessionState() {
               
               const bookingCode = booking.bookingId || booking.code || '';
               const paymentIndicator = booking.isPaid ? '' : ' (Old system)';
+              const roomDisplayName = getRoomDisplayName(booking);
               
               cell.innerHTML = `
                 <div class="booking-info">${booking.client || ''}</div>
                 <div class="client-name">${bookingCode}${paymentIndicator}</div>
               `;
               
-              cell.style.cursor = 'default';
+              // Only allow clicking own bookings when authenticated
+              if (hasValidToken && isOwnBooking && !isWithin24Hours) {
+                cell.style.cursor = 'pointer';
+                cell.title = 'Click to modify this booking';
+                
+                // Add click handler (use closure to capture booking data)
+                cell.addEventListener('click', (function(bookingData, roomName, rNum) {
+                  return function() {
+                    const bookingCode = bookingData.bookingId || bookingData.code || '';
+                    const date = bookingData.date;
+                    const time = bookingData.start;
+                    
+                    prefillForm(bookingCode, roomName, date, time);
+                    
+                    // Remove selection from all cells and add to clicked ones
+                    document.querySelectorAll('.selected-booking').forEach(c => c.classList.remove('selected-booking'));
+                    
+                    // Highlight all cells for this booking
+                    const startH = parseInt(bookingData.start.split(':')[0]);
+                    const endH = parseInt(bookingData.end.split(':')[0]);
+                    for (let h = startH; h < endH; h++) {
+                      const ts = `${String(h).padStart(2, '0')}:00`;
+                      const cId = `cell-${rNum}-${ts}`;
+                      const c = document.getElementById(cId);
+                      if (c) c.classList.add('selected-booking');
+                    }
+                    
+                    // Scroll to form
+                    const formContainer = document.querySelector('.form-container');
+                    if (formContainer) {
+                      formContainer.scrollIntoView({ behavior: 'smooth' });
+                    }
+                  };
+                })(booking, roomDisplayName, roomNumber));
+              } else if (hasValidToken && isOwnBooking && isWithin24Hours) {
+                cell.style.cursor = 'not-allowed';
+                cell.title = 'Within 24 hours - cannot modify online';
+              } else if (hasValidToken && !isOwnBooking) {
+                cell.style.cursor = 'default';
+                cell.title = `${booking.client}'s booking - view only`;
+              } else {
+                cell.style.cursor = 'default';
+              }
             }
           }
         }
