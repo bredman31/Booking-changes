@@ -2001,10 +2001,13 @@ function restoreSessionState() {
       const time = document.getElementById('newBookingTime').value;
       const endTime = document.getElementById('newBookingEndTime').value;
       const locationId = document.getElementById('newBookingLocationId').value;
-      const price = document.getElementById('newBookingPrice').value;
+      const price = parseInt(document.getElementById('newBookingPrice').value) || 0;
       
       const statusDiv = document.getElementById('bookingStatus');
       const confirmBtn = document.getElementById('confirmBookingBtn');
+      
+      // Webhook URL for new bookings
+      const NEW_BOOKING_WEBHOOK_URL = 'https://hook.eu2.make.com/eq57vfwrpkw2rtozjeiy71j88e5sw1kr';
       
       // Show processing status
       statusDiv.className = 'booking-status processing';
@@ -2013,46 +2016,80 @@ function restoreSessionState() {
       confirmBtn.disabled = true;
       
       try {
-        // For now, just log the booking data
-        // This will be replaced with Stripe integration
+        const counsellorName = selectedCounsellor || sessionStorage.getItem('counsellorName');
+        
+        // Build booking payload
         const bookingPayload = {
           action: 'create',
           timestamp: new Date().toISOString(),
           client_id: window.clientId,
-          counsellor_name: selectedCounsellor || sessionStorage.getItem('counsellorName'),
+          counsellor_name: counsellorName,
           service_id: '2',
           provider_id: roomId,
           location_id: locationId,
+          room_name: room,
           start_datetime: `${date}T${time}:00`,
           end_datetime: `${date}T${endTime}:00`,
           additional_fields: {
-            comments: `Booked via counsellor calendar by ${selectedCounsellor || sessionStorage.getItem('counsellorName')}`
+            comments: `Booked via counsellor calendar by ${counsellorName}`
           },
           payment: {
-            paymentAmount: parseInt(price),
-            paymentStatus: 'pending'
+            paymentId: null,
+            paymentAmount: price,
+            paymentStatus: price === 0 ? 'free' : 'pending',
+            paymentMethod: price === 0 ? 'none' : 'card'
           }
         };
         
         console.log('New booking payload:', bookingPayload);
         
-        // Placeholder: Show success message (actual payment integration coming)
-        statusDiv.className = 'booking-status success';
-        statusDiv.innerHTML = `
-          <strong>Ready for payment</strong><br>
-          <small>Stripe payment integration coming soon.<br>
-          Booking details logged to console.</small>
-        `;
-        
-        // In the future, this will:
-        // 1. Create Stripe checkout session
-        // 2. Redirect to Stripe payment
-        // 3. On success, webhook triggers Make.com to create booking
+        // Handle based on price
+        if (price === 0) {
+          // FREE BOOKING - Send directly to webhook
+          statusDiv.textContent = 'Creating booking...';
+          
+          const response = await fetch(NEW_BOOKING_WEBHOOK_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(bookingPayload)
+          });
+          
+          if (!response.ok) {
+            const errorText = await response.text();
+            throw new Error(`Webhook failed: ${response.status} - ${errorText}`);
+          }
+          
+          console.log('Webhook response:', response.status);
+          
+          // Success!
+          statusDiv.className = 'booking-status success';
+          statusDiv.innerHTML = `
+            <strong>✓ Booking Created!</strong><br>
+            <small>${room} on ${date} at ${time}<br>
+            The calendar will refresh shortly.</small>
+          `;
+          
+          // Close modal and refresh after delay
+          setTimeout(() => {
+            closeNewBookingModal();
+            refreshData();
+          }, 3000);
+          
+        } else {
+          // PAID BOOKING - Stripe integration needed
+          statusDiv.className = 'booking-status processing';
+          statusDiv.innerHTML = `
+            <strong>💳 Payment Required: £${(price / 100).toFixed(2)}</strong><br>
+            <small>Stripe payment integration coming soon.<br>
+            Booking details logged to console for testing.</small>
+          `;
+          confirmBtn.disabled = false;
+        }
         
       } catch (error) {
         console.error('Booking error:', error);
         statusDiv.className = 'booking-status error';
-        statusDiv.textContent = `Error: ${error.message}`;
+        statusDiv.innerHTML = `<strong>Error</strong><br><small>${error.message}</small>`;
         confirmBtn.disabled = false;
       }
     }
