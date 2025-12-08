@@ -1808,18 +1808,68 @@ function restoreSessionState() {
         pricingConfig = snapshot.val();
         
         if (pricingConfig) {
-          console.log('Loaded pricing config:', pricingConfig);
+          console.log('Loaded pricing config from Firebase:', pricingConfig);
         } else {
-          console.warn('No pricing config found in Firebase');
+          console.warn('No pricing config found in Firebase, using defaults');
+          // Default pricing configuration
+          pricingConfig = {
+            rates: {
+              "A": { amount: 1300, label: "Standard" },
+              "B": { amount: 1400, label: "Evening" },
+              "C": { amount: 800, label: "Sunday Special" }
+            },
+            locations: {
+              "1": {
+                name: "Buckhurst Hill",
+                rules: [
+                  { days: [0, 6], startHour: 8, endHour: 21, rate: "A" },
+                  { days: [1, 2, 3, 4, 5], startHour: 8, endHour: 17, rate: "A" },
+                  { days: [1, 2, 3, 4, 5], startHour: 17, endHour: 21, rate: "B" }
+                ]
+              },
+              "2": {
+                name: "Henley",
+                rules: [
+                  { days: [0], startHour: 8, endHour: 21, rate: "C" },
+                  { days: [1, 2, 3, 4, 5, 6], startHour: 8, endHour: 21, rate: "A" }
+                ]
+              }
+            },
+            durations: [
+              { minutes: 60, label: "1 Hour", multiplier: 1 },
+              { minutes: 75, label: "1 Hour 15 Mins", multiplier: 1 },
+              { minutes: 240, label: "4 Hours", multiplier: 4 }
+            ],
+            discounts: {}
+          };
         }
       } catch (error) {
         console.error('Error loading pricing config:', error);
+        // Use default on error as well
+        pricingConfig = {
+          rates: {
+            "A": { amount: 1300, label: "Standard" }
+          },
+          locations: {
+            "1": {
+              name: "Buckhurst Hill",
+              rules: [{ days: [0,1,2,3,4,5,6], startHour: 8, endHour: 21, rate: "A" }]
+            },
+            "2": {
+              name: "Henley",
+              rules: [{ days: [0,1,2,3,4,5,6], startHour: 8, endHour: 21, rate: "A" }]
+            }
+          },
+          durations: [{ minutes: 60, label: "1 Hour", multiplier: 1 }],
+          discounts: {}
+        };
       }
     }
     
     // Calculate price for a booking
     function calculateBookingPrice(locationId, date, hour) {
       if (!pricingConfig) {
+        console.warn('calculateBookingPrice: pricingConfig is null');
         return { amount: 0, breakdown: 'Pricing not loaded', rate: null };
       }
       
@@ -1828,6 +1878,7 @@ function restoreSessionState() {
       
       const location = pricingConfig.locations[locationId];
       if (!location) {
+        console.warn(`calculateBookingPrice: Location ${locationId} not found in config`);
         return { amount: 0, breakdown: 'Location not found', rate: null };
       }
       
@@ -1841,11 +1892,13 @@ function restoreSessionState() {
       }
       
       if (!matchedRule) {
+        console.warn(`calculateBookingPrice: No rule matches day ${dayOfWeek}, hour ${hour} for location ${locationId}`);
         return { amount: 0, breakdown: 'No pricing rule for this time', rate: null };
       }
       
       const rate = pricingConfig.rates[matchedRule.rate];
       if (!rate) {
+        console.warn(`calculateBookingPrice: Rate ${matchedRule.rate} not found`);
         return { amount: 0, breakdown: `Rate ${matchedRule.rate} not found`, rate: null };
       }
       
@@ -2314,7 +2367,9 @@ function restoreSessionState() {
     // UPDATED: Populate calendar with booking data
     function populateCalendar() {
         restoreSessionState(); 
-      const cells = document.querySelectorAll('.grid-cell');
+      
+      // Convert NodeList to Array to avoid mutation issues during iteration
+      const cells = Array.from(document.querySelectorAll('.grid-cell'));
       
       cells.forEach(cell => {
         // Clone and replace to remove all event listeners, but keep the ID
@@ -2324,7 +2379,9 @@ function restoreSessionState() {
         newCell.className = 'grid-cell';
         newCell.style.cursor = '';
         newCell.title = '';
-        cell.parentNode.replaceChild(newCell, cell);
+        if (cell.parentNode) {
+          cell.parentNode.replaceChild(newCell, cell);
+        }
       });
       
       // Filter out holding room bookings from regular calendar display
@@ -2460,6 +2517,8 @@ function restoreSessionState() {
       });
       
       // Handle empty slots - make them clickable for authenticated users
+      console.log('Empty slot check:', { hasValidToken, hasPricingConfig: !!pricingConfig, selectedDate });
+      
       if (hasValidToken && pricingConfig) {
         const roomIds = {
           'Room 1': '1',
@@ -2471,12 +2530,15 @@ function restoreSessionState() {
           'Online': 'online'
         };
         
-        // Check if selected date is in the past or within 24 hours
+        // Check if selected date is in the past
         const selectedDateTime = new Date(selectedDate + 'T08:00:00');
         const now = new Date();
         const isPastDate = selectedDateTime < now && selectedDate !== now.toISOString().split('T')[0];
         
+        console.log('Date check:', { selectedDate, isPastDate, today: now.toISOString().split('T')[0] });
+        
         if (!isPastDate) {
+          let slotsMarked = 0;
           Object.entries(roomIds).forEach(([roomName, roomId]) => {
             businessHours.forEach(time => {
               const cellId = `cell-${roomId}-${time}`;
@@ -2500,6 +2562,7 @@ function restoreSessionState() {
                 // Make cell clickable
                 cell.classList.add('available-slot');
                 cell.title = `Book ${roomName} at ${time} - £${(priceResult.amount / 100).toFixed(2)}`;
+                slotsMarked++;
                 
                 // Add click handler
                 cell.addEventListener('click', (function(room, date, timeSlot) {
@@ -2512,7 +2575,10 @@ function restoreSessionState() {
               }
             });
           });
+          console.log('Available slots marked:', slotsMarked);
         }
+      } else if (hasValidToken && !pricingConfig) {
+        console.warn('Pricing config not loaded - empty slots will not be clickable. Please save pricing config via admin panel.');
       }
     }
     
