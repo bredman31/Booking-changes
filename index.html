@@ -270,6 +270,183 @@
       font-weight: bold;
       text-align: center;
     }
+    
+    /* Empty slot styles */
+    .grid-cell.available-slot {
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .grid-cell.available-slot:hover {
+      background: #e8f5e9;
+      border-color: #4caf50;
+    }
+    .grid-cell.available-slot::after {
+      content: '+';
+      color: #4caf50;
+      font-size: 16px;
+      font-weight: bold;
+      opacity: 0;
+      transition: opacity 0.2s;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+    }
+    .grid-cell.available-slot:hover::after {
+      opacity: 1;
+    }
+    
+    /* New Booking Modal styles */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.6);
+      z-index: 1000;
+      justify-content: center;
+      align-items: center;
+    }
+    .modal-overlay.active {
+      display: flex;
+    }
+    .booking-modal {
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      max-width: 500px;
+      width: 90%;
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+    .modal-header {
+      background: #4caf50;
+      color: white;
+      padding: 20px;
+      border-radius: 12px 12px 0 0;
+    }
+    .modal-header h2 {
+      margin: 0;
+      font-size: 20px;
+    }
+    .modal-header .close-btn {
+      position: absolute;
+      top: 15px;
+      right: 20px;
+      background: none;
+      border: none;
+      color: white;
+      font-size: 24px;
+      cursor: pointer;
+      opacity: 0.8;
+    }
+    .modal-header .close-btn:hover {
+      opacity: 1;
+    }
+    .modal-body {
+      padding: 25px;
+    }
+    .booking-details {
+      background: #f8f9fa;
+      padding: 15px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+    }
+    .booking-details .detail-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 8px 0;
+      border-bottom: 1px solid #eee;
+    }
+    .booking-details .detail-row:last-child {
+      border-bottom: none;
+    }
+    .booking-details .detail-label {
+      color: #666;
+      font-weight: 500;
+    }
+    .booking-details .detail-value {
+      color: #333;
+      font-weight: 600;
+    }
+    .price-display {
+      background: linear-gradient(135deg, #4caf50 0%, #45a049 100%);
+      color: white;
+      padding: 20px;
+      border-radius: 8px;
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    .price-display .price-label {
+      font-size: 14px;
+      opacity: 0.9;
+      margin-bottom: 5px;
+    }
+    .price-display .price-amount {
+      font-size: 36px;
+      font-weight: bold;
+    }
+    .price-display .price-breakdown {
+      font-size: 12px;
+      opacity: 0.8;
+      margin-top: 5px;
+    }
+    .price-display.no-rate {
+      background: #ff9800;
+    }
+    .modal-actions {
+      display: flex;
+      gap: 10px;
+    }
+    .modal-actions button {
+      flex: 1;
+      padding: 14px;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .modal-actions .cancel-btn {
+      background: #f5f5f5;
+      color: #666;
+    }
+    .modal-actions .cancel-btn:hover {
+      background: #e0e0e0;
+    }
+    .modal-actions .confirm-btn {
+      background: #4caf50;
+      color: white;
+    }
+    .modal-actions .confirm-btn:hover {
+      background: #45a049;
+    }
+    .modal-actions .confirm-btn:disabled {
+      background: #ccc;
+      cursor: not-allowed;
+    }
+    .booking-status {
+      padding: 12px;
+      border-radius: 6px;
+      margin-top: 15px;
+      text-align: center;
+      font-size: 14px;
+    }
+    .booking-status.processing {
+      background: #fff3cd;
+      color: #856404;
+    }
+    .booking-status.success {
+      background: #d4edda;
+      color: #155724;
+    }
+    .booking-status.error {
+      background: #f8d7da;
+      color: #721c24;
+    }
   </style>
 </head>
 <body>
@@ -433,6 +610,65 @@
       </div>
     </div>
   </div>
+  
+  <!-- New Booking Modal -->
+  <div class="modal-overlay" id="newBookingModal">
+    <div class="booking-modal">
+      <div class="modal-header" style="position: relative;">
+        <h2>📅 Book This Slot</h2>
+        <button class="close-btn" onclick="closeNewBookingModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="booking-details">
+          <div class="detail-row">
+            <span class="detail-label">Room</span>
+            <span class="detail-value" id="modalRoom">-</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Date</span>
+            <span class="detail-value" id="modalDate">-</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Time</span>
+            <span class="detail-value" id="modalTime">-</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Duration</span>
+            <span class="detail-value" id="modalDuration">1 Hour</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Location</span>
+            <span class="detail-value" id="modalLocation">-</span>
+          </div>
+        </div>
+        
+        <div class="price-display" id="priceDisplay">
+          <div class="price-label">Room Hire Cost</div>
+          <div class="price-amount" id="priceAmount">£0.00</div>
+          <div class="price-breakdown" id="priceBreakdown">Calculating...</div>
+        </div>
+        
+        <div class="modal-actions">
+          <button class="cancel-btn" onclick="closeNewBookingModal()">Cancel</button>
+          <button class="confirm-btn" id="confirmBookingBtn" onclick="confirmNewBooking()">
+            Proceed to Payment
+          </button>
+        </div>
+        
+        <div class="booking-status" id="bookingStatus" style="display: none;"></div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Hidden fields for new booking -->
+  <input type="hidden" id="newBookingRoom">
+  <input type="hidden" id="newBookingRoomId">
+  <input type="hidden" id="newBookingDate">
+  <input type="hidden" id="newBookingTime">
+  <input type="hidden" id="newBookingEndTime">
+  <input type="hidden" id="newBookingLocationId">
+  <input type="hidden" id="newBookingPrice">
+  
   <!-- ================================ -->
   <!-- SECTION 3: GLOBAL CONFIGURATION -->
   <!-- ================================ -->
@@ -470,6 +706,8 @@
     window.clientId = null;
     // Global variable for booking to modify from URL
     window.bookingToModify = null;
+    // Global variable for pricing configuration
+    let pricingConfig = null;
     // Set today's date as default
     document.getElementById('dateSelector').value = currentDate;
     
@@ -1560,6 +1798,252 @@ function restoreSessionState() {
     }
   </script>
   <!-- ================================ -->
+  <!-- SECTION 5.5: PRICING & NEW BOOKINGS -->
+  <!-- ================================ -->
+  <script>
+    // Load pricing configuration from Firebase
+    async function loadPricingConfig() {
+      try {
+        const snapshot = await database.ref('pricing_config').once('value');
+        pricingConfig = snapshot.val();
+        
+        if (pricingConfig) {
+          console.log('Loaded pricing config:', pricingConfig);
+        } else {
+          console.warn('No pricing config found in Firebase');
+        }
+      } catch (error) {
+        console.error('Error loading pricing config:', error);
+      }
+    }
+    
+    // Calculate price for a booking
+    function calculateBookingPrice(locationId, date, hour) {
+      if (!pricingConfig) {
+        return { amount: 0, breakdown: 'Pricing not loaded', rate: null };
+      }
+      
+      const bookingDate = new Date(date + 'T12:00:00');
+      const dayOfWeek = bookingDate.getDay(); // 0 = Sunday, 1 = Monday, etc.
+      
+      const location = pricingConfig.locations[locationId];
+      if (!location) {
+        return { amount: 0, breakdown: 'Location not found', rate: null };
+      }
+      
+      // Find matching rule
+      let matchedRule = null;
+      for (const rule of location.rules) {
+        if (rule.days.includes(dayOfWeek) && hour >= rule.startHour && hour < rule.endHour) {
+          matchedRule = rule;
+          break;
+        }
+      }
+      
+      if (!matchedRule) {
+        return { amount: 0, breakdown: 'No pricing rule for this time', rate: null };
+      }
+      
+      const rate = pricingConfig.rates[matchedRule.rate];
+      if (!rate) {
+        return { amount: 0, breakdown: `Rate ${matchedRule.rate} not found`, rate: null };
+      }
+      
+      // For now, always 1 hour (multiplier = 1)
+      const price = rate.amount;
+      const breakdown = `${rate.label} rate (${matchedRule.rate})`;
+      
+      return { amount: price, breakdown, rate: matchedRule.rate };
+    }
+    
+    // Get room to location mapping
+    function getRoomLocationId(roomName) {
+      // Online is Buckhurst Hill (location 1), all others are Henley (location 2)
+      if (roomName === 'Online') {
+        return '1';
+      }
+      return '2';
+    }
+    
+    // Get room ID for SimplybookMe
+    function getRoomProviderId(roomName) {
+      const ROOM_MAPPING = {
+        'Room 1': '3',
+        'Room 2': '7',
+        'Room 4': '8',
+        'Room 5': '13',
+        'Room 6': '9',
+        'Room 7': '10',
+        'Online': '11'
+      };
+      return ROOM_MAPPING[roomName] || null;
+    }
+    
+    // Open new booking modal
+    function openNewBookingModal(room, date, time) {
+      const locationId = getRoomLocationId(room);
+      const locationName = locationId === '1' ? 'Buckhurst Hill' : 'Henley';
+      const hour = parseInt(time.split(':')[0]);
+      const endHour = hour + 1;
+      const endTime = `${String(endHour).padStart(2, '0')}:00`;
+      
+      // Format date for display
+      const dateObj = new Date(date + 'T12:00:00');
+      const dayName = weekDays[dateObj.getDay()];
+      const formattedDate = `${dayName}, ${dateObj.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}`;
+      
+      // Calculate price
+      const priceResult = calculateBookingPrice(locationId, date, hour);
+      
+      // Populate modal
+      document.getElementById('modalRoom').textContent = room;
+      document.getElementById('modalDate').textContent = formattedDate;
+      document.getElementById('modalTime').textContent = `${time} - ${endTime}`;
+      document.getElementById('modalDuration').textContent = '1 Hour';
+      document.getElementById('modalLocation').textContent = locationName;
+      
+      // Set hidden fields
+      document.getElementById('newBookingRoom').value = room;
+      document.getElementById('newBookingRoomId').value = getRoomProviderId(room);
+      document.getElementById('newBookingDate').value = date;
+      document.getElementById('newBookingTime').value = time;
+      document.getElementById('newBookingEndTime').value = endTime;
+      document.getElementById('newBookingLocationId').value = locationId;
+      document.getElementById('newBookingPrice').value = priceResult.amount;
+      
+      // Update price display
+      const priceDisplay = document.getElementById('priceDisplay');
+      const priceAmount = document.getElementById('priceAmount');
+      const priceBreakdown = document.getElementById('priceBreakdown');
+      
+      if (priceResult.amount > 0) {
+        priceDisplay.classList.remove('no-rate');
+        priceAmount.textContent = `£${(priceResult.amount / 100).toFixed(2)}`;
+        priceBreakdown.textContent = priceResult.breakdown;
+        document.getElementById('confirmBookingBtn').disabled = false;
+      } else {
+        priceDisplay.classList.add('no-rate');
+        priceAmount.textContent = '£0.00';
+        priceBreakdown.textContent = priceResult.breakdown;
+        document.getElementById('confirmBookingBtn').disabled = true;
+      }
+      
+      // Reset status
+      document.getElementById('bookingStatus').style.display = 'none';
+      
+      // Show modal
+      document.getElementById('newBookingModal').classList.add('active');
+    }
+    
+    // Close new booking modal
+    function closeNewBookingModal() {
+      document.getElementById('newBookingModal').classList.remove('active');
+    }
+    
+    // Confirm new booking (placeholder for Stripe integration)
+    async function confirmNewBooking() {
+      const room = document.getElementById('newBookingRoom').value;
+      const roomId = document.getElementById('newBookingRoomId').value;
+      const date = document.getElementById('newBookingDate').value;
+      const time = document.getElementById('newBookingTime').value;
+      const endTime = document.getElementById('newBookingEndTime').value;
+      const locationId = document.getElementById('newBookingLocationId').value;
+      const price = document.getElementById('newBookingPrice').value;
+      
+      const statusDiv = document.getElementById('bookingStatus');
+      const confirmBtn = document.getElementById('confirmBookingBtn');
+      
+      // Show processing status
+      statusDiv.className = 'booking-status processing';
+      statusDiv.textContent = 'Processing booking...';
+      statusDiv.style.display = 'block';
+      confirmBtn.disabled = true;
+      
+      try {
+        // For now, just log the booking data
+        // This will be replaced with Stripe integration
+        const bookingPayload = {
+          action: 'create',
+          timestamp: new Date().toISOString(),
+          client_id: window.clientId,
+          counsellor_name: selectedCounsellor || sessionStorage.getItem('counsellorName'),
+          service_id: '2',
+          provider_id: roomId,
+          location_id: locationId,
+          start_datetime: `${date}T${time}:00`,
+          end_datetime: `${date}T${endTime}:00`,
+          additional_fields: {
+            comments: `Booked via counsellor calendar by ${selectedCounsellor || sessionStorage.getItem('counsellorName')}`
+          },
+          payment: {
+            paymentAmount: parseInt(price),
+            paymentStatus: 'pending'
+          }
+        };
+        
+        console.log('New booking payload:', bookingPayload);
+        
+        // Placeholder: Show success message (actual payment integration coming)
+        statusDiv.className = 'booking-status success';
+        statusDiv.innerHTML = `
+          <strong>Ready for payment</strong><br>
+          <small>Stripe payment integration coming soon.<br>
+          Booking details logged to console.</small>
+        `;
+        
+        // In the future, this will:
+        // 1. Create Stripe checkout session
+        // 2. Redirect to Stripe payment
+        // 3. On success, webhook triggers Make.com to create booking
+        
+      } catch (error) {
+        console.error('Booking error:', error);
+        statusDiv.className = 'booking-status error';
+        statusDiv.textContent = `Error: ${error.message}`;
+        confirmBtn.disabled = false;
+      }
+    }
+    
+    // Check if a time slot is available (not booked)
+    function isSlotAvailable(room, date, time) {
+      const roomMappings = {
+        'Room 1': ['Room_1', '1'],
+        'Room 2': ['Room_2', '2'],
+        'Room 4': ['Room_4', '4'],
+        'Room 5': ['Room_5', '5'],
+        'Room 6': ['Room_6', '6'],
+        'Room 7': ['Room_7', '7'],
+        'Online': ['Online', 'online']
+      };
+      
+      const roomVariants = roomMappings[room] || [room];
+      const hour = parseInt(time.split(':')[0]);
+      
+      // Check all bookings for this date
+      const dayBookings = bookingData.filter(booking => booking.date === date);
+      
+      for (const booking of dayBookings) {
+        // Check if this booking uses this room
+        const bookingRoomMatches = roomVariants.some(variant => 
+          booking.room === variant || 
+          (booking.location && booking.location.toLowerCase().includes('online') && room === 'Online')
+        );
+        
+        if (bookingRoomMatches) {
+          const startHour = parseInt(booking.start.split(':')[0]);
+          const endHour = parseInt(booking.end.split(':')[0]);
+          
+          // Check if our requested hour falls within this booking
+          if (hour >= startHour && hour < endHour) {
+            return false; // Slot is booked
+          }
+        }
+      }
+      
+      return true; // Slot is available
+    }
+  </script>
+  <!-- ================================ -->
   <!-- SECTION 6: CALENDAR FUNCTIONS -->
   <!-- ================================ -->
   <script>
@@ -1833,8 +2317,14 @@ function restoreSessionState() {
       const cells = document.querySelectorAll('.grid-cell');
       
       cells.forEach(cell => {
-        cell.innerHTML = '';
-        cell.classList.remove('booked', 'room-1', 'room-2', 'room-4', 'room-5', 'room-6', 'room-7', 'online', 'selected-booking', 'past-booking');
+        // Clone and replace to remove all event listeners, but keep the ID
+        const cellId = cell.id;
+        const newCell = cell.cloneNode(false);
+        newCell.id = cellId;
+        newCell.className = 'grid-cell';
+        newCell.style.cursor = '';
+        newCell.title = '';
+        cell.parentNode.replaceChild(newCell, cell);
       });
       
       // Filter out holding room bookings from regular calendar display
@@ -1872,6 +2362,9 @@ function restoreSessionState() {
       const loggedInCounsellor = selectedCounsellor || sessionStorage.getItem('counsellorName') || '';
       const hasValidToken = !!sessionStorage.getItem('accessToken');
       
+      // Track which cells have bookings
+      const bookedCells = new Set();
+      
       dayBookings.forEach(booking => {
         const startHour = parseInt(booking.start.split(':')[0]);
         const endHour = parseInt(booking.end.split(':')[0]);
@@ -1890,6 +2383,9 @@ function restoreSessionState() {
             const timeString = `${String(hour).padStart(2, '0')}:00`;
             const cellId = `cell-${roomNumber}-${timeString}`;
             const cell = document.getElementById(cellId);
+            
+            // Track this cell as booked
+            bookedCells.add(cellId);
             
             if (cell) {
               cell.classList.add('booked', roomClass);
@@ -1962,6 +2458,62 @@ function restoreSessionState() {
           }
         }
       });
+      
+      // Handle empty slots - make them clickable for authenticated users
+      if (hasValidToken && pricingConfig) {
+        const roomIds = {
+          'Room 1': '1',
+          'Room 2': '2',
+          'Room 4': '4',
+          'Room 5': '5',
+          'Room 6': '6',
+          'Room 7': '7',
+          'Online': 'online'
+        };
+        
+        // Check if selected date is in the past or within 24 hours
+        const selectedDateTime = new Date(selectedDate + 'T08:00:00');
+        const now = new Date();
+        const isPastDate = selectedDateTime < now && selectedDate !== now.toISOString().split('T')[0];
+        
+        if (!isPastDate) {
+          Object.entries(roomIds).forEach(([roomName, roomId]) => {
+            businessHours.forEach(time => {
+              const cellId = `cell-${roomId}-${time}`;
+              
+              // Skip if this cell is already booked
+              if (bookedCells.has(cellId)) return;
+              
+              const cell = document.getElementById(cellId);
+              if (!cell) return;
+              
+              // Check if this time slot is in the past
+              const hour = parseInt(time.split(':')[0]);
+              const slotDateTime = new Date(`${selectedDate}T${time}:00`);
+              if (slotDateTime < now) return;
+              
+              // Check if pricing is available for this slot
+              const locationId = getRoomLocationId(roomName);
+              const priceResult = calculateBookingPrice(locationId, selectedDate, hour);
+              
+              if (priceResult.amount > 0) {
+                // Make cell clickable
+                cell.classList.add('available-slot');
+                cell.title = `Book ${roomName} at ${time} - £${(priceResult.amount / 100).toFixed(2)}`;
+                
+                // Add click handler
+                cell.addEventListener('click', (function(room, date, timeSlot) {
+                  return function(e) {
+                    // Don't open modal if clicking on a booked cell
+                    if (e.target.closest('.booked')) return;
+                    openNewBookingModal(room, date, timeSlot);
+                  };
+                })(roomName, selectedDate, time));
+              }
+            });
+          });
+        }
+      }
     }
     
     // FIXED: Populate week view with token persistence
@@ -2234,7 +2786,11 @@ const activeUpdatedBookings = updatedArray.filter(booking =>
     // Initialize data
     function initializeData() {
       const priorityCounsellor = selectedCounsellor || sessionStorage.getItem('counsellorName') || null;
-      loadBookingDataWithPriority(priorityCounsellor).then(() => {
+      
+      // Load pricing config first, then booking data
+      loadPricingConfig().then(() => {
+        return loadBookingDataWithPriority(priorityCounsellor);
+      }).then(() => {
         populateCalendar();
       });
     }
