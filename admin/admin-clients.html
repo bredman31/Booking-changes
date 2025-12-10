@@ -73,7 +73,7 @@
       background: rgba(255, 255, 255, 0.1);
       color: white;
       font-size: 14px;
-      min-width: 200px;
+      min-width: 180px;
     }
     
     .search-box::placeholder {
@@ -195,7 +195,7 @@
     .clients-table {
       width: 100%;
       border-collapse: collapse;
-      min-width: 1000px;
+      min-width: 1100px;
     }
     
     .clients-table th {
@@ -210,6 +210,52 @@
       top: 0;
       white-space: nowrap;
     }
+    
+    .clients-table th.sortable {
+      cursor: pointer;
+      user-select: none;
+      transition: background 0.2s;
+    }
+    
+    .clients-table th.sortable:hover {
+      background: #e9ecef;
+      color: #333;
+    }
+    
+    .sort-icon {
+      margin-left: 5px;
+      font-size: 10px;
+      color: #999;
+    }
+    
+    .sort-icon.asc::after {
+      content: '▲';
+      color: #007bff;
+    }
+    
+    .sort-icon.desc::after {
+      content: '▼';
+      color: #007bff;
+    }
+    
+    .location-badges {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+    }
+    
+    .location-badge {
+      background: #e3f2fd;
+      color: #1976d2;
+      padding: 2px 8px;
+      border-radius: 10px;
+      font-size: 11px;
+      font-weight: 500;
+    }
+    
+    .location-badge.henley { background: #e8f5e9; color: #388e3c; }
+    .location-badge.buckhurst_hill { background: #fff3e0; color: #f57c00; }
+    .location-badge.oxford { background: #f3e5f5; color: #7b1fa2; }
     
     .clients-table td {
       padding: 12px 15px;
@@ -792,14 +838,27 @@
     </div>
     <div class="header-controls">
       <input type="text" class="search-box" id="searchBox" placeholder="Search by name or email..." oninput="filterClients()">
+      <select class="filter-select" id="locationFilter" onchange="filterClients()">
+        <option value="all">All Locations</option>
+      </select>
       <select class="filter-select" id="statusFilter" onchange="filterClients()">
-        <option value="all">All Clients</option>
+        <option value="all">All Status</option>
         <option value="active">Active Only</option>
         <option value="inactive">Inactive Only</option>
         <option value="with-token">With Token</option>
         <option value="no-token">No Token</option>
         <option value="recent">Booked Recently (30 days)</option>
         <option value="dormant">No Booking 30+ Days</option>
+      </select>
+      <select class="filter-select" id="sortSelect" onchange="filterClients()">
+        <option value="name-asc">Sort: Name A-Z</option>
+        <option value="name-desc">Sort: Name Z-A</option>
+        <option value="id-asc">Sort: ID ↑</option>
+        <option value="id-desc">Sort: ID ↓</option>
+        <option value="bookings-desc">Sort: Most Bookings</option>
+        <option value="bookings-asc">Sort: Least Bookings</option>
+        <option value="last-desc">Sort: Recent Activity</option>
+        <option value="last-asc">Sort: Oldest Activity</option>
       </select>
       <button class="add-btn" onclick="openAddModal()">➕ Add Client</button>
     </div>
@@ -823,28 +882,35 @@
         <div class="stat-value" id="tokenCount">-</div>
         <div class="stat-label">With Token</div>
       </div>
+      <div class="stat-card" style="border-left: 3px solid #17a2b8;">
+        <div class="stat-value" id="bookedRecentCount" style="color: #17a2b8;">-</div>
+        <div class="stat-label">Booked (30 days)</div>
+      </div>
     </div>
     
     <div class="status-message" id="statusMessage"></div>
+    
+    <div class="results-count" id="resultsCount" style="margin-bottom: 15px; color: #666; font-size: 14px;"></div>
     
     <div class="clients-table-container">
       <div class="table-scroll">
         <table class="clients-table">
           <thead>
             <tr>
-              <th>ID</th>
-              <th>Name</th>
+              <th class="sortable" onclick="sortBy('id')">ID <span class="sort-icon" data-col="id"></span></th>
+              <th class="sortable" onclick="sortBy('name')">Name <span class="sort-icon" data-col="name"></span></th>
               <th>Email</th>
-              <th>Status</th>
-              <th>Last Booking</th>
-              <th>Bookings (6mo)</th>
+              <th>Location</th>
+              <th class="sortable" onclick="sortBy('status')">Status <span class="sort-icon" data-col="status"></span></th>
+              <th class="sortable" onclick="sortBy('last')">Last Booking <span class="sort-icon" data-col="last"></span></th>
+              <th class="sortable" onclick="sortBy('bookings')">Bookings (6mo) <span class="sort-icon" data-col="bookings"></span></th>
               <th>Token</th>
               <th>Actions</th>
             </tr>
           </thead>
           <tbody id="clientsTableBody">
             <tr>
-              <td colspan="8">
+              <td colspan="9">
                 <div class="loading">
                   <div class="loading-spinner"></div>
                   Loading clients...
@@ -1061,6 +1127,9 @@
           buckhurst_hill: { name: 'Buckhurst Hill', prefix: 'BH' }
         };
         
+        // Populate location filter dropdown
+        populateLocationFilter();
+        
         clients = clientsSnap.val() || {};
         
         // Process bookings
@@ -1175,10 +1244,24 @@
       const inactive = total - active;
       const withToken = clientList.filter(c => c.token).length;
       
+      // Count clients who booked in last 30 days
+      const now = new Date();
+      const thirtyDaysAgo = new Date(now);
+      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+      
+      let bookedRecent = 0;
+      Object.keys(clients).forEach(id => {
+        const stats = clientBookingStats[id] || {};
+        if (stats.lastBookingDate && stats.lastBookingDate >= thirtyDaysAgo) {
+          bookedRecent++;
+        }
+      });
+      
       document.getElementById('totalCount').textContent = total;
       document.getElementById('activeCount').textContent = active;
       document.getElementById('inactiveCount').textContent = inactive;
       document.getElementById('tokenCount').textContent = withToken;
+      document.getElementById('bookedRecentCount').textContent = bookedRecent;
     }
     
     // ================================
@@ -1188,6 +1271,8 @@
       const tbody = document.getElementById('clientsTableBody');
       const searchTerm = document.getElementById('searchBox').value.toLowerCase();
       const statusFilter = document.getElementById('statusFilter').value;
+      const locationFilter = document.getElementById('locationFilter').value;
+      const sortOption = document.getElementById('sortSelect').value;
       
       const now = new Date();
       const thirtyDaysAgo = new Date(now);
@@ -1201,6 +1286,10 @@
           client.email?.toLowerCase().includes(searchTerm) ||
           id.toLowerCase().includes(searchTerm);
         
+        // Location filter
+        const clientLocations = client.locations || ['henley'];
+        const matchesLocation = locationFilter === 'all' || clientLocations.includes(locationFilter);
+        
         // Get booking stats
         const stats = clientBookingStats[id] || {};
         
@@ -1213,16 +1302,61 @@
         else if (statusFilter === 'recent') matchesStatus = stats.lastBookingDate && stats.lastBookingDate >= thirtyDaysAgo;
         else if (statusFilter === 'dormant') matchesStatus = !stats.lastBookingDate || stats.lastBookingDate < thirtyDaysAgo;
         
-        return matchesSearch && matchesStatus;
+        return matchesSearch && matchesStatus && matchesLocation;
       });
       
-      // Sort by name
-      filteredClients.sort((a, b) => (a[1].name || '').localeCompare(b[1].name || ''));
+      // Sort clients
+      const [sortField, sortDir] = sortOption.split('-');
+      filteredClients.sort((a, b) => {
+        const [idA, clientA] = a;
+        const [idB, clientB] = b;
+        const statsA = clientBookingStats[idA] || {};
+        const statsB = clientBookingStats[idB] || {};
+        
+        let comparison = 0;
+        
+        switch (sortField) {
+          case 'name':
+            comparison = (clientA.name || '').localeCompare(clientB.name || '');
+            break;
+          case 'id':
+            comparison = idA.localeCompare(idB);
+            break;
+          case 'status':
+            comparison = (clientA.active ? 1 : 0) - (clientB.active ? 1 : 0);
+            break;
+          case 'bookings':
+            comparison = (statsA.last6Months || 0) - (statsB.last6Months || 0);
+            break;
+          case 'last':
+            const dateA = statsA.lastBookingDate ? statsA.lastBookingDate.getTime() : 0;
+            const dateB = statsB.lastBookingDate ? statsB.lastBookingDate.getTime() : 0;
+            comparison = dateA - dateB;
+            break;
+          default:
+            comparison = (clientA.name || '').localeCompare(clientB.name || '');
+        }
+        
+        return sortDir === 'desc' ? -comparison : comparison;
+      });
+      
+      // Update sort icons
+      updateSortIcons(sortField, sortDir);
+      
+      // Show results count
+      const totalClients = Object.keys(clients).length;
+      const filteredCount = filteredClients.length;
+      const resultsEl = document.getElementById('resultsCount');
+      if (filteredCount === totalClients) {
+        resultsEl.textContent = `Showing all ${totalClients} clients`;
+      } else {
+        resultsEl.textContent = `Showing ${filteredCount} of ${totalClients} clients`;
+      }
       
       if (filteredClients.length === 0) {
         tbody.innerHTML = `
           <tr>
-            <td colspan="8">
+            <td colspan="9">
               <div class="no-results">No clients found matching your criteria.</div>
             </td>
           </tr>
@@ -1232,6 +1366,7 @@
       
       tbody.innerHTML = filteredClients.map(([id, client]) => {
         const stats = clientBookingStats[id] || {};
+        const clientLocations = client.locations || ['henley'];
         
         // Format last booking
         let lastBookingHtml = '<span class="last-booking">Never</span>';
@@ -1244,11 +1379,18 @@
           lastBookingHtml = `<span class="last-booking ${colorClass}" title="${daysSince} days ago">${dateStr}</span>`;
         }
         
+        // Format locations
+        const locationBadges = clientLocations.map(loc => {
+          const locName = locationConfig[loc]?.name || loc;
+          return `<span class="location-badge ${loc}">${locName}</span>`;
+        }).join('');
+        
         return `
           <tr>
             <td><span class="client-id">${id}</span></td>
             <td><a class="client-name" onclick="openClientAnalysis('${id}')">${client.name || '-'}</a></td>
             <td><span class="client-email">${client.email || '-'}</span></td>
+            <td><div class="location-badges">${locationBadges}</div></td>
             <td>
               <span class="status-badge ${client.active ? 'active' : 'inactive'}">
                 ${client.active ? 'Active' : 'Inactive'}
@@ -1274,6 +1416,45 @@
           </tr>
         `;
       }).join('');
+    }
+    
+    function updateSortIcons(activeField, activeDir) {
+      document.querySelectorAll('.sort-icon').forEach(icon => {
+        icon.className = 'sort-icon';
+        if (icon.dataset.col === activeField) {
+          icon.classList.add(activeDir);
+        }
+      });
+    }
+    
+    function sortBy(field) {
+      const sortSelect = document.getElementById('sortSelect');
+      const currentValue = sortSelect.value;
+      const [currentField, currentDir] = currentValue.split('-');
+      
+      // Toggle direction if same field, otherwise default to asc (or desc for bookings/last)
+      let newDir;
+      if (currentField === field) {
+        newDir = currentDir === 'asc' ? 'desc' : 'asc';
+      } else {
+        // Default directions
+        newDir = (field === 'bookings' || field === 'last') ? 'desc' : 'asc';
+      }
+      
+      sortSelect.value = `${field}-${newDir}`;
+      filterClients();
+    }
+    
+    function populateLocationFilter() {
+      const select = document.getElementById('locationFilter');
+      select.innerHTML = '<option value="all">All Locations</option>';
+      
+      Object.entries(locationConfig).forEach(([key, loc]) => {
+        const option = document.createElement('option');
+        option.value = key;
+        option.textContent = loc.name;
+        select.appendChild(option);
+      });
     }
     
     function filterClients() {
