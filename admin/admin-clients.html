@@ -9,6 +9,9 @@
   <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-database-compat.js"></script>
   
+  <!-- Chart.js for graphs -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  
   <style>
     * {
       margin: 0;
@@ -185,9 +188,14 @@
       overflow: hidden;
     }
     
+    .table-scroll {
+      overflow-x: auto;
+    }
+    
     .clients-table {
       width: 100%;
       border-collapse: collapse;
+      min-width: 1000px;
     }
     
     .clients-table th {
@@ -200,6 +208,7 @@
       border-bottom: 2px solid #eee;
       position: sticky;
       top: 0;
+      white-space: nowrap;
     }
     
     .clients-table td {
@@ -223,7 +232,13 @@
     
     .client-name {
       font-weight: 600;
-      color: #1a1a2e;
+      color: #007bff;
+      cursor: pointer;
+      text-decoration: none;
+    }
+    
+    .client-name:hover {
+      text-decoration: underline;
     }
     
     .client-email {
@@ -255,7 +270,7 @@
       background: #f8f9fa;
       padding: 3px 8px;
       border-radius: 4px;
-      max-width: 100px;
+      max-width: 80px;
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
@@ -267,10 +282,27 @@
       font-style: italic;
     }
     
-    .henley-id {
-      font-family: 'Courier New', monospace;
+    .last-booking {
       font-size: 12px;
-      color: #6c757d;
+      color: #666;
+    }
+    
+    .last-booking.recent {
+      color: #28a745;
+      font-weight: 600;
+    }
+    
+    .last-booking.old {
+      color: #dc3545;
+    }
+    
+    .last-booking.medium {
+      color: #ffc107;
+    }
+    
+    .booking-count {
+      font-weight: 600;
+      color: #1a1a2e;
     }
     
     .action-btns {
@@ -309,16 +341,6 @@
     
     .action-btn.token:hover {
       background: #28a745;
-      color: white;
-    }
-    
-    .action-btn.delete {
-      color: #dc3545;
-      border-color: #dc3545;
-    }
-    
-    .action-btn.delete:hover {
-      background: #dc3545;
       color: white;
     }
     
@@ -374,6 +396,10 @@
       overflow-y: auto;
       transform: scale(0.9);
       transition: transform 0.3s;
+    }
+    
+    .modal.large {
+      max-width: 850px;
     }
     
     .modal-overlay.show .modal {
@@ -450,6 +476,12 @@
     .form-row {
       display: grid;
       grid-template-columns: 1fr 1fr;
+      gap: 15px;
+    }
+    
+    .form-row-3 {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
       gap: 15px;
     }
     
@@ -606,6 +638,92 @@
       background: #218838;
     }
     
+    /* Tabs */
+    .modal-tabs {
+      display: flex;
+      border-bottom: 2px solid #eee;
+      margin: -25px -25px 25px -25px;
+      padding: 0 25px;
+    }
+    
+    .modal-tab {
+      padding: 15px 25px;
+      border: none;
+      background: none;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 600;
+      color: #666;
+      border-bottom: 3px solid transparent;
+      margin-bottom: -2px;
+      transition: all 0.2s;
+    }
+    
+    .modal-tab:hover {
+      color: #1a1a2e;
+    }
+    
+    .modal-tab.active {
+      color: #007bff;
+      border-bottom-color: #007bff;
+    }
+    
+    .tab-content {
+      display: none;
+    }
+    
+    .tab-content.active {
+      display: block;
+    }
+    
+    /* Analysis Section */
+    .analysis-section {
+      padding-top: 10px;
+    }
+    
+    .analysis-section h3 {
+      color: #1a1a2e;
+      font-size: 16px;
+      margin-bottom: 20px;
+    }
+    
+    .analysis-stats {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 15px;
+      margin-bottom: 25px;
+    }
+    
+    .analysis-stat {
+      background: #f8f9fa;
+      padding: 15px;
+      border-radius: 8px;
+      text-align: center;
+    }
+    
+    .analysis-stat .value {
+      font-size: 24px;
+      font-weight: 700;
+      color: #1a1a2e;
+    }
+    
+    .analysis-stat .value.good { color: #28a745; }
+    .analysis-stat .value.warn { color: #ffc107; }
+    .analysis-stat .value.bad { color: #dc3545; }
+    
+    .analysis-stat .label {
+      font-size: 11px;
+      color: #666;
+      margin-top: 5px;
+    }
+    
+    .chart-container {
+      background: #f8f9fa;
+      padding: 20px;
+      border-radius: 8px;
+      height: 280px;
+    }
+    
     /* No results */
     .no-results {
       text-align: center;
@@ -646,15 +764,22 @@
         font-size: 12px;
       }
       
-      .clients-table th:nth-child(4),
-      .clients-table td:nth-child(4),
-      .clients-table th:nth-child(5),
-      .clients-table td:nth-child(5) {
-        display: none;
+      .form-row, .form-row-3 {
+        grid-template-columns: 1fr;
       }
       
-      .form-row {
-        grid-template-columns: 1fr;
+      .analysis-stats {
+        grid-template-columns: repeat(2, 1fr);
+      }
+      
+      .modal-tabs {
+        overflow-x: auto;
+      }
+      
+      .modal-tab {
+        padding: 12px 15px;
+        font-size: 13px;
+        white-space: nowrap;
       }
     }
   </style>
@@ -673,6 +798,8 @@
         <option value="inactive">Inactive Only</option>
         <option value="with-token">With Token</option>
         <option value="no-token">No Token</option>
+        <option value="recent">Booked Recently (30 days)</option>
+        <option value="dormant">No Booking 30+ Days</option>
       </select>
       <button class="add-btn" onclick="openAddModal()">➕ Add Client</button>
     </div>
@@ -701,91 +828,146 @@
     <div class="status-message" id="statusMessage"></div>
     
     <div class="clients-table-container">
-      <table class="clients-table">
-        <thead>
-          <tr>
-            <th>ID</th>
-            <th>Name</th>
-            <th>Email</th>
-            <th>Status</th>
-            <th>Token</th>
-            <th>SBM ID</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody id="clientsTableBody">
-          <tr>
-            <td colspan="7">
-              <div class="loading">
-                <div class="loading-spinner"></div>
-                Loading clients...
-              </div>
-            </td>
-          </tr>
-        </tbody>
-      </table>
+      <div class="table-scroll">
+        <table class="clients-table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Name</th>
+              <th>Email</th>
+              <th>Status</th>
+              <th>Last Booking</th>
+              <th>Bookings (6mo)</th>
+              <th>Token</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="clientsTableBody">
+            <tr>
+              <td colspan="8">
+                <div class="loading">
+                  <div class="loading-spinner"></div>
+                  Loading clients...
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
     </div>
   </main>
   
-  <!-- Add/Edit Client Modal -->
+  <!-- Add/Edit Client Modal with Tabs -->
   <div class="modal-overlay" id="clientModal">
-    <div class="modal">
+    <div class="modal large">
       <div class="modal-header">
         <h2 id="modalTitle">➕ Add New Client</h2>
         <button class="modal-close" onclick="closeModal()">&times;</button>
       </div>
       <div class="modal-body">
-        <input type="hidden" id="editClientId">
-        
-        <div class="form-group">
-          <label>Client ID</label>
-          <input type="text" id="clientIdDisplay" disabled>
-          <small>Auto-generated, cannot be changed</small>
+        <!-- Tabs -->
+        <div class="modal-tabs" id="modalTabs">
+          <button class="modal-tab active" onclick="switchTab('details')">Details</button>
+          <button class="modal-tab" onclick="switchTab('analysis')" id="analysisTabBtn" style="display: none;">📊 Analysis</button>
         </div>
         
-        <div class="form-group">
-          <label>Name *</label>
-          <input type="text" id="clientName" placeholder="Full name">
-        </div>
-        
-        <div class="form-group">
-          <label>Email *</label>
-          <input type="email" id="clientEmail" placeholder="email@example.com">
-        </div>
-        
-        <div class="toggle-row">
-          <span class="toggle-label">Active</span>
-          <label class="toggle-switch">
-            <input type="checkbox" id="clientActive" checked>
-            <span class="toggle-slider"></span>
-          </label>
-        </div>
-        
-        <div class="form-group">
-          <label>Locations</label>
-          <div class="checkbox-group" id="locationCheckboxes">
-            <!-- Populated dynamically -->
+        <!-- Details Tab -->
+        <div class="tab-content active" id="detailsTab">
+          <input type="hidden" id="editClientId">
+          
+          <div class="form-row">
+            <div class="form-group">
+              <label>Client ID</label>
+              <input type="text" id="clientIdDisplay" disabled>
+              <small>Auto-generated, cannot be changed</small>
+            </div>
+            <div class="form-group">
+              <label>FreeAgent ID</label>
+              <input type="text" id="clientFreeAgentId" placeholder="e.g. 12345678">
+              <small>For accounting integration</small>
+            </div>
           </div>
-        </div>
-        
-        <div class="form-row">
+          
           <div class="form-group">
-            <label>Henley SBM Client ID</label>
-            <input type="text" id="clientHenleyId" placeholder="e.g. 16">
-            <small>For transition period only</small>
+            <label>Name *</label>
+            <input type="text" id="clientName" placeholder="Full name">
           </div>
+          
           <div class="form-group">
-            <label>New System ID</label>
-            <input type="text" id="clientNewSystemId" disabled>
-            <small>Legacy reference</small>
+            <label>Email *</label>
+            <input type="email" id="clientEmail" placeholder="email@example.com">
+          </div>
+          
+          <div class="toggle-row">
+            <span class="toggle-label">Active</span>
+            <label class="toggle-switch">
+              <input type="checkbox" id="clientActive" checked>
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+          
+          <div class="form-group">
+            <label>Locations</label>
+            <div class="checkbox-group" id="locationCheckboxes">
+              <!-- Populated dynamically -->
+            </div>
+          </div>
+          
+          <div class="form-row-3">
+            <div class="form-group">
+              <label>Henley SBM ID</label>
+              <input type="text" id="clientHenleyId" placeholder="e.g. 16">
+              <small>For transition</small>
+            </div>
+            <div class="form-group">
+              <label>New System ID</label>
+              <input type="text" id="clientNewSystemId" disabled>
+              <small>Legacy reference</small>
+            </div>
+            <div class="form-group">
+              <label>Last Booking</label>
+              <input type="text" id="clientLastBooking" disabled>
+              <small>Auto-calculated</small>
+            </div>
+          </div>
+          
+          <div class="form-group" id="tokenSection" style="display: none;">
+            <label>Access Token</label>
+            <div class="token-display">
+              <code id="tokenDisplay">No token assigned</code>
+              <button class="copy-btn" onclick="copyToken()">📋 Copy Token</button>
+            </div>
           </div>
         </div>
         
-        <div class="form-group" id="tokenSection" style="display: none;">
-          <label>Access Token</label>
-          <div class="token-display">
-            <code id="tokenDisplay">No token assigned</code>
-            <button class="copy-btn" onclick="copyToken()">📋 Copy Token</button>
+        <!-- Analysis Tab -->
+        <div class="tab-content" id="analysisTabContent">
+          <div class="analysis-section">
+            <h3>📊 Booking Analysis for <span id="analysisClientName"></span></h3>
+            
+            <div class="analysis-stats">
+              <div class="analysis-stat">
+                <div class="value" id="totalBookingsCount">-</div>
+                <div class="label">Total All Time</div>
+              </div>
+              <div class="analysis-stat">
+                <div class="value" id="last6MonthsCount">-</div>
+                <div class="label">Last 6 Months</div>
+              </div>
+              <div class="analysis-stat">
+                <div class="value" id="weeklyAverage">-</div>
+                <div class="label">Avg Per Week</div>
+              </div>
+              <div class="analysis-stat">
+                <div class="value" id="lastBookingDays">-</div>
+                <div class="label">Days Since Last</div>
+              </div>
+            </div>
+            
+            <h4 style="margin-bottom: 15px; color: #666; font-size: 14px;">📈 Bookings Per Month (Last 6 Months)</h4>
+            <div class="chart-container">
+              <canvas id="bookingChart"></canvas>
+            </div>
           </div>
         </div>
       </div>
@@ -849,8 +1031,11 @@
     const CALENDAR_BASE_URL = 'https://bredman31.github.io/booking-changes/index.html';
     
     let clients = {};
+    let bookings = [];
     let locationConfig = {};
     let nextClientNumber = 1;
+    let bookingChart = null;
+    let clientBookingStats = {};  // Cache for booking stats per client
     
     // ================================
     // INITIALIZATION
@@ -864,16 +1049,27 @@
     // ================================
     async function loadData() {
       try {
-        // Load location config
-        const locSnap = await database.ref('location_config').once('value');
+        // Load all data in parallel
+        const [locSnap, clientsSnap, bookingsSnap] = await Promise.all([
+          database.ref('location_config').once('value'),
+          database.ref('clients').once('value'),
+          database.ref('bookings').once('value')
+        ]);
+        
         locationConfig = locSnap.val() || {
           henley: { name: 'Henley', prefix: 'H' },
           buckhurst_hill: { name: 'Buckhurst Hill', prefix: 'BH' }
         };
         
-        // Load clients
-        const clientsSnap = await database.ref('clients').once('value');
         clients = clientsSnap.val() || {};
+        
+        // Process bookings
+        const bookingsData = bookingsSnap.val() || [];
+        bookings = Array.isArray(bookingsData) ? bookingsData : Object.values(bookingsData);
+        bookings = bookings.filter(b => b && b.status !== 'cancelled' && b.status !== 'cancel');
+        
+        // Calculate booking stats for each client
+        calculateClientBookingStats();
         
         // Calculate next client number
         Object.keys(clients).forEach(id => {
@@ -893,6 +1089,80 @@
         console.error('Error loading data:', error);
         showStatus('Error loading data: ' + error.message, 'error');
       }
+    }
+    
+    // ================================
+    // BOOKING STATS CALCULATION
+    // ================================
+    function calculateClientBookingStats() {
+      clientBookingStats = {};
+      
+      const now = new Date();
+      const sixMonthsAgo = new Date(now);
+      sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+      
+      const thisMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+      
+      // Initialize stats for each client
+      Object.entries(clients).forEach(([clientId, client]) => {
+        clientBookingStats[clientId] = {
+          total: 0,
+          last6Months: 0,
+          thisMonth: 0,
+          lastBookingDate: null,
+          monthlyData: {}
+        };
+        
+        // Initialize monthly data for past 6 months
+        for (let i = 5; i >= 0; i--) {
+          const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+          const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+          clientBookingStats[clientId].monthlyData[key] = 0;
+        }
+      });
+      
+      // Process bookings
+      bookings.forEach(booking => {
+        if (!booking.client) return;
+        
+        // Find client by name (case insensitive)
+        const clientEntry = Object.entries(clients).find(([id, c]) => 
+          c.name && c.name.toLowerCase() === booking.client.toLowerCase()
+        );
+        
+        if (!clientEntry) return;
+        
+        const [clientId, client] = clientEntry;
+        const stats = clientBookingStats[clientId];
+        
+        if (!stats) return;
+        
+        const bookingDate = new Date(booking.date + 'T12:00:00');
+        
+        // Total count
+        stats.total++;
+        
+        // Last 6 months
+        if (bookingDate >= sixMonthsAgo) {
+          stats.last6Months++;
+          
+          // Monthly breakdown
+          const monthKey = `${bookingDate.getFullYear()}-${String(bookingDate.getMonth() + 1).padStart(2, '0')}`;
+          if (stats.monthlyData[monthKey] !== undefined) {
+            stats.monthlyData[monthKey]++;
+          }
+        }
+        
+        // This month
+        if (bookingDate >= thisMonthStart) {
+          stats.thisMonth++;
+        }
+        
+        // Track last booking
+        if (!stats.lastBookingDate || bookingDate > stats.lastBookingDate) {
+          stats.lastBookingDate = bookingDate;
+        }
+      });
     }
     
     // ================================
@@ -919,6 +1189,10 @@
       const searchTerm = document.getElementById('searchBox').value.toLowerCase();
       const statusFilter = document.getElementById('statusFilter').value;
       
+      const now = new Date();
+      const thirtyDaysAgo = new Date(now);
+      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+      
       // Filter clients
       let filteredClients = Object.entries(clients).filter(([id, client]) => {
         // Search filter
@@ -927,12 +1201,17 @@
           client.email?.toLowerCase().includes(searchTerm) ||
           id.toLowerCase().includes(searchTerm);
         
+        // Get booking stats
+        const stats = clientBookingStats[id] || {};
+        
         // Status filter
         let matchesStatus = true;
         if (statusFilter === 'active') matchesStatus = client.active;
         else if (statusFilter === 'inactive') matchesStatus = !client.active;
         else if (statusFilter === 'with-token') matchesStatus = !!client.token;
         else if (statusFilter === 'no-token') matchesStatus = !client.token;
+        else if (statusFilter === 'recent') matchesStatus = stats.lastBookingDate && stats.lastBookingDate >= thirtyDaysAgo;
+        else if (statusFilter === 'dormant') matchesStatus = !stats.lastBookingDate || stats.lastBookingDate < thirtyDaysAgo;
         
         return matchesSearch && matchesStatus;
       });
@@ -943,7 +1222,7 @@
       if (filteredClients.length === 0) {
         tbody.innerHTML = `
           <tr>
-            <td colspan="7">
+            <td colspan="8">
               <div class="no-results">No clients found matching your criteria.</div>
             </td>
           </tr>
@@ -951,38 +1230,179 @@
         return;
       }
       
-      tbody.innerHTML = filteredClients.map(([id, client]) => `
-        <tr>
-          <td><span class="client-id">${id}</span></td>
-          <td><span class="client-name">${client.name || '-'}</span></td>
-          <td><span class="client-email">${client.email || '-'}</span></td>
-          <td>
-            <span class="status-badge ${client.active ? 'active' : 'inactive'}">
-              ${client.active ? 'Active' : 'Inactive'}
-            </span>
-          </td>
-          <td>
-            ${client.token 
-              ? `<span class="token-badge">${client.token.substring(0, 8)}...</span>`
-              : `<span class="token-badge no-token">No token</span>`
-            }
-          </td>
-          <td><span class="henley-id">${client.henleyClientId || '-'}</span></td>
-          <td>
-            <div class="action-btns">
-              <button class="action-btn edit" onclick="editClient('${id}')">Edit</button>
+      tbody.innerHTML = filteredClients.map(([id, client]) => {
+        const stats = clientBookingStats[id] || {};
+        
+        // Format last booking
+        let lastBookingHtml = '<span class="last-booking">Never</span>';
+        if (stats.lastBookingDate) {
+          const daysSince = Math.floor((now - stats.lastBookingDate) / (1000 * 60 * 60 * 24));
+          const dateStr = stats.lastBookingDate.toLocaleDateString('en-GB');
+          let colorClass = 'recent';
+          if (daysSince > 60) colorClass = 'old';
+          else if (daysSince > 30) colorClass = 'medium';
+          lastBookingHtml = `<span class="last-booking ${colorClass}" title="${daysSince} days ago">${dateStr}</span>`;
+        }
+        
+        return `
+          <tr>
+            <td><span class="client-id">${id}</span></td>
+            <td><a class="client-name" onclick="openClientAnalysis('${id}')">${client.name || '-'}</a></td>
+            <td><span class="client-email">${client.email || '-'}</span></td>
+            <td>
+              <span class="status-badge ${client.active ? 'active' : 'inactive'}">
+                ${client.active ? 'Active' : 'Inactive'}
+              </span>
+            </td>
+            <td>${lastBookingHtml}</td>
+            <td><span class="booking-count">${stats.last6Months || 0}</span></td>
+            <td>
               ${client.token 
-                ? `<button class="action-btn token" onclick="showToken('${id}')">🔗</button>`
-                : `<button class="action-btn token" onclick="generateTokenFor('${id}')">+🔑</button>`
+                ? `<span class="token-badge">${client.token.substring(0, 8)}...</span>`
+                : `<span class="token-badge no-token">No token</span>`
               }
-            </div>
-          </td>
-        </tr>
-      `).join('');
+            </td>
+            <td>
+              <div class="action-btns">
+                <button class="action-btn edit" onclick="editClient('${id}')">Edit</button>
+                ${client.token 
+                  ? `<button class="action-btn token" onclick="showToken('${id}')">🔗</button>`
+                  : `<button class="action-btn token" onclick="generateTokenFor('${id}')">+🔑</button>`
+                }
+              </div>
+            </td>
+          </tr>
+        `;
+      }).join('');
     }
     
     function filterClients() {
       renderClients();
+    }
+    
+    // ================================
+    // TAB SWITCHING
+    // ================================
+    function switchTab(tabName) {
+      // Update tab buttons
+      document.querySelectorAll('.modal-tab').forEach(tab => tab.classList.remove('active'));
+      document.querySelector(`.modal-tab[onclick="switchTab('${tabName}')"]`).classList.add('active');
+      
+      // Update tab content
+      document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+      document.getElementById(tabName === 'details' ? 'detailsTab' : 'analysisTabContent').classList.add('active');
+    }
+    
+    // ================================
+    // CLIENT ANALYSIS (via name click)
+    // ================================
+    function openClientAnalysis(clientId) {
+      const client = clients[clientId];
+      if (!client) return;
+      
+      // Populate edit form first
+      populateEditForm(clientId, client);
+      
+      // Show analysis tab
+      document.getElementById('analysisTabBtn').style.display = 'block';
+      
+      // Populate analysis data
+      populateAnalysis(clientId, client.name);
+      
+      // Switch to analysis tab
+      switchTab('analysis');
+      
+      document.getElementById('clientModal').classList.add('show');
+    }
+    
+    function populateAnalysis(clientId, clientName) {
+      const stats = clientBookingStats[clientId] || {};
+      
+      // Update name
+      document.getElementById('analysisClientName').textContent = clientName || 'Unknown';
+      
+      // Update stats
+      document.getElementById('totalBookingsCount').textContent = stats.total || 0;
+      document.getElementById('last6MonthsCount').textContent = stats.last6Months || 0;
+      
+      // Weekly average (last 6 months = ~26 weeks)
+      const weeklyAvg = stats.last6Months ? (stats.last6Months / 26).toFixed(1) : '0';
+      document.getElementById('weeklyAverage').textContent = weeklyAvg;
+      
+      // Days since last booking
+      const daysEl = document.getElementById('lastBookingDays');
+      if (stats.lastBookingDate) {
+        const daysSince = Math.floor((new Date() - stats.lastBookingDate) / (1000 * 60 * 60 * 24));
+        daysEl.textContent = daysSince;
+        
+        // Color code
+        daysEl.className = 'value';
+        if (daysSince <= 14) daysEl.classList.add('good');
+        else if (daysSince <= 30) daysEl.classList.add('warn');
+        else daysEl.classList.add('bad');
+      } else {
+        daysEl.textContent = 'Never';
+        daysEl.className = 'value bad';
+      }
+      
+      // Create chart
+      createBookingChart(stats.monthlyData || {});
+    }
+    
+    function createBookingChart(monthlyData) {
+      const canvas = document.getElementById('bookingChart');
+      const ctx = canvas.getContext('2d');
+      
+      // Destroy existing chart
+      if (bookingChart) {
+        bookingChart.destroy();
+      }
+      
+      // Prepare data
+      const labels = [];
+      const data = [];
+      
+      const now = new Date();
+      for (let i = 5; i >= 0; i--) {
+        const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+        const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+        const monthName = d.toLocaleDateString('en-GB', { month: 'short', year: '2-digit' });
+        
+        labels.push(monthName);
+        data.push(monthlyData[key] || 0);
+      }
+      
+      bookingChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: labels,
+          datasets: [{
+            label: 'Bookings',
+            data: data,
+            backgroundColor: 'rgba(0, 123, 255, 0.7)',
+            borderColor: 'rgba(0, 123, 255, 1)',
+            borderWidth: 1,
+            borderRadius: 6
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              display: false
+            }
+          },
+          scales: {
+            y: {
+              beginAtZero: true,
+              ticks: {
+                stepSize: 1
+              }
+            }
+          }
+        }
+      });
     }
     
     // ================================
@@ -997,10 +1417,14 @@
       document.getElementById('clientActive').checked = true;
       document.getElementById('clientHenleyId').value = '';
       document.getElementById('clientNewSystemId').value = '';
+      document.getElementById('clientFreeAgentId').value = '';
+      document.getElementById('clientLastBooking').value = 'N/A';
       document.getElementById('tokenSection').style.display = 'none';
       document.getElementById('generateTokenBtn').style.display = 'none';
+      document.getElementById('analysisTabBtn').style.display = 'none';
       
       populateLocationCheckboxes([]);
+      switchTab('details');
       
       document.getElementById('clientModal').classList.add('show');
     }
@@ -1009,7 +1433,20 @@
       const client = clients[clientId];
       if (!client) return;
       
-      document.getElementById('modalTitle').textContent = '✏️ Edit Client';
+      populateEditForm(clientId, client);
+      
+      // Show analysis tab for existing clients
+      document.getElementById('analysisTabBtn').style.display = 'block';
+      
+      // Also populate analysis in case they switch tab
+      populateAnalysis(clientId, client.name);
+      
+      switchTab('details');
+      document.getElementById('clientModal').classList.add('show');
+    }
+    
+    function populateEditForm(clientId, client) {
+      document.getElementById('modalTitle').textContent = '✏️ ' + (client.name || 'Edit Client');
       document.getElementById('editClientId').value = clientId;
       document.getElementById('clientIdDisplay').value = clientId;
       document.getElementById('clientName').value = client.name || '';
@@ -1017,6 +1454,15 @@
       document.getElementById('clientActive').checked = client.active !== false;
       document.getElementById('clientHenleyId').value = client.henleyClientId || '';
       document.getElementById('clientNewSystemId').value = client.newSystemId || '';
+      document.getElementById('clientFreeAgentId').value = client.freeAgentId || '';
+      
+      // Last booking
+      const stats = clientBookingStats[clientId] || {};
+      if (stats.lastBookingDate) {
+        document.getElementById('clientLastBooking').value = stats.lastBookingDate.toLocaleDateString('en-GB');
+      } else {
+        document.getElementById('clientLastBooking').value = 'Never';
+      }
       
       populateLocationCheckboxes(client.locations || []);
       
@@ -1031,8 +1477,6 @@
         document.getElementById('generateTokenBtn').style.display = 'inline-block';
         document.getElementById('generateTokenBtn').textContent = '🔑 Generate Token';
       }
-      
-      document.getElementById('clientModal').classList.add('show');
     }
     
     function populateLocationCheckboxes(selectedLocations) {
@@ -1052,6 +1496,12 @@
     
     function closeModal() {
       document.getElementById('clientModal').classList.remove('show');
+      
+      // Destroy chart when closing
+      if (bookingChart) {
+        bookingChart.destroy();
+        bookingChart = null;
+      }
     }
     
     async function saveClient() {
@@ -1062,6 +1512,7 @@
       const email = document.getElementById('clientEmail').value.trim();
       const active = document.getElementById('clientActive').checked;
       const henleyClientId = document.getElementById('clientHenleyId').value.trim();
+      const freeAgentId = document.getElementById('clientFreeAgentId').value.trim();
       
       // Get selected locations
       const locationCheckboxes = document.querySelectorAll('#locationCheckboxes input[type="checkbox"]');
@@ -1080,18 +1531,19 @@
         name: name,
         email: email,
         active: active,
-        henleyClientId: henleyClientId,
         locations: locations.length > 0 ? locations : ['henley']
       };
       
+      // Add optional fields if present
+      if (henleyClientId) clientData.henleyClientId = henleyClientId;
+      if (freeAgentId) clientData.freeAgentId = freeAgentId;
+      
       // Preserve existing fields if editing
       if (editId && clients[editId]) {
-        clientData.token = clients[editId].token || '';
-        clientData.newSystemId = clients[editId].newSystemId || '';
+        if (clients[editId].token) clientData.token = clients[editId].token;
+        if (clients[editId].newSystemId) clientData.newSystemId = clients[editId].newSystemId;
         clientData.createdAt = clients[editId].createdAt || new Date().toISOString();
       } else {
-        clientData.token = '';
-        clientData.newSystemId = '';
         clientData.createdAt = new Date().toISOString();
       }
       
@@ -1103,6 +1555,9 @@
         if (!editId) {
           nextClientNumber++;
         }
+        
+        // Recalculate stats for this client
+        calculateClientBookingStats();
         
         closeModal();
         updateStats();
