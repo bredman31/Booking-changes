@@ -449,8 +449,7 @@
     }
   </style>
 </head>
-<script src="booking-enhancements.js"></script>
-  <body>
+<body>
   <!-- ================================ -->
   <!-- SECTION 2: HTML STRUCTURE -->
   <!-- ================================ -->
@@ -2907,5 +2906,13 @@ const activeUpdatedBookings = updatedArray.filter(booking =>
       parseURLParams(); // This handles everything now
     });
   </script>
+  
+  <!-- ================================ -->
+  <!-- SECTION 8: EXTERNAL JS FILES -->
+  <!-- ================================ -->
+  <!-- Token auth override - must load first -->
+  <script src="js/token-auth-update.js"></script>
+  <!-- Booking enhancements (£0 bookings, basket, etc) -->
+  <script src="js/booking-enhancements.js"></script>
 </body>
 </html>
