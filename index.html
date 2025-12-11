@@ -2595,7 +2595,7 @@ function restoreSessionState() {
               const locationId = getRoomLocationId(roomName);
               const priceResult = calculateBookingPrice(locationId, selectedDate, hour);
               
-              if (priceResult.amount > 0) {
+             if (priceResult.amount >= 0 && priceResult.rate !== null) {
                 // Make cell clickable
                 cell.classList.add('available-slot');
                 cell.title = `Book ${roomName} at ${time} - £${(priceResult.amount / 100).toFixed(2)}`;
