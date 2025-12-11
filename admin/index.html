@@ -1,0 +1,2839 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Cherry Tree Centre - Room Booking Calendar</title>
+  
+  <!-- Firebase Scripts -->
+  <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-database-compat.js"></script>
+  
+  <!-- QUICK WIN: External configuration and utilities -->
+  <script src="config.js"></script>
+  <script src="utils.js"></script>
+  
+  <!-- ================================ -->
+  <!-- SECTION 1: STYLES AND CSS -->
+  <!-- ================================ -->
+  <style>
+    /* General styles */
+    body {
+      display: flex;
+      margin: 0;
+      font-family: Arial, sans-serif;
+      height: 100vh;
+      flex-direction: column;
+    }
+    .header {
+      background: #f8f9fa;
+      padding: 10px 20px;
+      border-bottom: 1px solid #ddd;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .view-selector {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+    .view-btn {
+      padding: 8px 16px;
+      border: 1px solid #ddd;
+      background: white;
+      cursor: pointer;
+      border-radius: 4px;
+    }
+    .view-btn.active {
+      background: #007bff;
+      color: white;
+    }
+    .counsellor-filter {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+    .main-container {
+      display: flex;
+      flex: 1;
+      overflow: hidden;
+    }
+    .form-container {
+      width: 400px;
+      padding: 10px;
+      border-right: 1px solid #ccc;
+      box-sizing: border-box;
+      overflow-y: auto;
+    }
+    .calendar-section {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    .calendar-container {
+      flex: 1;
+      overflow: auto;
+      padding: 10px;
+    }
+    .controls {
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    
+    /* Holding room section */
+    .holding-room-section {
+      background: #e3f2fd;
+      border-top: 2px solid #2196f3;
+      padding: 15px;
+      margin: 0;
+    }
+    .holding-room-header {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      margin-bottom: 10px;
+    }
+    .holding-room-title {
+      font-weight: bold;
+      font-size: 16px;
+      color: #1976d2;
+    }
+    .holding-room-count {
+      background: #2196f3;
+      color: white;
+      padding: 4px 12px;
+      border-radius: 12px;
+      font-weight: bold;
+      font-size: 14px;
+    }
+    .select-holding-btn {
+      background: #4caf50;
+      color: white;
+      padding: 8px 16px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-weight: bold;
+      transition: background 0.3s;
+    }
+    .select-holding-btn:hover:not(:disabled) {
+      background: #45a049;
+    }
+    .select-holding-btn:disabled {
+      background: #ccc;
+      cursor: not-allowed;
+    }
+    .holding-room-info {
+      font-size: 14px;
+      color: #666;
+      margin-top: 5px;
+    }
+    
+    /* Calendar grid styles */
+    .calendar-grid {
+      display: grid;
+      border: 1px solid #ccc;
+      font-size: 0.85em;
+      max-width: 100%;
+      min-height: 400px;
+    }
+    .calendar-grid.day-view {
+      grid-template-columns: 60px repeat(7, 1fr);
+      grid-auto-rows: 35px;
+    }
+    .calendar-grid.week-view {
+      grid-template-columns: 80px repeat(7, 1fr);
+      grid-auto-rows: 30px;
+    }
+    .grid-header {
+      background: #f0f0f0;
+      font-weight: bold;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid #ccc;
+      padding: 2px;
+      font-size: 0.9em;
+    }
+    .time-header {
+      background: #f8f8f8;
+      font-weight: bold;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid #ccc;
+      font-size: 0.8em;
+    }
+    .grid-cell {
+      border: 1px solid #eee;
+      padding: 2px;
+      font-size: 0.75em;
+      position: relative;
+      overflow: hidden;
+      background: #fff;
+      line-height: 1.2;
+      cursor: pointer;
+    }
+    .grid-cell.booked {
+      border: 1px solid #333;
+    }
+    .grid-cell.booked.room-1 {
+      background: #d4a5a5;
+      border-color: #b89090;
+    }
+    .grid-cell.booked.room-2 {
+      background: #b299d4;
+      border-color: #9680c0;
+    }
+    .grid-cell.booked.room-4 {
+      background: #a5d4a5;
+      border-color: #90b890;
+    }
+    .grid-cell.booked.room-5 {
+      background: #e57373;
+      border-color: #d32f2f;
+    }
+    .grid-cell.booked.room-6 {
+      background: #c8a882;
+      border-color: #b5946e;
+    }
+    .grid-cell.booked.room-7 {
+      background: #e6d45a;
+      border-color: #d4c347;
+    }
+    .grid-cell.booked.online {
+      background: #7dd87d;
+      border-color: #6bc46b;
+    }
+    .grid-cell.selected-booking {
+      box-shadow: 0 0 0 3px #ff6b6b inset, 0 0 8px rgba(255, 107, 107, 0.6);
+      animation: pulse 2s infinite;
+    }
+    @keyframes pulse {
+      0% { box-shadow: 0 0 0 3px #ff6b6b inset, 0 0 8px rgba(255, 107, 107, 0.6); }
+      50% { box-shadow: 0 0 0 3px #ff9999 inset, 0 0 12px rgba(255, 153, 153, 0.8); }
+      100% { box-shadow: 0 0 0 3px #ff6b6b inset, 0 0 8px rgba(255, 107, 107, 0.6); }
+    }
+    .booking-info {
+      font-weight: bold;
+      color: #1976d2;
+      font-size: 0.8em;
+    }
+    .client-name {
+      color: #666;
+      font-size: 0.7em;
+    }
+    
+    /* Form and info styles */
+    .date-selector {
+      font-weight: bold;
+    }
+    .week-navigation {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+    .counsellor-info {
+      background: #e8f4f8;
+      padding: 10px;
+      margin-bottom: 10px;
+      border-radius: 5px;
+    }
+    .hidden {
+      display: none;
+    }
+    
+    /* 24-hour restriction styles */
+    .grid-cell.past-booking {
+      opacity: 0.5;
+      cursor: not-allowed;
+      background-color: #f5f5f5 !important;
+      color: #999;
+    }
+    .past-booking-notice {
+      background: #f8d7da;
+      color: #721c24;
+      padding: 8px;
+      border-radius: 4px;
+      margin-top: 10px;
+      font-size: 12px;
+      text-align: center;
+    }
+    
+    /* Holding room form styles */
+    .holding-room-form-header {
+      background: #e3f2fd;
+      color: #1976d2;
+      padding: 10px;
+      margin: -20px -20px 15px -20px;
+      border-radius: 8px 8px 0 0;
+      font-weight: bold;
+      text-align: center;
+    }
+    
+    /* Empty slot styles */
+    .grid-cell.available-slot {
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .grid-cell.available-slot:hover {
+      background: #e8f5e9;
+      border-color: #4caf50;
+    }
+    .grid-cell.available-slot::after {
+      content: '+';
+      color: #4caf50;
+      font-size: 16px;
+      font-weight: bold;
+      opacity: 0;
+      transition: opacity 0.2s;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+    }
+    .grid-cell.available-slot:hover::after {
+      opacity: 1;
+    }
+    
+    /* New Booking Modal styles */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.6);
+      z-index: 1000;
+      justify-content: center;
+      align-items: center;
+    }
+    .modal-overlay.active {
+      display: flex;
+    }
+    .booking-modal {
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      max-width: 500px;
+      width: 90%;
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+    .modal-header {
+      background: #4caf50;
+      color: white;
+      padding: 20px;
+      border-radius: 12px 12px 0 0;
+    }
+    .modal-header h2 {
+      margin: 0;
+      font-size: 20px;
+    }
+    .modal-header .close-btn {
+      position: absolute;
+      top: 15px;
+      right: 20px;
+      background: none;
+      border: none;
+      color: white;
+      font-size: 24px;
+      cursor: pointer;
+      opacity: 0.8;
+    }
+    .modal-header .close-btn:hover {
+      opacity: 1;
+    }
+    .modal-body {
+      padding: 25px;
+    }
+    .booking-details {
+      background: #f8f9fa;
+      padding: 15px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+    }
+    .booking-details .detail-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 8px 0;
+      border-bottom: 1px solid #eee;
+    }
+    .booking-details .detail-row:last-child {
+      border-bottom: none;
+    }
+    .booking-details .detail-label {
+      color: #666;
+      font-weight: 500;
+    }
+    .booking-details .detail-value {
+      color: #333;
+      font-weight: 600;
+    }
+    .price-display {
+      background: linear-gradient(135deg, #4caf50 0%, #45a049 100%);
+      color: white;
+      padding: 20px;
+      border-radius: 8px;
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    .price-display .price-label {
+      font-size: 14px;
+      opacity: 0.9;
+      margin-bottom: 5px;
+    }
+    .price-display .price-amount {
+      font-size: 36px;
+      font-weight: bold;
+    }
+    .price-display .price-breakdown {
+      font-size: 12px;
+      opacity: 0.8;
+      margin-top: 5px;
+    }
+    .price-display.no-rate {
+      background: #ff9800;
+    }
+    .modal-actions {
+      display: flex;
+      gap: 10px;
+    }
+    .modal-actions button {
+      flex: 1;
+      padding: 14px;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .modal-actions .cancel-btn {
+      background: #f5f5f5;
+      color: #666;
+    }
+    .modal-actions .cancel-btn:hover {
+      background: #e0e0e0;
+    }
+    .modal-actions .confirm-btn {
+      background: #4caf50;
+      color: white;
+    }
+    .modal-actions .confirm-btn:hover {
+      background: #45a049;
+    }
+    .modal-actions .confirm-btn:disabled {
+      background: #ccc;
+      cursor: not-allowed;
+    }
+    .booking-status {
+      padding: 12px;
+      border-radius: 6px;
+      margin-top: 15px;
+      text-align: center;
+      font-size: 14px;
+    }
+    .booking-status.processing {
+      background: #fff3cd;
+      color: #856404;
+    }
+    .booking-status.success {
+      background: #d4edda;
+      color: #155724;
+    }
+    .booking-status.error {
+      background: #f8d7da;
+      color: #721c24;
+    }
+  </style>
+</head>
+<body>
+  <!-- ================================ -->
+  <!-- SECTION 2: HTML STRUCTURE -->
+  <!-- ================================ -->
+  <div class="header">
+    <h2 id="pageTitle">Cherry Tree Centre - Room Booking Calendar</h2>
+    <div class="view-selector">
+      <button class="view-btn active" onclick="switchView('day')">Day View</button>
+      <button class="view-btn" onclick="switchView('week')">Week View</button>
+    </div>
+    <div class="counsellor-filter hidden" id="counsellorFilterContainer">
+      <label>Counsellor:</label>
+      <select id="counsellorSelect" onchange="filterByCounsellor()">
+        <option value="">All Counsellors</option>
+      </select>
+    </div>
+  </div>
+  <div class="main-container">
+    <!-- Left panel: Form for modifying bookings -->
+    <div class="form-container">
+      <div id="counsellorInfo" class="counsellor-info hidden">
+        <h3 id="counsellorName"></h3>
+        <p id="counsellorSummary"></p>
+      </div>
+      
+      <!-- Custom booking change form -->
+      <div style="background: #f9f9f9; padding: 20px; border-radius: 8px;">
+        <div id="normalFormHeader">
+          <h3>Modify Booking</h3>
+          <p style="margin-bottom: 15px; font-size: 14px; color: #666;">Click on a booking in the calendar to modify it.</p>
+        </div>
+        <div id="holdingFormHeader" class="holding-room-form-header hidden">
+          Move Booking from Holding Room
+        </div>
+        
+        <form id="bookingChangeForm">
+          <div id="currentBookingDisplay" style="margin-bottom: 15px;">
+            <div style="font-size: 14px; line-height: 1.4;">
+              <div style="margin-bottom: 8px;"><strong>Current Room:</strong> <span id="currentRoomDisplay"></span></div>
+              <div id="currentDateRow" style="margin-bottom: 8px;"><strong>Current Date:</strong> <span id="currentDateDisplay"></span></div>
+              <div id="currentTimeRow" style="margin-bottom: 8px;"><strong>Current Time:</strong> <span id="currentTimeDisplay"></span></div>
+              <div id="bookingCodeRow" class="hidden" style="margin-bottom: 8px;"><strong>Booking Code:</strong> <span id="bookingCodeDisplay"></span></div>
+              <div id="clientNameRow" class="hidden" style="margin-bottom: 8px;"><strong>Client:</strong> <span id="clientNameDisplay"></span></div>
+            </div>
+          </div>
+          
+          <!-- Hidden fields for form submission -->
+          <input type="hidden" id="bookingCodeInput">
+          <input type="hidden" id="currentRoomInput">
+          <input type="hidden" id="currentDateInput">
+          <input type="hidden" id="currentTimeInput">
+          <input type="hidden" id="counsellorNameInput">
+          <input type="hidden" id="isHoldingRoomBooking" value="false">
+          
+          <!-- Past booking notice -->
+          <div id="pastBookingNotice" class="past-booking-notice hidden">
+            This booking is within 24 hours and cannot be modified or cancelled online. Please contact the centre directly.
+          </div>
+          
+          <div id="cancelButtonSection" style="margin: 20px 0; text-align: center;">
+            <button type="button" id="cancelBookingBtn" onclick="cancelBooking()" 
+                    style="background: #dc3545; color: white; padding: 12px 24px; border: none; border-radius: 4px; cursor: pointer; font-size: 14px; font-weight: bold; width: 100%; margin-bottom: 10px;"
+                    disabled>
+              Cancel This Appointment
+            </button>
+            <div id="cancelStatus" style="margin-top: 10px; padding: 8px; border-radius: 4px; display: none; font-size: 12px;"></div>
+          </div>
+          
+          <hr id="formDivider" style="margin: 20px 0; border: 1px solid #ddd;">
+          <h4 id="changeRequestHeader" style="margin-bottom: 15px; color: #007bff;">Or Request Changes:</h4>
+          <h4 id="holdingMoveHeader" class="hidden" style="margin-bottom: 15px; color: #007bff;">Select New Location:</h4>
+          
+          <div style="margin-bottom: 15px;">
+            <label id="roomChangeLabel" style="display: block; font-weight: bold; margin-bottom: 5px;">New Room (if changing):</label>
+            <select id="newRoomInput" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px;">
+              <option value="">No change</option>
+              <option value="Room 1">Room 1</option>
+              <option value="Room 2">Room 2</option>
+              <option value="Room 4">Room 4</option>
+              <option value="Room 5">Room 5</option>
+              <option value="Room 6">Room 6</option>
+              <option value="Room 7">Room 7</option>
+              <option value="Online">Online</option>
+            </select>
+          </div>
+          
+          <div style="margin-bottom: 15px;">
+            <label style="display: block; font-weight: bold; margin-bottom: 5px;">New Date (if changing):</label>
+            <input type="date" id="newDateInput" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px;">
+          </div>
+          
+          <div style="margin-bottom: 20px;">
+            <label style="display: block; font-weight: bold; margin-bottom: 5px;">New Time (if changing):</label>
+            <select id="newTimeInput" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px;">
+              <option value="">No change</option>
+              <option value="08:00">08:00</option>
+              <option value="09:00">09:00</option>
+              <option value="10:00">10:00</option>
+              <option value="11:00">11:00</option>
+              <option value="12:00">12:00</option>
+              <option value="13:00">13:00</option>
+              <option value="14:00">14:00</option>
+              <option value="15:00">15:00</option>
+              <option value="16:00">16:00</option>
+              <option value="17:00">17:00</option>
+              <option value="18:00">18:00</option>
+              <option value="19:00">19:00</option>
+              <option value="20:00">20:00</option>
+            </select>
+          </div>
+          
+          <button type="submit" id="submitChangeBtn" style="background: #007bff; color: white; padding: 12px 24px; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; width: 100%; font-weight: bold;">
+            Submit Change Request
+          </button>
+        </form>
+        
+        <div id="submitStatus" style="margin-top: 15px; padding: 12px; border-radius: 4px; display: none;"></div>
+      </div>
+    </div>
+    
+    <!-- Right panel: Calendar display -->
+    <div class="calendar-section">
+      <div class="calendar-container">
+        <div class="controls">
+          <div id="dayControls">
+            <label class="date-selector">Date:</label>
+            <input type="date" id="dateSelector" />
+          </div>
+          
+          <div id="weekControls" class="hidden">
+            <div class="week-navigation">
+              <button onclick="changeWeek(-1)">← Previous Week</button>
+              <span id="weekDisplay"></span>
+              <button onclick="changeWeek(1)">Next Week →</button>
+            </div>
+          </div>
+          
+          <button onclick="refreshData()">Refresh Data</button>
+          <span id="dataStatus" style="margin-left: 15px; font-size: 0.9em; color: #666;"></span>
+        </div>
+        
+        <div class="calendar-grid day-view" id="calendarGrid">
+          <!-- Dynamic grid will be inserted here -->
+        </div>
+      </div>
+      
+      <!-- Holding Room Section -->
+      <div class="holding-room-section" id="holdingRoomSection">
+        <div class="holding-room-header">
+          <span class="holding-room-title">Available Holding Room Bookings</span>
+          <span class="holding-room-count" id="holdingRoomCount">0</span>
+          <button class="select-holding-btn" id="selectHoldingBtn" onclick="selectHoldingRoomBooking()">
+            Select Holding Room Booking
+          </button>
+        </div>
+        <div class="holding-room-info">
+          Click the button above to move a booking from the holding room to a new time slot.
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- New Booking Modal -->
+  <div class="modal-overlay" id="newBookingModal">
+    <div class="booking-modal">
+      <div class="modal-header" style="position: relative;">
+        <h2>📅 Book This Slot</h2>
+        <button class="close-btn" onclick="closeNewBookingModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="booking-details">
+          <div class="detail-row">
+            <span class="detail-label">Room</span>
+            <span class="detail-value" id="modalRoom">-</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Date</span>
+            <span class="detail-value" id="modalDate">-</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Time</span>
+            <span class="detail-value" id="modalTime">-</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Duration</span>
+            <span class="detail-value" id="modalDuration">1 Hour</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Location</span>
+            <span class="detail-value" id="modalLocation">-</span>
+          </div>
+        </div>
+        
+        <div class="price-display" id="priceDisplay">
+          <div class="price-label">Room Hire Cost</div>
+          <div class="price-amount" id="priceAmount">£0.00</div>
+          <div class="price-breakdown" id="priceBreakdown">Calculating...</div>
+        </div>
+        
+        <div class="modal-actions">
+          <button class="cancel-btn" onclick="closeNewBookingModal()">Cancel</button>
+          <button class="confirm-btn" id="confirmBookingBtn" onclick="confirmNewBooking()">
+            Proceed to Payment
+          </button>
+        </div>
+        
+        <div class="booking-status" id="bookingStatus" style="display: none;"></div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Hidden fields for new booking -->
+  <input type="hidden" id="newBookingRoom">
+  <input type="hidden" id="newBookingRoomId">
+  <input type="hidden" id="newBookingDate">
+  <input type="hidden" id="newBookingTime">
+  <input type="hidden" id="newBookingEndTime">
+  <input type="hidden" id="newBookingLocationId">
+  <input type="hidden" id="newBookingPrice">
+  
+  <!-- ================================ -->
+  <!-- SECTION 3: GLOBAL CONFIGURATION -->
+  <!-- ================================ -->
+  <script>
+    // QUICK WIN: Using external config.js for Firebase and URLs
+    const SCRIPT_URL = GOOGLE_SCRIPTS.MAIN;
+    
+    // Initialize Firebase using external config
+    firebase.initializeApp(FIREBASE_CONFIG);
+    const database = firebase.database();
+    
+    // Constants - using CALENDAR_ROOMS from config.js
+    const rooms = CALENDAR_ROOMS;
+    const businessHours = Array.from({length: 13}, (_, i) => `${String(i + 8).padStart(2, '0')}:00`);
+    const weekDays = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    
+    // Global state variables
+    let bookingData = [];
+    let holdingRoomBookings = [];
+    let currentView = 'day';
+    let currentDate = new Date().toISOString().split('T')[0];
+    let currentWeekStart = new Date();
+    let selectedCounsellor = '';
+    window.clientId = null;
+    window.bookingToModify = null;
+    let pricingConfig = null;
+    
+    // Set today's date as default
+    document.getElementById('dateSelector').value = currentDate;
+    
+    // Set current week to start on Monday
+    const today = new Date();
+    const dayOfWeek = today.getDay();
+    let daysToSubtract;
+    if (dayOfWeek === 0) {
+      daysToSubtract = 6;
+    } else {
+      daysToSubtract = dayOfWeek - 1;
+    }
+    currentWeekStart = new Date(today);
+    currentWeekStart.setDate(today.getDate() - daysToSubtract);
+    currentWeekStart.setHours(0, 0, 0, 0);
+  </script>
+  <!-- ================================ -->
+  <!-- SECTION 4: UTILITY FUNCTIONS -->
+  <!-- ================================ -->
+  <script>
+    // 24-hour check function
+    function isBookingWithin24Hours(bookingDate, bookingTime) {
+      const now = new Date();
+      const bookingDateTime = new Date(`${bookingDate}T${bookingTime}:00`);
+      const timeDiff = bookingDateTime.getTime() - now.getTime();
+      const hoursDiff = timeDiff / (1000 * 60 * 60);
+      return hoursDiff < 24;
+    }
+    
+    // Format date and time for SimplybookMe
+    function formatDateTimeForSimplybookMe(date, time) {
+      if (!date || !time) {
+        return '';
+      }
+      
+      let formattedTime = time;
+      if (time.length === 5) {
+        formattedTime = time + ':00';
+      }
+      
+      return `${date}T${formattedTime}`;
+    }
+    // Get location ID from room name - ADDED ROOM 5
+    function getLocationIdFromRoom(roomName) {
+      if (HENLEY_ROOMS.includes(roomName)) {
+        return '2';
+      } else {
+        return '1';
+      }
+    }
+    // Get available rooms for a specific location - ADDED ROOM 5
+    function getRoomsForLocation(locationId) {
+      if (locationId === '1') {
+        return ['Online'];
+      } else if (locationId === '2') {
+        return ['Room 1', 'Room 2', 'Room 4', 'Room 5', 'Room 6', 'Room 7', 'Car Park'];
+      }
+      return [];
+    }
+
+// Restore session state from storage - call this at start of any navigation
+function restoreSessionState() {
+  const token = sessionStorage.getItem('accessToken');
+  const counsellorName = sessionStorage.getItem('counsellorName');
+  
+  if (token && counsellorName && !selectedCounsellor) {
+    selectedCounsellor = counsellorName;
+    console.log('Session restored: counsellor =', counsellorName);
+    return true;
+  }
+  
+  if (token && !counsellorName) {
+    console.warn('Token exists but no counsellor name found');
+    return false;
+  }
+  
+  return !!token;
+}
+    
+    // FIXED: Token validation function WITH DEBUGGING
+    async function validateAccessToken(token) {
+      console.log('🔐 validateAccessToken called with token:', token);
+      
+      try {
+        console.log('📡 Checking Firebase for token:', token);
+        const snap = await database.ref('therapist_tokens/' + token).once('value');
+        const t = snap.val();
+        
+        console.log('📦 Firebase returned:', t);
+        
+        if (t && t.active) {
+          console.log('✅ Token is valid and active');
+          console.log('👤 Counsellor name:', t.name);
+          console.log('🆔 Client ID:', t.clientId);
+          
+          sessionStorage.setItem('accessToken', token);
+          sessionStorage.setItem('counsellorName', t.name || '');
+          window.clientId = t.clientId || null;
+          selectedCounsellor = t.name || '';
+          
+          console.log('💾 Stored in sessionStorage:');
+          console.log('  - accessToken:', sessionStorage.getItem('accessToken'));
+          console.log('  - counsellorName:', sessionStorage.getItem('counsellorName'));
+          console.log('  - selectedCounsellor global:', selectedCounsellor);
+          console.log('  - window.clientId:', window.clientId);
+          
+          return true;
+        } else {
+          console.log('❌ Token invalid or inactive');
+          console.log('  - Token data exists?', !!t);
+          console.log('  - Token active?', t?.active);
+        }
+        return false;
+      } catch (e) {
+        console.error('🚨 Token validation error:', e);
+        console.error('  - Error message:', e.message);
+        console.error('  - Stack:', e.stack);
+        return false;
+      }
+    }
+
+    // FIXED: Process valid session function WITH DEBUGGING
+    function processValidSession(params) {
+      console.log('🎯 processValidSession called with params:', Object.fromEntries(params));
+      
+      const view = params.get('view');
+      const date = params.get('date');
+      const bookingId = params.get('booking');
+      const room = params.get('room');
+      const time = params.get('time');
+      const modify = params.get('modify');
+
+      console.log('📋 Extracted params:');
+      console.log('  - view:', view);
+      console.log('  - date:', date);
+      console.log('  - modify:', modify);
+
+      if (view === 'day' || view === 'week') {
+        currentView = view;
+        console.log('  - Set currentView to:', currentView);
+      }
+
+      if (date) {
+        currentDate = date;
+        const dateEl = document.getElementById('dateSelector');
+        if (dateEl) {
+          dateEl.value = currentDate;
+          console.log('  - Set date selector to:', currentDate);
+        }
+        const d = new Date(date + 'T12:00:00');
+        currentWeekStart = getWeekStartDate(d);
+        console.log('  - Set week start to:', formatDate(currentWeekStart));
+      }
+
+      if (modify === 'true' && bookingId && room && date && time) {
+        window.bookingToModify = {
+          bookingId,
+          room: decodeURIComponent(room),
+          date,
+          time: decodeURIComponent(time)
+        };
+        console.log('  - Set booking to modify:', window.bookingToModify);
+      }
+
+      console.log('🚀 Calling initializeWithFullAccess...');
+      // Initialize with full access when token is valid
+      initializeWithFullAccess();
+    }
+
+    // Parse non-token parameters
+    function parseNonTokenParams(params) {
+      const view = params.get('view');
+      const counsellor = params.get('counsellor');
+      const clientName = params.get('name');
+      const clientId = params.get('clientId');
+      const date = params.get('date');
+      const bookingId = params.get('booking');
+      const room = params.get('room');
+      const time = params.get('time');
+      const modify = params.get('modify');
+
+      if (view === 'day' || view === 'week') currentView = view;
+
+      if (clientId && clientName) {
+        selectedCounsellor = decodeURIComponent(clientName);
+        window.clientId = clientId;
+      } else if (counsellor) {
+        selectedCounsellor = decodeURIComponent(counsellor);
+        window.clientId = null;
+      } else {
+        // last resort: if a previous token set the name, reuse it for rendering
+        const storedName = sessionStorage.getItem('counsellorName');
+        if (storedName) selectedCounsellor = storedName;
+      }
+
+      if (date) {
+        currentDate = date;
+        const dateEl = document.getElementById('dateSelector');
+        if (dateEl) dateEl.value = currentDate;
+        const d = new Date(date + 'T12:00:00');
+        currentWeekStart = getWeekStartDate(d);
+      }
+
+      if (modify === 'true' && bookingId && room && date && time) {
+        window.bookingToModify = {
+          bookingId,
+          room: decodeURIComponent(room),
+          date,
+          time: decodeURIComponent(time)
+        };
+      }
+
+      // Initialize with read-only access when no token
+      initializeWithReadOnlyAccess();
+    }
+
+    // FIXED: Parse URL parameters - token-first and async
+    function parseURLParams() {
+      const params = new URLSearchParams(window.location.search);
+      const tokenFromURL = params.get('token');
+      const tokenFromSession = sessionStorage.getItem('accessToken');
+
+      if (tokenFromURL) {
+        validateAccessToken(tokenFromURL).then(ok => {
+          if (ok) {
+            processValidSession(params);
+            updateURL(); // ensures token stays in URL
+          } else {
+            sessionStorage.removeItem('accessToken');
+            sessionStorage.removeItem('counsellorName');
+            // fall back to non-token params below
+            parseNonTokenParams(params);
+          }
+        });
+      } else if (tokenFromSession) {
+        validateAccessToken(tokenFromSession).then(ok => {
+          if (ok) {
+            processValidSession(params);
+            updateURL();
+          } else {
+            sessionStorage.removeItem('accessToken');
+            sessionStorage.removeItem('counsellorName');
+            parseNonTokenParams(params);
+          }
+        });
+      } else {
+        parseNonTokenParams(params);
+      }
+    }
+    
+    // Initialize with full access
+    function initializeWithFullAccess() {
+      console.log('Initializing with full access');
+      
+      // Set up view and controls
+      updateViewButtons();
+      updateControlsVisibility();
+      
+      const grid = document.getElementById('calendarGrid');
+      if (grid) {
+        grid.className = `calendar-grid ${currentView}-view`;
+        createCalendarGrid();
+      }
+      
+      // Load data
+      initializeData();
+      
+      // Enable form submission
+      const changeForm = document.getElementById('bookingChangeForm');
+      if (changeForm) {
+        changeForm.addEventListener('submit', handleFormSubmit);
+      }
+      
+      // Set up date selector with token preservation
+      document.getElementById('dateSelector').addEventListener('change', function() {
+        currentDate = this.value;
+        populateCalendar();
+        updateURL(); // This will preserve the token
+      });
+      
+      // Handle auto-fill from URL
+      if (window.bookingToModify) {
+        setTimeout(() => {
+          prefillForm(
+            window.bookingToModify.bookingId,
+            window.bookingToModify.room,
+            window.bookingToModify.date,
+            window.bookingToModify.time
+          );
+          
+          const formContainer = document.querySelector('.form-container');
+          if (formContainer) {
+            formContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          }
+        }, 500);
+      }
+    }
+    
+    // Initialize with read-only access
+    function initializeWithReadOnlyAccess() {
+      console.log('Initializing with read-only access');
+      
+      // Set up view and controls
+      updateViewButtons();
+      updateControlsVisibility();
+      
+      const grid = document.getElementById('calendarGrid');
+      if (grid) {
+        grid.className = `calendar-grid ${currentView}-view`;
+        createCalendarGrid();
+      }
+      
+      // Load data (read-only)
+      initializeData();
+      
+      // Set up date selector (still allow navigation)
+      document.getElementById('dateSelector').addEventListener('change', function() {
+        currentDate = this.value;
+        populateCalendar();
+        updateURL();
+      });
+      
+      // Disable clicking on bookings
+      document.addEventListener('click', function(e) {
+        if (e.target.closest('.grid-cell.booked')) {
+          e.preventDefault();
+          e.stopPropagation();
+        }
+      }, true);
+    }
+    
+    // Handle form submit with token
+    function handleFormSubmit(e) {
+      e.preventDefault();
+      
+      const token = sessionStorage.getItem('accessToken');
+      if (!token) {
+        alert('Session expired. Please use your access link to continue.');
+        return;
+      }
+      
+      const isHoldingRoom = document.getElementById('isHoldingRoomBooking').value === 'true';
+      
+      const changeData = {
+        originalBookingCode: document.getElementById('bookingCodeInput').value,
+        originalRoom: document.getElementById('currentRoomInput').value,
+        originalDate: document.getElementById('currentDateInput').value,
+        originalTime: document.getElementById('currentTimeInput').value,
+        newRoom: document.getElementById('newRoomInput').value,
+        newDate: document.getElementById('newDateInput').value,
+        newTime: document.getElementById('newTimeInput').value,
+        counsellorName: selectedCounsellor,
+        accessToken: token
+      };
+      
+      // Validation for holding room bookings
+      if (isHoldingRoom) {
+        if (!changeData.newRoom || !changeData.newDate || !changeData.newTime) {
+          alert('Please select a room, date, and time for the booking.');
+          return;
+        }
+      } else {
+        // Normal booking validation
+        if (!changeData.newRoom && !changeData.newDate && !changeData.newTime) {
+          alert('Please specify what changes you would like to make.');
+          return;
+        }
+        
+        if (isBookingWithin24Hours(changeData.originalDate, changeData.originalTime)) {
+          alert('This booking is within 24 hours and cannot be modified online. Please contact the centre directly.');
+          return;
+        }
+        
+        if (changeData.newRoom) {
+          const originalLocationId = getLocationIdFromRoom(changeData.originalRoom);
+          const requestedLocationId = getLocationIdFromRoom(changeData.newRoom);
+          
+          if (originalLocationId !== requestedLocationId) {
+            const originalLocation = originalLocationId === '1' ? 'Buckhurst Hill' : 'Henley';
+            const requestedLocation = requestedLocationId === '1' ? 'Buckhurst Hill' : 'Henley';
+            
+            alert(`Cannot change locations. Your current booking is in ${originalLocation}, but you selected a room in ${requestedLocation}. Please choose a room in the same location.`);
+            return;
+          }
+        }
+      }
+      
+      if (!changeData.counsellorName) {
+        alert('Please select a counsellor first.');
+        return;
+      }
+      
+      submitBookingChange(changeData);
+    }
+    
+    // Show access denied
+    function showAccessDenied() {
+      document.body.innerHTML = `
+        <div style="display: flex; justify-content: center; align-items: center; height: 100vh; font-family: Arial;">
+          <div style="text-align: center; padding: 40px; background: #f8f9fa; border-radius: 8px; max-width: 500px;">
+            <h2 style="color: #dc3545;">Access Denied</h2>
+            <p>Invalid or expired access token.</p>
+            <p>Please use the link provided in your weekly email.</p>
+            <hr style="margin: 20px 0;">
+            <p style="font-size: 14px; color: #666;">If you believe this is an error, please contact the Cherry Tree Centre.</p>
+          </div>
+        </div>
+      `;
+    }
+    
+    // Show limited access
+    function showLimitedAccess() {
+      // Allow viewing the calendar but not modifying
+      const formContainer = document.querySelector('.form-container');
+      if (formContainer) {
+        formContainer.innerHTML = `
+          <div style="padding: 20px; background: #fff3cd; border-radius: 8px; border: 1px solid #ffeaa7;">
+            <h3 style="color: #856404;">Limited Access</h3>
+            <p>You can view the booking calendar, but you need a valid access token to make changes.</p>
+            <p style="margin-top: 15px;">To modify bookings, please use the personal link sent to your email.</p>
+            <hr style="margin: 20px 0; border-color: #ffeaa7;">
+            <p style="font-size: 14px;">If you are a therapist and don't have your access link, please contact the centre administrator.</p>
+          </div>
+        `;
+      }
+      
+      // Hide modification buttons
+      const cancelBtn = document.getElementById('cancelBookingBtn');
+      const submitBtn = document.getElementById('submitChangeBtn');
+      const holdingBtn = document.getElementById('selectHoldingBtn');
+      
+      if (cancelBtn) cancelBtn.style.display = 'none';
+      if (submitBtn) submitBtn.style.display = 'none';
+      if (holdingBtn) holdingBtn.style.display = 'none';
+      
+      // Still initialize the calendar for viewing
+      initializeWithReadOnlyAccess();
+    }
+    
+    // Populate room dropdown based on current booking's location - ADDED ROOM 5
+    function populateRoomDropdown(currentRoom) {
+      const newRoomInput = document.getElementById('newRoomInput');
+      const roomLabel = document.getElementById('roomChangeLabel');
+      if (!newRoomInput) return;
+      
+      // For holding room bookings, show all rooms
+      if (currentRoom === 'Holding Room') {
+        newRoomInput.innerHTML = '<option value="">Select a room (required)</option>';
+        
+        // Add all rooms from both locations
+        ['Room 1', 'Room 2', 'Room 4', 'Room 5', 'Room 6', 'Room 7', 'Online'].forEach(roomName => {
+          const option = document.createElement('option');
+          option.value = roomName;
+          option.textContent = roomName;
+          newRoomInput.appendChild(option);
+        });
+        
+        if (roomLabel) {
+          roomLabel.textContent = 'Select Room (required):';
+        }
+        return;
+      }
+      
+      // Normal booking - location-based restrictions
+      const currentLocationId = getLocationIdFromRoom(currentRoom);
+      const availableRooms = getRoomsForLocation(currentLocationId);
+      
+      newRoomInput.innerHTML = '<option value="">No change</option>';
+      
+      availableRooms.forEach(roomName => {
+        if (roomName !== currentRoom) {
+          const option = document.createElement('option');
+          option.value = roomName;
+          option.textContent = roomName;
+          newRoomInput.appendChild(option);
+        }
+      });
+      
+      const locationName = currentLocationId === '1' ? 'Buckhurst Hill' : 'Henley';
+      if (roomLabel) {
+        roomLabel.textContent = `New Room (if changing) - ${locationName} only:`;
+      }
+    }
+    
+    // Convert room display name to underscore format for webhook
+    function convertRoomNameToUnderscore(roomName) {
+      if (roomName && roomName.startsWith('Room ')) {
+        return roomName.replace('Room ', 'Room_');
+      }
+      return roomName;
+    }
+    
+    // Get week start date (Monday)
+    function getWeekStartDate(date) {
+      const result = new Date(date);
+      const day = result.getDay();
+      
+      let daysToSubtract;
+      if (day === 0) {
+        daysToSubtract = 6;
+      } else {
+        daysToSubtract = day - 1;
+      }
+      
+      result.setDate(result.getDate() - daysToSubtract);
+      result.setHours(0, 0, 0, 0);
+      
+      return result;
+    }
+    
+    // Format date as YYYY-MM-DD
+    function formatDate(date) {
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    }
+    
+    // Get room display name from booking data - ADDED ROOM 5
+    function getRoomDisplayName(booking) {
+      if (booking.room === 'Room_1' || booking.room === '1') return 'Room 1';
+      if (booking.room === 'Room_2' || booking.room === '2') return 'Room 2';
+      if (booking.room === 'Room_4' || booking.room === '4') return 'Room 4';
+      if (booking.room === 'Room_5' || booking.room === '5') return 'Room 5';
+      if (booking.room === 'Room_6' || booking.room === '6') return 'Room 6';
+      if (booking.room === 'Room_7' || booking.room === '7') return 'Room 7';
+      if (booking.room === 'Henley_Holding_Room' || booking.room === '18') return 'Holding Room';
+      if (booking.location && booking.location.toLowerCase().includes('online')) return 'Online';
+      return booking.room || 'Unknown';
+    }
+    
+    // Get room mapping for CSS classes - ADDED ROOM 5
+    function getRoomMapping(booking) {
+      let roomNumber, roomClass;
+      
+      if (booking.room === 'Room_1' || booking.room === '1') {
+        roomNumber = '1'; roomClass = 'room-1';
+      } else if (booking.room === 'Room_2' || booking.room === '2') {
+        roomNumber = '2'; roomClass = 'room-2';
+      } else if (booking.room === 'Room_4' || booking.room === '4') {
+        roomNumber = '4'; roomClass = 'room-4';
+      } else if (booking.room === 'Room_5' || booking.room === '5') {
+        roomNumber = '5'; roomClass = 'room-5';
+      } else if (booking.room === 'Room_6' || booking.room === '6') {
+        roomNumber = '6'; roomClass = 'room-6';
+      } else if (booking.room === 'Room_7' || booking.room === '7') {
+        roomNumber = '7'; roomClass = 'room-7';
+      } else if (booking.location && booking.location.toLowerCase().includes('online')) {
+        roomNumber = 'online'; roomClass = 'online';
+      }
+      
+      return {roomNumber, roomClass};
+    }
+  </script>
+  <!-- ================================ -->
+  <!-- SECTION 5: BOOKING FORM FUNCTIONS -->
+  <!-- ================================ -->
+  <script>
+    // Select a holding room booking
+    function selectHoldingRoomBooking() {
+      if (holdingRoomBookings.length === 0) {
+        alert('No bookings available in the holding room.');
+        return;
+      }
+      
+      // Get the booking with the lowest booking ID
+      const selectedBooking = holdingRoomBookings.reduce((min, booking) => {
+        const currentId = parseInt(booking.bookingId) || 999999;
+        const minId = parseInt(min.bookingId) || 999999;
+        return currentId < minId ? booking : min;
+      }, holdingRoomBookings[0]);
+      
+      console.log('Selected holding room booking:', selectedBooking);
+      
+      // Switch to holding room mode
+      document.getElementById('isHoldingRoomBooking').value = 'true';
+      
+      // Update form UI for holding room booking
+      document.getElementById('normalFormHeader').classList.add('hidden');
+      document.getElementById('holdingFormHeader').classList.remove('hidden');
+      
+      // Hide normal booking info, show holding room info
+      document.getElementById('currentDateRow').classList.add('hidden');
+      document.getElementById('currentTimeRow').classList.add('hidden');
+      document.getElementById('bookingCodeRow').classList.remove('hidden');
+      document.getElementById('clientNameRow').classList.remove('hidden');
+      
+      // Update displays
+      document.getElementById('currentRoomDisplay').textContent = 'Holding Room';
+      document.getElementById('bookingCodeDisplay').textContent = selectedBooking.bookingId || selectedBooking.code || '';
+      document.getElementById('clientNameDisplay').textContent = selectedBooking.client || '';
+      
+      // Hide cancel button and divider for holding room bookings
+      document.getElementById('cancelButtonSection').classList.add('hidden');
+      document.getElementById('formDivider').classList.add('hidden');
+      document.getElementById('changeRequestHeader').classList.add('hidden');
+      document.getElementById('holdingMoveHeader').classList.remove('hidden');
+      
+      // Update hidden inputs - keep fallback for display, but we'll fix in webhook
+      document.getElementById('bookingCodeInput').value = selectedBooking.bookingId || selectedBooking.code || '';
+      document.getElementById('currentRoomInput').value = 'Henley_Holding_Room';
+      document.getElementById('currentDateInput').value = '2030-01-01';
+      document.getElementById('currentTimeInput').value = selectedBooking.start || '09:00';
+      
+      // Enable all form controls (no 24-hour restriction for holding room)
+      document.getElementById('pastBookingNotice').classList.add('hidden');
+      document.getElementById('submitChangeBtn').disabled = false;
+      document.getElementById('newRoomInput').disabled = false;
+      document.getElementById('newDateInput').disabled = false;
+      document.getElementById('newTimeInput').disabled = false;
+      
+      // Populate room dropdown with all rooms
+      populateRoomDropdown('Holding Room');
+      
+      // Make all fields required for holding room bookings
+      document.getElementById('newRoomInput').required = true;
+      document.getElementById('newDateInput').required = true;
+      document.getElementById('newTimeInput').required = true;
+      
+      // Clear any previous selections
+      document.getElementById('newRoomInput').value = '';
+      document.getElementById('newDateInput').value = '';
+      document.getElementById('newTimeInput').value = '';
+      
+      // Update submit button text
+      document.getElementById('submitChangeBtn').textContent = 'Move from Holding Room';
+      
+      // Scroll to form
+      const formContainer = document.querySelector('.form-container');
+      if (formContainer) {
+        formContainer.scrollIntoView({ behavior: 'smooth' });
+      }
+    }
+    
+    // Prefill the booking form with selected booking details
+    function prefillForm(bookingCode, room, date, time) {
+      // Reset to normal mode
+      document.getElementById('isHoldingRoomBooking').value = 'false';
+      
+      // Show normal headers
+      document.getElementById('normalFormHeader').classList.remove('hidden');
+      document.getElementById('holdingFormHeader').classList.add('hidden');
+      
+      // Show normal booking info
+      document.getElementById('currentDateRow').classList.remove('hidden');
+      document.getElementById('currentTimeRow').classList.remove('hidden');
+      document.getElementById('bookingCodeRow').classList.add('hidden');
+      document.getElementById('clientNameRow').classList.add('hidden');
+      
+      // Show cancel button and divider
+      document.getElementById('cancelButtonSection').classList.remove('hidden');
+      document.getElementById('formDivider').classList.remove('hidden');
+      document.getElementById('changeRequestHeader').classList.remove('hidden');
+      document.getElementById('holdingMoveHeader').classList.add('hidden');
+      
+      // Update displays
+      const roomDisplay = document.getElementById('currentRoomDisplay');
+      const dateDisplay = document.getElementById('currentDateDisplay');
+      const timeDisplay = document.getElementById('currentTimeDisplay');
+      
+      const bookingCodeInput = document.getElementById('bookingCodeInput');
+      const currentRoomInput = document.getElementById('currentRoomInput');
+      const currentDateInput = document.getElementById('currentDateInput');
+      const currentTimeInput = document.getElementById('currentTimeInput');
+      const counsellorNameInput = document.getElementById('counsellorNameInput');
+      
+      const pastNotice = document.getElementById('pastBookingNotice');
+      const cancelBtn = document.getElementById('cancelBookingBtn');
+      const submitBtn = document.getElementById('submitChangeBtn');
+      const newRoomInput = document.getElementById('newRoomInput');
+      const newDateInput = document.getElementById('newDateInput');
+      const newTimeInput = document.getElementById('newTimeInput');
+      
+      if (!roomDisplay || !dateDisplay || !timeDisplay) {
+        console.warn('Display elements not found, cannot pre-fill form');
+        return;
+      }
+      
+      roomDisplay.textContent = room || '';
+      dateDisplay.textContent = date || '';
+      timeDisplay.textContent = time || '';
+      
+      if (bookingCodeInput) bookingCodeInput.value = bookingCode || '';
+      if (currentRoomInput) currentRoomInput.value = room || '';
+      if (currentDateInput) currentDateInput.value = date || '';
+      if (currentTimeInput) currentTimeInput.value = time || '';
+      
+      if (selectedCounsellor && counsellorNameInput) {
+        counsellorNameInput.value = selectedCounsellor;
+      } else if (counsellorNameInput) {
+        counsellorNameInput.value = 'Please select counsellor from dropdown above';
+      }
+      
+      // Check 24-hour restriction
+      const isWithin24Hours = isBookingWithin24Hours(date, time);
+      
+      if (isWithin24Hours) {
+        if (pastNotice) pastNotice.classList.remove('hidden');
+        if (cancelBtn) cancelBtn.disabled = true;
+        if (submitBtn) submitBtn.disabled = true;
+        if (newRoomInput) newRoomInput.disabled = true;
+        if (newDateInput) newDateInput.disabled = true;
+        if (newTimeInput) newTimeInput.disabled = true;
+      } else {
+        if (pastNotice) pastNotice.classList.add('hidden');
+        if (cancelBtn) cancelBtn.disabled = false;
+        if (submitBtn) submitBtn.disabled = false;
+        if (newRoomInput) newRoomInput.disabled = false;
+        if (newDateInput) newDateInput.disabled = false;
+        if (newTimeInput) newTimeInput.disabled = false;
+        
+        populateRoomDropdown(room);
+      }
+      
+      // Make fields optional for normal bookings
+      if (newRoomInput) newRoomInput.required = false;
+      if (newDateInput) newDateInput.required = false;
+      if (newTimeInput) newTimeInput.required = false;
+      
+      // Clear any previous new values
+      if (newRoomInput) newRoomInput.value = '';
+      if (newDateInput) newDateInput.value = '';
+      if (newTimeInput) newTimeInput.value = '';
+      
+      // Reset submit button text
+      if (submitBtn) submitBtn.textContent = 'Submit Change Request';
+      
+      console.log('Pre-filled form with:', {
+        bookingCode, room, date, time,
+        counsellor: selectedCounsellor || 'Not set',
+        within24Hours: isWithin24Hours
+      });
+    }
+    
+    // Clear the booking form
+    function clearBookingForm() {
+      document.getElementById('currentRoomDisplay').textContent = '';
+      document.getElementById('currentDateDisplay').textContent = '';
+      document.getElementById('currentTimeDisplay').textContent = '';
+      document.getElementById('bookingCodeDisplay').textContent = '';
+      document.getElementById('clientNameDisplay').textContent = '';
+      document.getElementById('bookingCodeInput').value = '';
+      document.getElementById('currentRoomInput').value = '';
+      document.getElementById('currentDateInput').value = '';
+      document.getElementById('currentTimeInput').value = '';
+      document.getElementById('counsellorNameInput').value = '';
+      document.getElementById('newRoomInput').value = '';
+      document.getElementById('newDateInput').value = '';
+      document.getElementById('newTimeInput').value = '';
+      document.getElementById('isHoldingRoomBooking').value = 'false';
+      
+      // Reset to normal mode
+      document.getElementById('normalFormHeader').classList.remove('hidden');
+      document.getElementById('holdingFormHeader').classList.add('hidden');
+      document.getElementById('currentDateRow').classList.remove('hidden');
+      document.getElementById('currentTimeRow').classList.remove('hidden');
+      document.getElementById('bookingCodeRow').classList.add('hidden');
+      document.getElementById('clientNameRow').classList.add('hidden');
+      document.getElementById('cancelButtonSection').classList.remove('hidden');
+      document.getElementById('formDivider').classList.remove('hidden');
+      document.getElementById('changeRequestHeader').classList.remove('hidden');
+      document.getElementById('holdingMoveHeader').classList.add('hidden');
+      
+      const cancelBtn = document.getElementById('cancelBookingBtn');
+      if (cancelBtn) {
+        cancelBtn.disabled = true;
+      }
+      
+      const pastNotice = document.getElementById('pastBookingNotice');
+      if (pastNotice) {
+        pastNotice.classList.add('hidden');
+      }
+      
+      document.getElementById('submitChangeBtn').textContent = 'Submit Change Request';
+    }
+    
+    // Handle booking cancellation - USING WEBHOOKS CONSTANT
+    async function cancelBooking() {
+      const bookingCode = document.getElementById('bookingCodeInput').value;
+      const room = document.getElementById('currentRoomInput').value;
+      const date = document.getElementById('currentDateInput').value;
+      const time = document.getElementById('currentTimeInput').value;
+      const counsellorName = selectedCounsellor;
+      
+      if (!bookingCode || !counsellorName) {
+        alert('Please select a booking first by clicking on it in the calendar.');
+        return;
+      }
+      
+      if (isBookingWithin24Hours(date, time)) {
+        alert('This booking is within 24 hours and cannot be cancelled online. Please contact the centre directly.');
+        return;
+      }
+      
+      const booking = bookingData.find(b => 
+        (b.bookingId === bookingCode || b.code === bookingCode) &&
+        b.date === date &&
+        b.start === time
+      );
+      
+      const isPaidBooking = booking && booking.isPaid;
+      
+      if (!confirm(`Are you sure you want to cancel this appointment?\n\nDate: ${date}\nTime: ${time}\nRoom: ${room}\n\nThis action cannot be undone.`)) {
+        return;
+      }
+      
+      const cancelStatusDiv = document.getElementById('cancelStatus');
+      
+      try {
+        cancelStatusDiv.style.display = 'block';
+        cancelStatusDiv.style.background = '#fff3cd';
+        cancelStatusDiv.style.color = '#856404';
+        cancelStatusDiv.style.border = '1px solid #ffeaa7';
+        cancelStatusDiv.textContent = 'Processing cancellation...';
+        
+        let counsellorId = window.clientId;
+        
+        if (!counsellorId) {
+          counsellorId = await lookupCounsellorId(counsellorName);
+          if (!counsellorId) {
+            throw new Error(`Counsellor "${counsellorName}" not found. Please contact support.`);
+          }
+        }
+        
+        let roomForWebhook = room;
+        if (room && room.startsWith('Room ')) {
+          roomForWebhook = room.replace('Room ', 'Room_');
+        }
+        
+        let payload;
+        
+        if (isPaidBooking) {
+          payload = {
+            timestamp: new Date().toISOString(),
+            action: 'modify',
+            counsellor_id: counsellorId,
+            original_booking_code: booking.bookingId || bookingCode,
+            original_room: roomForWebhook,
+            original_room_id: ROOM_PROVIDER_IDS[roomForWebhook] || '3',
+            original_location_id: getLocationIdFromRoom(roomForWebhook),
+            original_datetime: `${date}T${time}:00`,
+            requested_room: 'Henley_Holding_Room',
+            requested_room_id: '18',
+            requested_location_id: '2',
+            requested_datetime: `2030-01-01T${time}:00`,
+            service_id: '2',
+            comments: booking ? (booking.comments || '') : '',
+            is_paid: 'True'
+          };
+        } else {
+          payload = {
+            timestamp: new Date().toISOString(),
+            action: 'cancel',
+            counsellor_id: counsellorId,
+            booking_code: booking.bookingId || bookingCode,
+            original_datetime: `${date}T${time}:00`,
+            original_room: roomForWebhook,
+            service_id: '2',
+            comments: booking ? (booking.comments || '') : '',
+            is_paid: 'No'
+          };
+        }
+        
+        cancelStatusDiv.textContent = 'Sending cancellation request...';
+        // QUICK WIN: Using WEBHOOKS constant from config.js
+        const CANCEL_WEBHOOK_URL = WEBHOOKS.BOOKING_CHANGES;
+        
+        const response = await fetch(CANCEL_WEBHOOK_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        
+        if (!response.ok) {
+          throw new Error(`Cancellation failed: ${response.status} - ${await response.text()}`);
+        }
+        
+        cancelStatusDiv.style.background = '#d4edda';
+        cancelStatusDiv.style.color = '#155724';
+        cancelStatusDiv.style.border = '1px solid #c3e6cb';
+        cancelStatusDiv.textContent = 'Appointment cancelled successfully!';
+        
+        clearBookingForm();
+        
+        setTimeout(() => {
+          refreshData();
+          cancelStatusDiv.style.display = 'none';
+        }, 3000);
+        
+      } catch (error) {
+        console.error('Cancellation error:', error);
+        cancelStatusDiv.style.background = '#f8d7da';
+        cancelStatusDiv.style.color = '#721c24';
+        cancelStatusDiv.style.border = '1px solid #f5c6cb';
+        cancelStatusDiv.textContent = `Error: ${error.message}`;
+      }
+    }
+    
+    // Submit booking change request - USING WEBHOOKS CONSTANT
+    async function submitBookingChange(changeData) {
+      const statusDiv = document.getElementById('submitStatus');
+      const isHoldingRoom = document.getElementById('isHoldingRoomBooking').value === 'true';
+      
+      try {
+        statusDiv.style.display = 'block';
+        statusDiv.style.background = '#fff3cd';
+        statusDiv.style.color = '#856404';
+        statusDiv.style.border = '1px solid #ffeaa7';
+        statusDiv.textContent = isHoldingRoom ? 'Moving booking from holding room...' : 'Submitting change request...';
+        
+        let counsellorId = window.clientId;
+        
+        if (!counsellorId) {
+          counsellorId = await lookupCounsellorId(changeData.counsellorName);
+          if (!counsellorId) {
+            throw new Error(`Counsellor "${changeData.counsellorName}" not found. Please contact support.`);
+          }
+        }
+        
+        // FIXED: Find booking and use bookingId directly
+        const booking = bookingData.concat(holdingRoomBookings).find(b => 
+          (b.bookingId === changeData.originalBookingCode || b.code === changeData.originalBookingCode)
+        );
+        
+        const originalRoomUnderscore = convertRoomNameToUnderscore(changeData.originalRoom);
+        const newRoomUnderscore = changeData.newRoom ? convertRoomNameToUnderscore(changeData.newRoom) : originalRoomUnderscore;
+        
+        const originalRoomId = ROOM_PROVIDER_IDS[originalRoomUnderscore] || '18';
+        const requestedRoomId = ROOM_PROVIDER_IDS[newRoomUnderscore];
+        
+        if (!requestedRoomId) {
+          throw new Error(`Room mapping failed for "${newRoomUnderscore}"`);
+        }
+        
+        const originalLocationId = isHoldingRoom ? '2' : getLocationIdFromRoom(originalRoomUnderscore);
+        const requestedLocationId = getLocationIdFromRoom(newRoomUnderscore);
+        
+        const webhookPayload = {
+          timestamp: new Date().toISOString(),
+          action: 'modify',
+          counsellor_id: counsellorId,
+          original_booking_code: booking ? booking.bookingId : changeData.originalBookingCode,
+          original_room: originalRoomUnderscore,
+          original_room_id: originalRoomId,
+          original_location_id: originalLocationId,
+          original_datetime: `${changeData.originalDate}T${changeData.originalTime}:00`,
+          requested_room: newRoomUnderscore,
+          requested_room_id: requestedRoomId,
+          requested_location_id: requestedLocationId,
+          requested_datetime: formatDateTimeForSimplybookMe(
+            changeData.newDate || changeData.originalDate,
+            changeData.newTime || changeData.originalTime
+          ),
+          service_id: '2',
+          comments: booking ? (booking.comments || '') : '',
+          is_paid: booking ? (booking.isPaid ? 'True' : 'No') : 'No'
+        };
+        
+        console.log('Webhook payload:', webhookPayload);
+        
+        statusDiv.textContent = 'Sending to booking system...';
+        // QUICK WIN: Using WEBHOOKS constant from config.js
+        const MAKE_WEBHOOK_URL = WEBHOOKS.BOOKING_CHANGES;
+        
+        const response = await fetch(MAKE_WEBHOOK_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(webhookPayload)
+        });
+        
+        if (!response.ok) {
+          throw new Error(`Booking system error: ${response.status} - ${await response.text()}`);
+        }
+        
+        console.log('Make webhook success');
+        
+        statusDiv.textContent = 'Logging change request...';
+        await logChangeToGoogleSheets(changeData, webhookPayload);
+        
+        statusDiv.style.background = '#d4edda';
+        statusDiv.style.color = '#155724';
+        statusDiv.style.border = '1px solid #c3e6cb';
+        statusDiv.textContent = isHoldingRoom ? 
+          'Booking moved from holding room successfully!' : 
+          'Change request submitted successfully!';
+        
+        clearBookingForm();
+        
+        setTimeout(() => {
+          statusDiv.style.display = 'none';
+          refreshData();
+        }, 7000);
+        
+      } catch (error) {
+        console.error('Submission error:', error);
+        statusDiv.style.background = '#f8d7da';
+        statusDiv.style.color = '#721c24';
+        statusDiv.style.border = '1px solid #f5c6cb';
+        statusDiv.textContent = `Error: ${error.message}`;
+      }
+    }
+    
+    // Fallback counsellor ID lookup
+    async function lookupCounsellorId(counsellorName) {
+      try {
+        const booking = bookingData.find(b => b.client === counsellorName && b.clientId);
+        if (booking && booking.clientId) {
+          console.log(`Found counsellor ID ${booking.clientId} for ${counsellorName} in booking data`);
+          return booking.clientId;
+        }
+        
+        const COUNSELLOR_MAPPING = {
+          'Barry Redman': '6',
+        };
+        
+        return COUNSELLOR_MAPPING[counsellorName] || null;
+        
+      } catch (error) {
+        console.error('Counsellor lookup error:', error);
+        return null;
+      }
+    }
+    
+    // Log change to Google Sheets - USING GOOGLE_SCRIPTS CONSTANT
+    async function logChangeToGoogleSheets(changeData, webhookPayload) {
+      try {
+        const formData = new FormData();
+        formData.append('action', 'submitBookingChange');
+        formData.append('timestamp', webhookPayload.timestamp);
+        formData.append('counsellorName', changeData.counsellorName);
+        formData.append('originalBookingCode', changeData.originalBookingCode);
+        formData.append('originalRoom', changeData.originalRoom);
+        formData.append('originalDate', changeData.originalDate);
+        formData.append('originalTime', changeData.originalTime);
+        
+        const requestedDate = changeData.newDate || changeData.originalDate;
+        const requestedTime = changeData.newTime || changeData.originalTime;
+        const requestedDateTime = formatDateTimeForSimplybookMe(requestedDate, requestedTime);
+        const requestedRoom = changeData.newRoom || changeData.originalRoom;
+        
+        formData.append('requestedDateTime', requestedDateTime);
+        formData.append('requestedRoom', requestedRoom);
+        formData.append('webhookSent', 'Yes');
+        formData.append('submissionMethod', 'Direct from HTML');
+        
+        // QUICK WIN: Using GOOGLE_SCRIPTS constant from config.js
+        const response = await fetch(GOOGLE_SCRIPTS.CHANGE_REQUESTS, {
+          method: 'POST',
+          body: formData
+        });
+        
+        if (response.ok) {
+          console.log('Successfully logged to Google Sheets');
+        } else {
+          console.warn('Failed to log to Google Sheets, but webhook was sent');
+        }
+        
+      } catch (error) {
+        console.warn('Google Sheets logging failed:', error);
+      }
+    }
+  </script>
+  <!-- ================================ -->
+  <!-- SECTION 5.5: PRICING & NEW BOOKINGS -->
+  <!-- ================================ -->
+  <script>
+    // Load pricing configuration from Firebase
+    async function loadPricingConfig() {
+      try {
+        const snapshot = await database.ref('pricing_config').once('value');
+        pricingConfig = snapshot.val();
+        
+        if (pricingConfig) {
+          console.log('Loaded pricing config from Firebase:', pricingConfig);
+        } else {
+          console.warn('No pricing config found in Firebase, using defaults');
+          pricingConfig = {
+            rates: {
+              "A": { amount: 1300, label: "Standard" },
+              "B": { amount: 1400, label: "Evening" },
+              "C": { amount: 800, label: "Sunday Special" }
+            },
+            locations: {
+              "1": {
+                name: "Buckhurst Hill",
+                rules: [
+                  { days: [0, 6], startHour: 8, endHour: 21, rate: "A" },
+                  { days: [1, 2, 3, 4, 5], startHour: 8, endHour: 17, rate: "A" },
+                  { days: [1, 2, 3, 4, 5], startHour: 17, endHour: 21, rate: "B" }
+                ]
+              },
+              "2": {
+                name: "Henley",
+                rules: [
+                  { days: [0], startHour: 8, endHour: 21, rate: "C" },
+                  { days: [1, 2, 3, 4, 5, 6], startHour: 8, endHour: 21, rate: "A" }
+                ]
+              }
+            },
+            durations: [
+              { minutes: 60, label: "1 Hour", multiplier: 1 },
+              { minutes: 75, label: "1 Hour 15 Mins", multiplier: 1 },
+              { minutes: 240, label: "4 Hours", multiplier: 4 }
+            ],
+            discounts: {}
+          };
+        }
+      } catch (error) {
+        console.error('Error loading pricing config:', error);
+        pricingConfig = {
+          rates: { "A": { amount: 1300, label: "Standard" } },
+          locations: {
+            "1": { name: "Buckhurst Hill", rules: [{ days: [0,1,2,3,4,5,6], startHour: 8, endHour: 21, rate: "A" }] },
+            "2": { name: "Henley", rules: [{ days: [0,1,2,3,4,5,6], startHour: 8, endHour: 21, rate: "A" }] }
+          },
+          durations: [{ minutes: 60, label: "1 Hour", multiplier: 1 }],
+          discounts: {}
+        };
+      }
+    }
+    
+    // Calculate price for a booking
+    function calculateBookingPrice(locationId, date, hour) {
+      if (!pricingConfig) {
+        console.warn('calculateBookingPrice: pricingConfig is null');
+        return { amount: 0, breakdown: 'Pricing not loaded', rate: null };
+      }
+      
+      const bookingDate = new Date(date + 'T12:00:00');
+      const dayOfWeek = bookingDate.getDay();
+      
+      const location = pricingConfig.locations[locationId];
+      if (!location) {
+        console.warn(`calculateBookingPrice: Location ${locationId} not found in config`);
+        return { amount: 0, breakdown: 'Location not found', rate: null };
+      }
+      
+      let matchedRule = null;
+      for (const rule of location.rules) {
+        if (rule.days.includes(dayOfWeek) && hour >= rule.startHour && hour < rule.endHour) {
+          matchedRule = rule;
+          break;
+        }
+      }
+      
+      if (!matchedRule) {
+        console.warn(`calculateBookingPrice: No rule matches day ${dayOfWeek}, hour ${hour} for location ${locationId}`);
+        return { amount: 0, breakdown: 'No pricing rule for this time', rate: null };
+      }
+      
+      const rate = pricingConfig.rates[matchedRule.rate];
+      if (!rate) {
+        console.warn(`calculateBookingPrice: Rate ${matchedRule.rate} not found`);
+        return { amount: 0, breakdown: `Rate ${matchedRule.rate} not found`, rate: null };
+      }
+      
+      const price = rate.amount;
+      const breakdown = `${rate.label} rate (${matchedRule.rate})`;
+      
+      return { amount: price, breakdown, rate: matchedRule.rate };
+    }
+    
+    // Get room to location mapping
+    function getRoomLocationId(roomName) {
+      if (roomName === 'Online') {
+        return '1';
+      }
+      return '2';
+    }
+    
+    // Get room ID for SimplybookMe - USING ROOM_PROVIDER_IDS CONSTANT
+    function getRoomProviderId(roomName) {
+      let lookupName = roomName;
+      if (roomName && roomName.startsWith('Room ')) {
+        lookupName = roomName.replace('Room ', 'Room_');
+      }
+      return ROOM_PROVIDER_IDS[lookupName] || ROOM_PROVIDER_IDS[roomName] || null;
+    }
+    
+    // Open new booking modal
+    function openNewBookingModal(room, date, time) {
+      const locationId = getRoomLocationId(room);
+      const locationName = locationId === '1' ? 'Buckhurst Hill' : 'Henley';
+      const hour = parseInt(time.split(':')[0]);
+      const endHour = hour + 1;
+      const endTime = `${String(endHour).padStart(2, '0')}:00`;
+      
+      const dateObj = new Date(date + 'T12:00:00');
+      const dayName = weekDays[dateObj.getDay()];
+      const formattedDate = `${dayName}, ${dateObj.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}`;
+      
+      const priceResult = calculateBookingPrice(locationId, date, hour);
+      
+      document.getElementById('modalRoom').textContent = room;
+      document.getElementById('modalDate').textContent = formattedDate;
+      document.getElementById('modalTime').textContent = `${time} - ${endTime}`;
+      document.getElementById('modalDuration').textContent = '1 Hour';
+      document.getElementById('modalLocation').textContent = locationName;
+      
+      document.getElementById('newBookingRoom').value = room;
+      document.getElementById('newBookingRoomId').value = getRoomProviderId(room);
+      document.getElementById('newBookingDate').value = date;
+      document.getElementById('newBookingTime').value = time;
+      document.getElementById('newBookingEndTime').value = endTime;
+      document.getElementById('newBookingLocationId').value = locationId;
+      document.getElementById('newBookingPrice').value = priceResult.amount;
+      
+      const priceDisplay = document.getElementById('priceDisplay');
+      const priceAmount = document.getElementById('priceAmount');
+      const priceBreakdown = document.getElementById('priceBreakdown');
+      
+      if (priceResult.amount > 0) {
+        priceDisplay.classList.remove('no-rate');
+        priceAmount.textContent = `£${(priceResult.amount / 100).toFixed(2)}`;
+        priceBreakdown.textContent = priceResult.breakdown;
+        document.getElementById('confirmBookingBtn').disabled = false;
+      } else {
+        priceDisplay.classList.add('no-rate');
+        priceAmount.textContent = '£0.00';
+        priceBreakdown.textContent = priceResult.breakdown;
+        document.getElementById('confirmBookingBtn').disabled = true;
+      }
+      
+      document.getElementById('bookingStatus').style.display = 'none';
+      document.getElementById('newBookingModal').classList.add('active');
+    }
+    
+    // Close new booking modal
+    function closeNewBookingModal() {
+      document.getElementById('newBookingModal').classList.remove('active');
+    }
+    
+    // Confirm new booking - USING WEBHOOKS CONSTANT
+    async function confirmNewBooking() {
+      const room = document.getElementById('newBookingRoom').value;
+      const roomId = document.getElementById('newBookingRoomId').value;
+      const date = document.getElementById('newBookingDate').value;
+      const time = document.getElementById('newBookingTime').value;
+      const endTime = document.getElementById('newBookingEndTime').value;
+      const locationId = document.getElementById('newBookingLocationId').value;
+      const price = parseInt(document.getElementById('newBookingPrice').value) || 0;
+      
+      const statusDiv = document.getElementById('bookingStatus');
+      const confirmBtn = document.getElementById('confirmBookingBtn');
+      
+      statusDiv.className = 'booking-status processing';
+      statusDiv.textContent = 'Processing booking...';
+      statusDiv.style.display = 'block';
+      confirmBtn.disabled = true;
+      
+      try {
+        const counsellorName = selectedCounsellor || sessionStorage.getItem('counsellorName');
+        
+        const bookingPayload = {
+          action: 'create',
+          timestamp: new Date().toISOString(),
+          client_id: window.clientId,
+          counsellor_name: counsellorName,
+          service_id: '2',
+          provider_id: roomId,
+          location_id: locationId,
+          room_name: room,
+          start_datetime: `${date}T${time}:00`,
+          end_datetime: `${date}T${endTime}:00`,
+          additional_fields: {
+            comments: `Booked via counsellor calendar by ${counsellorName}`
+          },
+          payment: {
+            paymentId: null,
+            paymentAmount: price,
+            paymentStatus: price === 0 ? 'free' : 'pending',
+            paymentMethod: price === 0 ? 'none' : 'card'
+          }
+        };
+        
+        console.log('New booking payload:', bookingPayload);
+        
+        if (price === 0) {
+          statusDiv.textContent = 'Creating booking...';
+          
+          // QUICK WIN: Using WEBHOOKS constant from config.js
+          const NEW_BOOKING_WEBHOOK_URL = WEBHOOKS.NEW_BOOKING;
+          
+          const response = await fetch(NEW_BOOKING_WEBHOOK_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(bookingPayload)
+          });
+          
+          if (!response.ok) {
+            const errorText = await response.text();
+            throw new Error(`Webhook failed: ${response.status} - ${errorText}`);
+          }
+          
+          console.log('Webhook response:', response.status);
+          
+          statusDiv.className = 'booking-status success';
+          statusDiv.innerHTML = `
+            <strong>✓ Booking Created!</strong><br>
+            <small>${room} on ${date} at ${time}<br>
+            The calendar will refresh shortly.</small>
+          `;
+          
+          setTimeout(() => {
+            closeNewBookingModal();
+            refreshData();
+          }, 3000);
+          
+        } else {
+          statusDiv.className = 'booking-status processing';
+          statusDiv.innerHTML = `
+            <strong>💳 Payment Required: £${(price / 100).toFixed(2)}</strong><br>
+            <small>Stripe payment integration coming soon.<br>
+            Booking details logged to console for testing.</small>
+          `;
+          confirmBtn.disabled = false;
+        }
+        
+      } catch (error) {
+        console.error('Booking error:', error);
+        statusDiv.className = 'booking-status error';
+        statusDiv.innerHTML = `<strong>Error</strong><br><small>${error.message}</small>`;
+        confirmBtn.disabled = false;
+      }
+    }
+    
+    // Check if a time slot is available (not booked)
+    function isSlotAvailable(room, date, time) {
+      const roomMappings = {
+        'Room 1': ['Room_1', '1'],
+        'Room 2': ['Room_2', '2'],
+        'Room 4': ['Room_4', '4'],
+        'Room 5': ['Room_5', '5'],
+        'Room 6': ['Room_6', '6'],
+        'Room 7': ['Room_7', '7'],
+        'Online': ['Online', 'online']
+      };
+      
+      const roomVariants = roomMappings[room] || [room];
+      const hour = parseInt(time.split(':')[0]);
+      
+      const dayBookings = bookingData.filter(booking => booking.date === date);
+      
+      for (const booking of dayBookings) {
+        const bookingRoomMatches = roomVariants.some(variant => 
+          booking.room === variant || 
+          (booking.location && booking.location.toLowerCase().includes('online') && room === 'Online')
+        );
+        
+        if (bookingRoomMatches) {
+          const startHour = parseInt(booking.start.split(':')[0]);
+          const endHour = parseInt(booking.end.split(':')[0]);
+          
+          if (hour >= startHour && hour < endHour) {
+            return false;
+          }
+        }
+      }
+      
+      return true;
+    }
+  </script>
+  <!-- ================================ -->
+  <!-- SECTION 6: CALENDAR FUNCTIONS -->
+  <!-- ================================ -->
+  <script>
+    // Update holding room count
+    function updateHoldingRoomCount() {
+      const countElement = document.getElementById('holdingRoomCount');
+      const selectBtn = document.getElementById('selectHoldingBtn');
+      
+      if (countElement) {
+        countElement.textContent = holdingRoomBookings.length.toString();
+      }
+      
+      if (selectBtn) {
+        selectBtn.disabled = holdingRoomBookings.length === 0;
+      }
+      
+      console.log(`Holding room bookings: ${holdingRoomBookings.length}`);
+    }
+    
+    // UPDATED: Switch between day and week views
+    function switchView(view) {
+        restoreSessionState(); 
+      currentView = view;
+      
+      const buttons = document.querySelectorAll('.view-btn');
+      if (buttons.length > 0) {
+        buttons.forEach(btn => btn.classList.remove('active'));
+        const clickedButton = event ? event.target : document.querySelector(`[onclick="switchView('${view}')"]`);
+        if (clickedButton) {
+          clickedButton.classList.add('active');
+        }
+      }
+      
+      const dayControls = document.getElementById('dayControls');
+      const weekControls = document.getElementById('weekControls');
+      const counsellorContainer = document.getElementById('counsellorFilterContainer');
+      
+      if (dayControls) dayControls.classList.toggle('hidden', view !== 'day');
+      if (weekControls) weekControls.classList.toggle('hidden', view !== 'week');
+      
+      // Hide counsellor selector if we have a token
+      if (counsellorContainer && !sessionStorage.getItem('accessToken')) {
+        counsellorContainer.classList.toggle('hidden', false);
+      } else if (counsellorContainer) {
+        counsellorContainer.style.display = 'none';
+      }
+      
+      const grid = document.getElementById('calendarGrid');
+      if (grid) {
+        grid.className = `calendar-grid ${view}-view`;
+      }
+      
+      updateCounsellorInfo();
+      createCalendarGrid();
+      populateCalendar();
+      updateURL(); // This now preserves the token
+    }
+    
+    // Filter by counsellor
+    function filterByCounsellor() {
+        restoreSessionState(); 
+      selectedCounsellor = document.getElementById('counsellorSelect').value;
+      updateCounsellorInfo();
+      populateCalendar();
+      updateURL();
+    }
+    
+    // Update counsellor info display
+    function updateCounsellorInfo() {
+      const infoDiv = document.getElementById('counsellorInfo');
+      const nameDiv = document.getElementById('counsellorName');
+      const summaryDiv = document.getElementById('counsellorSummary');
+      
+      // Use stored counsellor name if available
+      const storedCounsellor = sessionStorage.getItem('counsellorName');
+      const counsellorToUse = selectedCounsellor || storedCounsellor;
+      
+      if (currentView === 'day') {
+        if (counsellorToUse) {
+          nameDiv.textContent = counsellorToUse;
+          summaryDiv.textContent = `Viewing your bookings (Day View) - Only your bookings are modifiable`;
+          infoDiv.classList.remove('hidden');
+          
+          if (window.clientId || sessionStorage.getItem('accessToken')) {
+            document.getElementById('pageTitle').textContent = `${counsellorToUse} - Day View`;
+          } else {
+            document.getElementById('pageTitle').textContent = `${counsellorToUse} - Your Bookings (Day View)`;
+          }
+        } else {
+          infoDiv.classList.add('hidden');
+          document.getElementById('pageTitle').textContent = 'Cherry Tree Centre - Select Counsellor for Day View';
+        }
+      } else {
+        if (counsellorToUse) {
+          const counsellorBookings = bookingData.filter(booking => 
+            booking.client.toLowerCase().includes(counsellorToUse.toLowerCase())
+          );
+          
+          nameDiv.textContent = counsellorToUse;
+          summaryDiv.textContent = `${counsellorBookings.length} bookings found`;
+          infoDiv.classList.remove('hidden');
+          
+          if (window.clientId || sessionStorage.getItem('accessToken')) {
+            document.getElementById('pageTitle').textContent = `My Bookings - ${counsellorToUse}`;
+          } else {
+            document.getElementById('pageTitle').textContent = `Bookings - ${counsellorToUse}`;
+          }
+        } else {
+          infoDiv.classList.add('hidden');
+          
+          if (window.clientId || sessionStorage.getItem('accessToken')) {
+            document.getElementById('pageTitle').textContent = 'Please select your name to view bookings';
+          } else {
+            document.getElementById('pageTitle').textContent = 'Select Counsellor to View Bookings';
+          }
+        }
+      }
+    }
+    
+    // Populate counsellor dropdown
+    function populateCounsellorDropdown() {
+      const select = document.getElementById('counsellorSelect');
+      const counsellors = new Set();
+      
+      bookingData.forEach(booking => {
+        if (booking.client && booking.client.trim()) {
+          counsellors.add(booking.client.trim());
+        }
+      });
+      
+      select.innerHTML = '<option value="">Select Counsellor</option>';
+      
+      Array.from(counsellors).sort().forEach(counsellor => {
+        const option = document.createElement('option');
+        option.value = counsellor;
+        option.textContent = counsellor;
+        if (counsellor === selectedCounsellor) {
+          option.selected = true;
+        }
+        select.appendChild(option);
+      });
+    }
+    
+    // UPDATED: Change week navigation
+    function changeWeek(direction) {
+        restoreSessionState(); 
+      currentWeekStart.setDate(currentWeekStart.getDate() + (direction * 7));
+      updateWeekDisplay();
+      createCalendarGrid();
+      populateCalendar();
+      updateURL(); // This now preserves the token
+    }
+    
+    // Update week display text
+    function updateWeekDisplay() {
+      const weekEnd = new Date(currentWeekStart);
+      weekEnd.setDate(weekEnd.getDate() + 6);
+      
+      const startStr = currentWeekStart.toLocaleDateString('en-GB', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric'
+      });
+      const endStr = weekEnd.toLocaleDateString('en-GB', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric'
+      });
+      
+      document.getElementById('weekDisplay').textContent = `${startStr} - ${endStr}`;
+    }
+    
+    // Create calendar grid based on current view
+    function createCalendarGrid() {
+      const grid = document.getElementById("calendarGrid");
+      
+      if (!grid) {
+        console.error('Could not find calendarGrid element!');
+        return;
+      }
+      
+      grid.innerHTML = '';
+      
+      if (currentView === 'day') {
+        createDayGrid(grid);
+      } else {
+        createWeekGrid(grid);
+      }
+    }
+    
+    // Create day view grid - ADDED ROOM 5
+    function createDayGrid(grid) {
+      const emptyCell = document.createElement("div");
+      emptyCell.className = "grid-header";
+      emptyCell.textContent = "Time";
+      grid.appendChild(emptyCell);
+      
+      rooms.forEach(room => {
+        const header = document.createElement("div");
+        header.className = "grid-header";
+        header.textContent = room;
+        grid.appendChild(header);
+      });
+      
+      businessHours.forEach(time => {
+        const timeCell = document.createElement("div");
+        timeCell.className = "time-header";
+        timeCell.textContent = time;
+        grid.appendChild(timeCell);
+        
+        rooms.forEach((room) => {
+          const cell = document.createElement("div");
+          cell.className = "grid-cell";
+          
+          let roomId;
+          if (room === "Room 1") roomId = "1";
+          else if (room === "Room 2") roomId = "2";
+          else if (room === "Room 4") roomId = "4";
+          else if (room === "Room 5") roomId = "5";
+          else if (room === "Room 6") roomId = "6";
+          else if (room === "Room 7") roomId = "7";
+          else if (room === "Online") roomId = "online";
+          
+          cell.id = `cell-${roomId}-${time}`;
+          grid.appendChild(cell);
+        });
+      });
+    }
+    
+    // Create week view grid
+    function createWeekGrid(grid) {
+      const emptyCell = document.createElement("div");
+      emptyCell.className = "grid-header";
+      emptyCell.textContent = "Time";
+      grid.appendChild(emptyCell);
+      
+      const weekDaysDisplay = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+      
+      for (let i = 0; i < 7; i++) {
+        const cellDate = new Date(currentWeekStart);
+        cellDate.setDate(currentWeekStart.getDate() + i);
+        
+        const header = document.createElement("div");
+        header.className = "grid-header";
+        const dayNum = String(cellDate.getDate()).padStart(2, '0');
+        const monthNum = String(cellDate.getMonth() + 1).padStart(2, '0');
+        header.textContent = `${weekDaysDisplay[i]} ${dayNum}/${monthNum}`;
+        grid.appendChild(header);
+      }
+      
+      businessHours.forEach(time => {
+        const timeCell = document.createElement("div");
+        timeCell.className = "time-header";
+        timeCell.textContent = time;
+        grid.appendChild(timeCell);
+        
+        for (let day = 0; day < 7; day++) {
+          const cell = document.createElement("div");
+          cell.className = "grid-cell";
+          cell.id = `week-cell-${day}-${time}`;
+          grid.appendChild(cell);
+        }
+      });
+      
+      updateWeekDisplay();
+    }
+    
+    // UPDATED: Populate calendar with booking data
+    function populateCalendar() {
+        restoreSessionState(); 
+      
+      // Convert NodeList to Array to avoid mutation issues during iteration
+      const cells = Array.from(document.querySelectorAll('.grid-cell'));
+      
+      cells.forEach(cell => {
+        // Clone and replace to remove all event listeners, but keep the ID
+        const cellId = cell.id;
+        const newCell = cell.cloneNode(false);
+        newCell.id = cellId;
+        newCell.className = 'grid-cell';
+        newCell.style.cursor = '';
+        newCell.title = '';
+        if (cell.parentNode) {
+          cell.parentNode.replaceChild(newCell, cell);
+        }
+      });
+      
+      // Filter out holding room bookings from regular calendar display
+      let filteredBookings = bookingData.filter(booking => 
+        booking.room !== 'Henley_Holding_Room' && 
+        booking.room !== '18' &&
+        booking.date !== '2030-01-01'
+      );
+      
+      // Use stored counsellor name for filtering
+      const storedCounsellor = sessionStorage.getItem('counsellorName');
+      if (currentView === 'week' && (selectedCounsellor || storedCounsellor)) {
+        const counsellorToFilter = selectedCounsellor || storedCounsellor;
+        filteredBookings = filteredBookings.filter(booking => 
+          booking.client && booking.client.toLowerCase().includes(counsellorToFilter.toLowerCase())
+        );
+      }
+      
+      if (currentView === 'day') {
+        populateDayView(filteredBookings);
+      } else {
+        populateWeekView(filteredBookings);
+      }
+    }
+    
+    // UPDATED: Populate day view - NOW WITH CLICK HANDLERS FOR OWN BOOKINGS
+    function populateDayView(filteredBookings) {
+      const selectedDate = document.getElementById('dateSelector').value;
+      
+      const dayBookings = filteredBookings.filter(booking => {
+        return booking.date === selectedDate;
+      });
+      
+      // Get logged-in counsellor name for ownership check
+      const loggedInCounsellor = selectedCounsellor || sessionStorage.getItem('counsellorName') || '';
+      const hasValidToken = !!sessionStorage.getItem('accessToken');
+      
+      // Track which cells have bookings
+      const bookedCells = new Set();
+      
+      dayBookings.forEach(booking => {
+        const startHour = parseInt(booking.start.split(':')[0]);
+        const endHour = parseInt(booking.end.split(':')[0]);
+        
+        const {roomNumber, roomClass} = getRoomMapping(booking);
+        if (!roomNumber) return;
+        
+        const isWithin24Hours = isBookingWithin24Hours(booking.date, booking.start);
+        
+        // Check if this booking belongs to the logged-in counsellor
+        const isOwnBooking = loggedInCounsellor && booking.client && 
+          booking.client.toLowerCase().includes(loggedInCounsellor.toLowerCase());
+        
+        for (let hour = startHour; hour < endHour; hour++) {
+          if (hour >= 8 && hour <= 20) {
+            const timeString = `${String(hour).padStart(2, '0')}:00`;
+            const cellId = `cell-${roomNumber}-${timeString}`;
+            const cell = document.getElementById(cellId);
+            
+            // Track this cell as booked
+            bookedCells.add(cellId);
+            
+            if (cell) {
+              cell.classList.add('booked', roomClass);
+              
+              if (isWithin24Hours) {
+                cell.classList.add('past-booking');
+              }
+              
+              if (window.bookingToModify && 
+                  (booking.bookingId === window.bookingToModify.bookingId || 
+                   booking.code === window.bookingToModify.bookingId) &&
+                  booking.date === window.bookingToModify.date &&
+                  booking.start === window.bookingToModify.time) {
+                cell.classList.add('selected-booking');
+              }
+              
+              const bookingCode = booking.bookingId || booking.code || '';
+              const paymentIndicator = booking.isPaid ? '' : ' (Old system)';
+              const roomDisplayName = getRoomDisplayName(booking);
+              
+              cell.innerHTML = `
+                <div class="booking-info">${booking.client || ''}</div>
+                <div class="client-name">${bookingCode}${paymentIndicator}</div>
+              `;
+              
+              // Only allow clicking own bookings when authenticated
+              if (hasValidToken && isOwnBooking && !isWithin24Hours) {
+                cell.style.cursor = 'pointer';
+                cell.title = 'Click to modify this booking';
+                
+                // Add click handler (use closure to capture booking data)
+                cell.addEventListener('click', (function(bookingData, roomName, rNum) {
+                  return function() {
+                    const bookingCode = bookingData.bookingId || bookingData.code || '';
+                    const date = bookingData.date;
+                    const time = bookingData.start;
+                    
+                    prefillForm(bookingCode, roomName, date, time);
+                    
+                    // Remove selection from all cells and add to clicked ones
+                    document.querySelectorAll('.selected-booking').forEach(c => c.classList.remove('selected-booking'));
+                    
+                    // Highlight all cells for this booking
+                    const startH = parseInt(bookingData.start.split(':')[0]);
+                    const endH = parseInt(bookingData.end.split(':')[0]);
+                    for (let h = startH; h < endH; h++) {
+                      const ts = `${String(h).padStart(2, '0')}:00`;
+                      const cId = `cell-${rNum}-${ts}`;
+                      const c = document.getElementById(cId);
+                      if (c) c.classList.add('selected-booking');
+                    }
+                    
+                    // Scroll to form
+                    const formContainer = document.querySelector('.form-container');
+                    if (formContainer) {
+                      formContainer.scrollIntoView({ behavior: 'smooth' });
+                    }
+                  };
+                })(booking, roomDisplayName, roomNumber));
+              } else if (hasValidToken && isOwnBooking && isWithin24Hours) {
+                cell.style.cursor = 'not-allowed';
+                cell.title = 'Within 24 hours - cannot modify online';
+              } else if (hasValidToken && !isOwnBooking) {
+                cell.style.cursor = 'default';
+                cell.title = `${booking.client}'s booking - view only`;
+              } else {
+                cell.style.cursor = 'default';
+              }
+            }
+          }
+        }
+      });
+      
+      // Handle empty slots - make them clickable for authenticated users
+      console.log('Empty slot check:', { hasValidToken, hasPricingConfig: !!pricingConfig, selectedDate });
+      
+      if (hasValidToken && pricingConfig) {
+        const roomIds = {
+          'Room 1': '1',
+          'Room 2': '2',
+          'Room 4': '4',
+          'Room 5': '5',
+          'Room 6': '6',
+          'Room 7': '7',
+          'Online': 'online'
+        };
+        
+        // Check if selected date is in the past
+        const selectedDateTime = new Date(selectedDate + 'T08:00:00');
+        const now = new Date();
+        const isPastDate = selectedDateTime < now && selectedDate !== now.toISOString().split('T')[0];
+        
+        console.log('Date check:', { selectedDate, isPastDate, today: now.toISOString().split('T')[0] });
+        
+        if (!isPastDate) {
+          let slotsMarked = 0;
+          Object.entries(roomIds).forEach(([roomName, roomId]) => {
+            businessHours.forEach(time => {
+              const cellId = `cell-${roomId}-${time}`;
+              
+              // Skip if this cell is already booked
+              if (bookedCells.has(cellId)) return;
+              
+              const cell = document.getElementById(cellId);
+              if (!cell) return;
+              
+              // Check if this time slot is in the past
+              const hour = parseInt(time.split(':')[0]);
+              const slotDateTime = new Date(`${selectedDate}T${time}:00`);
+              if (slotDateTime < now) return;
+              
+              // Check if pricing is available for this slot
+              const locationId = getRoomLocationId(roomName);
+              const priceResult = calculateBookingPrice(locationId, selectedDate, hour);
+              
+              if (priceResult.amount > 0) {
+                // Make cell clickable
+                cell.classList.add('available-slot');
+                cell.title = `Book ${roomName} at ${time} - £${(priceResult.amount / 100).toFixed(2)}`;
+                slotsMarked++;
+                
+                // Add click handler
+                cell.addEventListener('click', (function(room, date, timeSlot) {
+                  return function(e) {
+                    // Don't open modal if clicking on a booked cell
+                    if (e.target.closest('.booked')) return;
+                    openNewBookingModal(room, date, timeSlot);
+                  };
+                })(roomName, selectedDate, time));
+              }
+            });
+          });
+          console.log('Available slots marked:', slotsMarked);
+        }
+      } else if (hasValidToken && !pricingConfig) {
+        console.warn('Pricing config not loaded - empty slots will not be clickable. Please save pricing config via admin panel.');
+      }
+    }
+    
+    // FIXED: Populate week view with token persistence
+    function populateWeekView(filteredBookings) {
+      // if a token set the name earlier, reuse it
+      if (!selectedCounsellor) {
+        const stored = sessionStorage.getItem('counsellorName');
+        if (stored) selectedCounsellor = stored;
+      }
+      if (!selectedCounsellor) return;
+      
+      filteredBookings.forEach(booking => {
+        const bookingDate = new Date(booking.date + 'T12:00:00');
+        
+        const weekStartNoon = new Date(currentWeekStart);
+        weekStartNoon.setHours(12, 0, 0, 0);
+        
+        const msPerDay = 24 * 60 * 60 * 1000;
+        const timeDiff = bookingDate.getTime() - weekStartNoon.getTime();
+        const daysDiff = Math.round(timeDiff / msPerDay);
+        
+        if (daysDiff >= 0 && daysDiff <= 6) {
+          const startHour = parseInt(booking.start.split(':')[0]);
+          const endHour = parseInt(booking.end.split(':')[0]);
+          
+          const isWithin24Hours = isBookingWithin24Hours(booking.date, booking.start);
+          
+          for (let hour = startHour; hour < endHour; hour++) {
+            if (hour >= 8 && hour <= 20) {
+              const timeString = `${String(hour).padStart(2, '0')}:00`;
+              const cellId = `week-cell-${daysDiff}-${timeString}`;
+              const cell = document.getElementById(cellId);
+              
+              if (cell) {
+                const {roomClass} = getRoomMapping(booking);
+                const roomDisplayName = getRoomDisplayName(booking);
+                
+                cell.classList.add('booked', roomClass);
+                
+                if (isWithin24Hours) {
+                  cell.classList.add('past-booking');
+                }
+                
+                if (window.bookingToModify && 
+                    (booking.bookingId === window.bookingToModify.bookingId || 
+                     booking.code === window.bookingToModify.bookingId) &&
+                    booking.date === window.bookingToModify.date &&
+                    booking.start === window.bookingToModify.time) {
+                  cell.classList.add('selected-booking');
+                }
+                
+                const bookingCode = booking.bookingId || booking.code || '';
+                const paymentIndicator = booking.isPaid ? '' : ' (Old system)';
+                
+                cell.innerHTML = `
+                  <div class="booking-info">${roomDisplayName}</div>
+                  <div class="client-name">${bookingCode}${paymentIndicator}</div>
+                `;
+                
+                // Only allow clicking if we have a valid token
+                if (!isWithin24Hours && sessionStorage.getItem('accessToken')) {
+                  cell.addEventListener('click', function() {
+                    const bookingCode = booking.bookingId;
+                    const room = roomDisplayName;
+                    const date = booking.date;
+                    const time = booking.start;
+                    
+                    prefillForm(bookingCode, room, date, time);
+                    
+                    document.querySelectorAll('.selected-booking').forEach(c => c.classList.remove('selected-booking'));
+                    cell.classList.add('selected-booking');
+                    
+                    const formContainer = document.querySelector('.form-container');
+                    if (formContainer) {
+                      formContainer.scrollIntoView({ behavior: 'smooth' });
+                    }
+                  });
+                }
+              }
+            }
+          }
+        }
+      });
+    }
+  </script>
+  <!-- ================================ -->
+  <!-- SECTION 7: DATA MANAGEMENT FUNCTIONS -->
+  <!-- ================================ -->
+  <script>
+    // Load booking data with priority for specific counsellor
+    async function loadBookingDataWithPriority(priorityCounsellor = null) {
+      const statusElement = document.getElementById('dataStatus');
+      const startTime = Date.now();
+      
+      try {
+        if (statusElement) statusElement.textContent = 'Loading booking data...';
+        
+        // Get data from Firebase
+        const snapshot = await database.ref('bookings').once('value');
+        const jsonData = snapshot.val() || [];
+        
+        // Convert to array if needed
+        const bookingArray = Array.isArray(jsonData) ? jsonData : Object.values(jsonData);
+        
+        // Filter out cancelled bookings first
+        const cancelledCount = bookingArray.filter(b => b.status === 'cancelled' || b.status === 'cancel').length;
+        const activeBookings = bookingArray.filter(booking => 
+          booking.status !== 'cancelled' && booking.status !== 'cancel'
+        );
+        
+        if (cancelledCount > 0) {
+          console.log(`Filtered out ${cancelledCount} cancelled bookings`);
+        }
+        
+        // Separate holding room bookings from regular bookings (excluding cancelled)
+        holdingRoomBookings = activeBookings.filter(booking => 
+          booking.room === 'Henley_Holding_Room' || 
+          booking.room === '18' ||
+          booking.date === '2030-01-01'
+        );
+        
+        bookingData = activeBookings.filter(booking => 
+          booking.room !== 'Henley_Holding_Room' && 
+          booking.room !== '18' &&
+          booking.date !== '2030-01-01'
+        );
+        
+        console.log(`Firebase: Loaded ${bookingData.length} bookings in ${Date.now() - startTime}ms`);
+        
+        updateHoldingRoomCount();
+        updateCounsellorInfo();
+        
+        if (statusElement) {
+          let statusText = `Loaded ${bookingData.length} bookings`;
+          if (holdingRoomBookings.length > 0) {
+            statusText += ` (${holdingRoomBookings.length} in holding room)`;
+          }
+          if (priorityCounsellor) {
+            const priorityCount = bookingData.filter(b => b.client === priorityCounsellor).length;
+            statusText += ` - ${priorityCount} for ${priorityCounsellor}`;
+          }
+          statusElement.textContent = statusText;
+          statusElement.style.color = '#28a745';
+          
+          setTimeout(() => {
+            statusElement.textContent = '';
+          }, 3000);
+        }
+        
+        // Set up real-time listener for updates
+        database.ref('bookings').on('value', (snapshot) => {
+          const updatedData = snapshot.val() || [];
+          const updatedArray = Array.isArray(updatedData) ? updatedData : Object.values(updatedData);
+          
+          // Filter out cancelled bookings first
+          const activeUpdatedBookings = updatedArray.filter(booking => 
+            booking.status !== 'cancelled' && booking.status !== 'cancel'
+          );
+          
+          // Update local data (excluding cancelled)
+          holdingRoomBookings = activeUpdatedBookings.filter(booking => 
+            booking.room === 'Henley_Holding_Room' || 
+            booking.room === '18' ||
+            booking.date === '2030-01-01'
+          );
+          
+          bookingData = activeUpdatedBookings.filter(booking => 
+            booking.room !== 'Henley_Holding_Room' && 
+            booking.room !== '18' &&
+            booking.date !== '2030-01-01'
+          );
+          
+          updateHoldingRoomCount();
+          populateCalendar();
+          console.log('Data updated in real-time!');
+        });
+        
+        return Promise.resolve();
+        
+      } catch (error) {
+        console.error('Firebase error:', error);
+        bookingData = [];
+        holdingRoomBookings = [];
+        updateHoldingRoomCount();
+        return Promise.resolve();
+      }
+    }
+    
+    // Load booking data
+    async function loadBookingData() {
+      const priorityCounsellor = selectedCounsellor || sessionStorage.getItem('counsellorName') || null;
+      return loadBookingDataWithPriority(priorityCounsellor);
+    }
+    
+    // Refresh data manually
+    function refreshData() {
+      console.log('Manual refresh triggered');
+      try {
+        sessionStorage.removeItem('bookingDataCache');
+      } catch (e) {
+        console.warn('Could not clear cache:', e);
+      }
+      
+      const priorityCounsellor = selectedCounsellor || sessionStorage.getItem('counsellorName') || null;
+      loadBookingDataWithPriority(priorityCounsellor).then(() => {
+        console.log('Refresh complete, repopulating calendar');
+        populateCalendar();
+      });
+    }
+    
+    // FIXED: Update URL with token preservation
+    function updateURL() {
+      // start from current query so we don't drop unknown params
+      const current = new URLSearchParams(window.location.search);
+      const existingToken = current.get('token');
+      const sessionToken = sessionStorage.getItem('accessToken');
+      const params = new URLSearchParams();
+      
+      const token = sessionToken || existingToken;
+      if (token) params.set('token', token);
+      
+      params.set('view', currentView);
+      
+      if (window.clientId && (selectedCounsellor || sessionStorage.getItem('counsellorName'))) {
+        params.set('clientId', window.clientId);
+        params.set('name', encodeURIComponent(selectedCounsellor || sessionStorage.getItem('counsellorName') || ''));
+      } else if (selectedCounsellor) {
+        params.set('counsellor', encodeURIComponent(selectedCounsellor));
+      }
+      
+      if (currentView === 'day') {
+        const ds = document.getElementById('dateSelector');
+        params.set('date', ds ? ds.value : currentDate);
+      } else {
+        params.set('date', formatDate(currentWeekStart));
+      }
+      
+      const newURL = window.location.pathname + '?' + params.toString();
+      window.history.replaceState({}, '', newURL);
+    }
+    
+    // Initialize view buttons
+    function updateViewButtons() {
+      const dayBtn = document.querySelector('[onclick="switchView(\'day\')"]');
+      const weekBtn = document.querySelector('[onclick="switchView(\'week\')"]');
+      
+      if (dayBtn && weekBtn) {
+        dayBtn.classList.toggle('active', currentView === 'day');
+        weekBtn.classList.toggle('active', currentView === 'week');
+      }
+    }
+    
+    // Update controls visibility based on view
+    function updateControlsVisibility() {
+      const dayControls = document.getElementById('dayControls');
+      const weekControls = document.getElementById('weekControls');
+      const counsellorContainer = document.getElementById('counsellorFilterContainer');
+      
+      if (dayControls) dayControls.classList.toggle('hidden', currentView !== 'day');
+      if (weekControls) weekControls.classList.toggle('hidden', currentView !== 'week');
+      
+      // Hide counsellor selector if we have a token
+      if (counsellorContainer && !sessionStorage.getItem('accessToken')) {
+        counsellorContainer.classList.toggle('hidden', false);
+      } else if (counsellorContainer) {
+        counsellorContainer.style.display = 'none';
+      }
+    }
+    
+    // Initialize data
+    function initializeData() {
+      const priorityCounsellor = selectedCounsellor || sessionStorage.getItem('counsellorName') || null;
+      
+      // Load pricing config first, then booking data
+      loadPricingConfig().then(() => {
+        return loadBookingDataWithPriority(priorityCounsellor);
+      }).then(() => {
+        populateCalendar();
+      });
+    }
+    
+    // Initialize when DOM is ready - CORRECTED VERSION
+    document.addEventListener('DOMContentLoaded', function() {
+      console.log('DOM loaded, starting initialization...');
+      
+      // Call parseURLParams which will handle the rest of initialization
+      parseURLParams(); // This handles everything now
+    });
+  </script>
+</body>
+</html>
