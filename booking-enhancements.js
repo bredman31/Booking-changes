@@ -421,10 +421,19 @@
 
     for (const booking of window.bookingBasket) {
       try {
+        // Get all client IDs
+        const clientInfo = window.getClientInfo ? window.getClientInfo() : {
+          clientId: window.clientId || sessionStorage.getItem('clientId') || '',
+          henleyClientId: window.henleyClientId || sessionStorage.getItem('henleyClientId') || '',
+          newSystemId: window.newSystemId || sessionStorage.getItem('newSystemId') || ''
+        };
+        
         const payload = {
           action: 'create',
           timestamp: new Date().toISOString(),
-          client_id: window.clientId,
+          client_id: clientInfo.clientId,
+          henley_client_id: clientInfo.henleyClientId,
+          new_system_id: clientInfo.newSystemId,
           counsellor_name: counsellorName,
           service_id: '2',
           provider_id: booking.roomId,
