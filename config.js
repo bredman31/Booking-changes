@@ -5,6 +5,7 @@
  * This just extracts existing values from index.html
  */
 
+
 // ================================
 // FIREBASE CONFIGURATION
 // ================================
