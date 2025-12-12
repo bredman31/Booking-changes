@@ -532,3 +532,48 @@ body {
 .config-error h3 {
   margin-top: 0;
 }
+/* === MULTI-BOOKING CELLS (Room + Car Park etc) === */
+.grid-cell.multi-booking {
+  padding: 0;
+  display: flex;
+  flex-direction: row;
+}
+
+.booking-segment {
+  flex: 1;
+  padding: 2px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  border-right: 1px solid rgba(255,255,255,0.5);
+  min-width: 0;
+  overflow: hidden;
+}
+
+.booking-segment:last-child {
+  border-right: none;
+}
+
+.booking-segment .booking-info {
+  font-size: 0.7em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.booking-segment .client-name {
+  font-size: 0.6em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Room colours for segments */
+.booking-segment.room-1 { background: #d4a5a5; }
+.booking-segment.room-2 { background: #b299d4; }
+.booking-segment.room-4 { background: #a5d4a5; }
+.booking-segment.room-5 { background: #e57373; }
+.booking-segment.room-6 { background: #c8a882; }
+.booking-segment.room-7 { background: #e6d45a; }
+.booking-segment.online { background: #7dd87d; }
+.booking-segment.car-park { background: #90caf9; }
