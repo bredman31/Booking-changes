@@ -1695,7 +1695,9 @@ function restoreSessionState() {
       return true; // Slot is available
     }
   </script>
-  <!-- ================================ -->
+
+
+<!-- ================================ -->
   <!-- SECTION 6: CALENDAR FUNCTIONS -->
   <!-- ================================ -->
   <script>
@@ -1723,96 +1725,24 @@ function restoreSessionState() {
       const buttons = document.querySelectorAll('.view-btn');
       if (buttons.length > 0) {
         buttons.forEach(btn => btn.classList.remove('active'));
-        const clickedButton = event ? event.target : document.querySelector(`[onclick="switchView('${view}')"]`);
-        if (clickedButton) {
-          clickedButton.classList.add('active');
-        }
+        const clickedButton = event ? event.target : document.querySelector(`.view-btn[onclick*="${view}"]`);
+        if (clickedButton) clickedButton.classList.add('active');
       }
       
-      const dayControls = document.getElementById('dayControls');
-      const weekControls = document.getElementById('weekControls');
-      const counsellorContainer = document.getElementById('counsellorFilterContainer');
+      const weekNav = document.querySelector('.week-navigation');
+      const dateSelector = document.getElementById('dateSelector');
       
-      if (dayControls) dayControls.classList.toggle('hidden', view !== 'day');
-      if (weekControls) weekControls.classList.toggle('hidden', view !== 'week');
-      
-      // Hide counsellor selector if we have a token
-      if (counsellorContainer && !sessionStorage.getItem('accessToken')) {
-        counsellorContainer.classList.toggle('hidden', false);
-      } else if (counsellorContainer) {
-        counsellorContainer.style.display = 'none';
+      if (view === 'day') {
+        if (weekNav) weekNav.style.display = 'none';
+        if (dateSelector) dateSelector.style.display = 'block';
+      } else {
+        if (weekNav) weekNav.style.display = 'flex';
+        if (dateSelector) dateSelector.style.display = 'none';
       }
       
-      const grid = document.getElementById('calendarGrid');
-      if (grid) {
-        grid.className = `calendar-grid ${view}-view`;
-      }
-      
-      updateCounsellorInfo();
       createCalendarGrid();
       populateCalendar();
-      updateURL(); // This now preserves the token
-    }
-    
-    // Filter by counsellor
-    function filterByCounsellor() {
-        restoreSessionState(); 
-      selectedCounsellor = document.getElementById('counsellorSelect').value;
-      updateCounsellorInfo();
-      populateCalendar();
       updateURL();
-    }
-    
-    // Update counsellor info display
-    function updateCounsellorInfo() {
-      const infoDiv = document.getElementById('counsellorInfo');
-      const nameDiv = document.getElementById('counsellorName');
-      const summaryDiv = document.getElementById('counsellorSummary');
-      
-      // Use stored counsellor name if available
-      const storedCounsellor = sessionStorage.getItem('counsellorName');
-      const counsellorToUse = selectedCounsellor || storedCounsellor;
-      
-      if (currentView === 'day') {
-        if (counsellorToUse) {
-          nameDiv.textContent = counsellorToUse;
-          summaryDiv.textContent = `Viewing your bookings (Day View) - Only your bookings are modifiable`;
-          infoDiv.classList.remove('hidden');
-          
-          if (window.clientId || sessionStorage.getItem('accessToken')) {
-            document.getElementById('pageTitle').textContent = `${counsellorToUse} - Day View`;
-          } else {
-            document.getElementById('pageTitle').textContent = `${counsellorToUse} - Your Bookings (Day View)`;
-          }
-        } else {
-          infoDiv.classList.add('hidden');
-          document.getElementById('pageTitle').textContent = 'Cherry Tree Centre - Select Counsellor for Day View';
-        }
-      } else {
-        if (counsellorToUse) {
-          const counsellorBookings = bookingData.filter(booking => 
-            booking.client.toLowerCase().includes(counsellorToUse.toLowerCase())
-          );
-          
-          nameDiv.textContent = counsellorToUse;
-          summaryDiv.textContent = `${counsellorBookings.length} bookings found`;
-          infoDiv.classList.remove('hidden');
-          
-          if (window.clientId || sessionStorage.getItem('accessToken')) {
-            document.getElementById('pageTitle').textContent = `My Bookings - ${counsellorToUse}`;
-          } else {
-            document.getElementById('pageTitle').textContent = `Bookings - ${counsellorToUse}`;
-          }
-        } else {
-          infoDiv.classList.add('hidden');
-          
-          if (window.clientId || sessionStorage.getItem('accessToken')) {
-            document.getElementById('pageTitle').textContent = 'Please select your name to view bookings';
-          } else {
-            document.getElementById('pageTitle').textContent = 'Select Counsellor to View Bookings';
-          }
-        }
-      }
     }
     
     // Populate counsellor dropdown
@@ -1846,7 +1776,7 @@ function restoreSessionState() {
       updateWeekDisplay();
       createCalendarGrid();
       populateCalendar();
-      updateURL(); // This now preserves the token
+      updateURL();
     }
     
     // Update week display text
@@ -1886,7 +1816,7 @@ function restoreSessionState() {
       }
     }
     
-    // Create day view grid - ADDED ROOM 5
+    // Create day view grid
     function createDayGrid(grid) {
       const emptyCell = document.createElement("div");
       emptyCell.className = "grid-header";
@@ -2018,21 +1948,19 @@ function restoreSessionState() {
       const loggedInCounsellor = selectedCounsellor || sessionStorage.getItem('counsellorName') || '';
       const hasValidToken = !!sessionStorage.getItem('accessToken');
       
-      // Track which cells have bookings
-      const bookedCells = new Set();
-      
       dayBookings.forEach(booking => {
-        const startHour = parseInt(booking.start.split(':')[0]);
-        const endHour = parseInt(booking.end.split(':')[0]);
-        
         const {roomNumber, roomClass} = getRoomMapping(booking);
         if (!roomNumber) return;
         
-        const isWithin24Hours = isBookingWithin24Hours(booking.date, booking.start);
+        const startHour = parseInt(booking.start.split(':')[0]);
+        const endHour = parseInt(booking.end.split(':')[0]);
         
-        // Check if this booking belongs to the logged-in counsellor
-        const isOwnBooking = loggedInCounsellor && booking.client && 
+        // Check if this is the logged-in user's booking
+        const isOwnBooking = loggedInCounsellor && 
+          booking.client && 
           booking.client.toLowerCase().includes(loggedInCounsellor.toLowerCase());
+        
+        const isWithin24Hours = isBookingWithin24Hours(booking.date, booking.start);
         
         for (let hour = startHour; hour < endHour; hour++) {
           if (hour >= 8 && hour <= 20) {
@@ -2040,22 +1968,11 @@ function restoreSessionState() {
             const cellId = `cell-${roomNumber}-${timeString}`;
             const cell = document.getElementById(cellId);
             
-            // Track this cell as booked
-            bookedCells.add(cellId);
-            
             if (cell) {
               cell.classList.add('booked', roomClass);
               
               if (isWithin24Hours) {
                 cell.classList.add('past-booking');
-              }
-              
-              if (window.bookingToModify && 
-                  (booking.bookingId === window.bookingToModify.bookingId || 
-                   booking.code === window.bookingToModify.bookingId) &&
-                  booking.date === window.bookingToModify.date &&
-                  booking.start === window.bookingToModify.time) {
-                cell.classList.add('selected-booking');
               }
               
               const bookingCode = booking.bookingId || booking.code || '';
@@ -2072,7 +1989,6 @@ function restoreSessionState() {
                 cell.style.cursor = 'pointer';
                 cell.title = 'Click to modify this booking';
                 
-                // Add click handler (use closure to capture booking data)
                 cell.addEventListener('click', (function(bookingData, roomName, rNum) {
                   return function() {
                     const bookingCode = bookingData.bookingId || bookingData.code || '';
@@ -2081,10 +1997,8 @@ function restoreSessionState() {
                     
                     prefillForm(bookingCode, roomName, date, time);
                     
-                    // Remove selection from all cells and add to clicked ones
                     document.querySelectorAll('.selected-booking').forEach(c => c.classList.remove('selected-booking'));
                     
-                    // Highlight all cells for this booking
                     const startH = parseInt(bookingData.start.split(':')[0]);
                     const endH = parseInt(bookingData.end.split(':')[0]);
                     for (let h = startH; h < endH; h++) {
@@ -2094,7 +2008,6 @@ function restoreSessionState() {
                       if (c) c.classList.add('selected-booking');
                     }
                     
-                    // Scroll to form
                     const formContainer = document.querySelector('.form-container');
                     if (formContainer) {
                       formContainer.scrollIntoView({ behavior: 'smooth' });
@@ -2115,73 +2028,16 @@ function restoreSessionState() {
         }
       });
       
-      // Handle empty slots - make them clickable for authenticated users
-      console.log('Empty slot check:', { hasValidToken, hasPricingConfig: !!pricingConfig, selectedDate });
-      
+      // Handle empty slots for new bookings
+      console.log('Empty slot check:', { hasValidToken, hasPricingConfig: !!pricingConfig });
       if (hasValidToken && pricingConfig) {
-        const roomIds = {
-          'Room 1': '1',
-          'Room 2': '2',
-          'Room 4': '4',
-          'Room 5': '5',
-          'Room 6': '6',
-          'Room 7': '7',
-          'Online': 'online'
-        };
-        
-        // Check if selected date is in the past
-        const selectedDateTime = new Date(selectedDate + 'T08:00:00');
-        const now = new Date();
-        const isPastDate = selectedDateTime < now && selectedDate !== now.toISOString().split('T')[0];
-        
-        console.log('Date check:', { selectedDate, isPastDate, today: now.toISOString().split('T')[0] });
-        
-        if (!isPastDate) {
-          let slotsMarked = 0;
-          Object.entries(roomIds).forEach(([roomName, roomId]) => {
-            businessHours.forEach(time => {
-              const cellId = `cell-${roomId}-${time}`;
-              
-              // Skip if this cell is already booked
-              if (bookedCells.has(cellId)) return;
-              
-              const cell = document.getElementById(cellId);
-              if (!cell) return;
-              
-              // Check if this time slot is in the past
-              const hour = parseInt(time.split(':')[0]);
-              const slotDateTime = new Date(`${selectedDate}T${time}:00`);
-              if (slotDateTime < now) return;
-              
-              // Check if pricing is available for this slot
-              const locationId = getRoomLocationId(roomName);
-              const priceResult = calculateBookingPrice(locationId, selectedDate, hour);
-              
-             if (priceResult.amount >= 0 && priceResult.rate !== null) {
-                // Make cell clickable
-                cell.classList.add('available-slot');
-                cell.title = `Book ${roomName} at ${time} - £${(priceResult.amount / 100).toFixed(2)}`;
-                slotsMarked++;
-                
-                // Add click handler
-                cell.addEventListener('click', (function(room, date, timeSlot) {
-                  return function(e) {
-                    // Don't open modal if clicking on a booked cell
-                    if (e.target.closest('.booked')) return;
-                    openNewBookingModal(room, date, timeSlot);
-                  };
-                })(roomName, selectedDate, time));
-              }
-            });
-          });
-          console.log('Available slots marked:', slotsMarked);
-        }
+        markAvailableSlotsForNewBookings(selectedDate);
       } else if (hasValidToken && !pricingConfig) {
-        console.warn('Pricing config not loaded - empty slots will not be clickable. Please save pricing config via admin panel.');
+        console.warn('Pricing config not loaded - new booking feature disabled. Please save pricing config via admin panel.');
       }
     }
     
-    // FIXED: Populate week view with token persistence
+    // FIXED: Populate week view - handles multiple bookings per cell (Room + Car Park etc)
     function populateWeekView(filteredBookings) {
       // if a token set the name earlier, reuse it
       if (!selectedCounsellor) {
@@ -2189,6 +2045,9 @@ function restoreSessionState() {
         if (stored) selectedCounsellor = stored;
       }
       if (!selectedCounsellor) return;
+      
+      // Build a map of cellId -> array of bookings
+      const cellBookings = {};
       
       filteredBookings.forEach(booking => {
         const bookingDate = new Date(booking.date + 'T12:00:00');
@@ -2204,66 +2063,130 @@ function restoreSessionState() {
           const startHour = parseInt(booking.start.split(':')[0]);
           const endHour = parseInt(booking.end.split(':')[0]);
           
-          const isWithin24Hours = isBookingWithin24Hours(booking.date, booking.start);
-          
           for (let hour = startHour; hour < endHour; hour++) {
             if (hour >= 8 && hour <= 20) {
               const timeString = `${String(hour).padStart(2, '0')}:00`;
               const cellId = `week-cell-${daysDiff}-${timeString}`;
-              const cell = document.getElementById(cellId);
               
-              if (cell) {
-                const {roomClass} = getRoomMapping(booking);
-                const roomDisplayName = getRoomDisplayName(booking);
-                
-                cell.classList.add('booked', roomClass);
-                
-                if (isWithin24Hours) {
-                  cell.classList.add('past-booking');
-                }
-                
-                if (window.bookingToModify && 
-                    (booking.bookingId === window.bookingToModify.bookingId || 
-                     booking.code === window.bookingToModify.bookingId) &&
-                    booking.date === window.bookingToModify.date &&
-                    booking.start === window.bookingToModify.time) {
-                  cell.classList.add('selected-booking');
-                }
-                
-                const bookingCode = booking.bookingId || booking.code || '';
-                const paymentIndicator = booking.isPaid ? '' : ' (Old system)';
-                
-                cell.innerHTML = `
-                  <div class="booking-info">${roomDisplayName}</div>
-                  <div class="client-name">${bookingCode}${paymentIndicator}</div>
-                `;
-                
-                // Only allow clicking if we have a valid token
-                if (!isWithin24Hours && sessionStorage.getItem('accessToken')) {
-                  cell.addEventListener('click', function() {
-                    const bookingCode = booking.bookingId;
-                    const room = roomDisplayName;
-                    const date = booking.date;
-                    const time = booking.start;
-                    
-                    prefillForm(bookingCode, room, date, time);
-                    
-                    document.querySelectorAll('.selected-booking').forEach(c => c.classList.remove('selected-booking'));
-                    cell.classList.add('selected-booking');
-                    
-                    const formContainer = document.querySelector('.form-container');
-                    if (formContainer) {
-                      formContainer.scrollIntoView({ behavior: 'smooth' });
-                    }
-                  });
-                }
+              if (!cellBookings[cellId]) {
+                cellBookings[cellId] = [];
+              }
+              
+              // Get room info
+              const {roomClass} = getRoomMapping(booking);
+              const roomDisplayName = getRoomDisplayName(booking);
+              const isWithin24Hours = isBookingWithin24Hours(booking.date, booking.start);
+              
+              // Check if this exact booking is already added (avoid duplicates)
+              const existingIdx = cellBookings[cellId].findIndex(b => 
+                b.booking.bookingId === booking.bookingId && b.roomClass === roomClass
+              );
+              
+              if (existingIdx === -1) {
+                cellBookings[cellId].push({
+                  booking: booking,
+                  roomClass: roomClass,
+                  roomDisplayName: roomDisplayName,
+                  isWithin24Hours: isWithin24Hours
+                });
               }
             }
           }
         }
       });
+      
+      // Now populate cells
+      Object.entries(cellBookings).forEach(([cellId, bookings]) => {
+        const cell = document.getElementById(cellId);
+        if (!cell) return;
+        
+        cell.classList.add('booked');
+        
+        // Check for booking to modify highlight
+        const hasHighlight = bookings.some(b => 
+          window.bookingToModify && 
+          (b.booking.bookingId === window.bookingToModify.bookingId || 
+           b.booking.code === window.bookingToModify.bookingId) &&
+          b.booking.date === window.bookingToModify.date &&
+          b.booking.start === window.bookingToModify.time
+        );
+        
+        if (hasHighlight) {
+          cell.classList.add('selected-booking');
+        }
+        
+        if (bookings.length > 1) {
+          // Multiple bookings - show side by side
+          cell.classList.add('multi-booking');
+          
+          cell.innerHTML = bookings.map((b, idx) => {
+            const bookingCode = b.booking.bookingId || b.booking.code || '';
+            const paymentIndicator = b.booking.isPaid ? '' : ' (Old)';
+            const pastClass = b.isWithin24Hours ? ' past-booking' : '';
+            
+            return `<div class="booking-segment ${b.roomClass}${pastClass}" data-booking-idx="${idx}">
+                      <div class="booking-info">${b.roomDisplayName}</div>
+                      <div class="client-name">${bookingCode}${paymentIndicator}</div>
+                    </div>`;
+          }).join('');
+          
+          // Add click handlers to each segment
+          cell.querySelectorAll('.booking-segment').forEach((segment, idx) => {
+            const b = bookings[idx];
+            if (!b.isWithin24Hours && sessionStorage.getItem('accessToken')) {
+              segment.style.cursor = 'pointer';
+              segment.onclick = (e) => {
+                e.stopPropagation();
+                prefillForm(b.booking.bookingId, b.roomDisplayName, b.booking.date, b.booking.start);
+                
+                document.querySelectorAll('.selected-booking').forEach(c => c.classList.remove('selected-booking'));
+                cell.classList.add('selected-booking');
+                
+                const formContainer = document.querySelector('.form-container');
+                if (formContainer) {
+                  formContainer.scrollIntoView({ behavior: 'smooth' });
+                }
+              };
+            }
+          });
+          
+        } else {
+          // Single booking - existing behaviour
+          const b = bookings[0];
+          const bookingCode = b.booking.bookingId || b.booking.code || '';
+          const paymentIndicator = b.booking.isPaid ? '' : ' (Old system)';
+          
+          cell.classList.add(b.roomClass);
+          
+          if (b.isWithin24Hours) {
+            cell.classList.add('past-booking');
+          }
+          
+          cell.innerHTML = `
+            <div class="booking-info">${b.roomDisplayName}</div>
+            <div class="client-name">${bookingCode}${paymentIndicator}</div>
+          `;
+          
+          // Only allow clicking if we have a valid token and not within 24 hours
+          if (!b.isWithin24Hours && sessionStorage.getItem('accessToken')) {
+            cell.addEventListener('click', function() {
+              prefillForm(bookingCode, b.roomDisplayName, b.booking.date, b.booking.start);
+              
+              document.querySelectorAll('.selected-booking').forEach(c => c.classList.remove('selected-booking'));
+              cell.classList.add('selected-booking');
+              
+              const formContainer = document.querySelector('.form-container');
+              if (formContainer) {
+                formContainer.scrollIntoView({ behavior: 'smooth' });
+              }
+            });
+          }
+        }
+      });
     }
   </script>
+
+
   <!-- ================================ -->
   <!-- SECTION 7: DATA MANAGEMENT FUNCTIONS -->
   <!-- ================================ -->
