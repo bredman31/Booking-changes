@@ -532,6 +532,10 @@ body {
 .config-error h3 {
   margin-top: 0;
 }
+/* ================================ */
+/* ADD THESE TO END OF styles.css */
+/* ================================ */
+
 /* === MULTI-BOOKING CELLS (Room + Car Park etc) === */
 .grid-cell.multi-booking {
   padding: 0;
@@ -577,3 +581,8 @@ body {
 .booking-segment.room-7 { background: #e6d45a; }
 .booking-segment.online { background: #7dd87d; }
 .booking-segment.car-park { background: #90caf9; }
+
+/* Past booking styling for segments */
+.booking-segment.past-booking {
+  opacity: 0.5;
+}
