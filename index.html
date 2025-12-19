@@ -2370,18 +2370,20 @@ const activeUpdatedBookings = updatedArray.filter(booking =>
         counsellorContainer.style.display = 'none';
       }
     }
+
+function initializeData() {
+  const priorityCounsellor = selectedCounsellor || sessionStorage.getItem('counsellorName') || null;
+  
+  // Load room config first (for dynamic colours), then pricing, then bookings
+  loadRoomConfig().then(() => {
+    return loadPricingConfig();
+  }).then(() => {
+    return loadBookingDataWithPriority(priorityCounsellor);
+  }).then(() => {
+    populateCalendar();
+  });
+}
     
-    // Initialize data
-    function initializeData() {
-      const priorityCounsellor = selectedCounsellor || sessionStorage.getItem('counsellorName') || null;
-      
-      // Load pricing config first, then booking data
-      loadPricingConfig().then(() => {
-        return loadBookingDataWithPriority(priorityCounsellor);
-      }).then(() => {
-        populateCalendar();
-      });
-    }
     
     // Initialize when DOM is ready - CORRECTED VERSION
     document.addEventListener('DOMContentLoaded', function() {
