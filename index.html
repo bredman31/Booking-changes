@@ -293,37 +293,235 @@
 
 
 
-
 <!-- ================================ -->
-  <!-- SECTION 4: UTILITY FUNCTIONS -->
+  <!-- SECTION 4: AUTHENTICATION & INITIALIZATION -->
   <!-- ================================ -->
-  <!-- 
-    Most utility functions have been moved to external files:
-    - js/utils.js: Date formatting, session management, location helpers
-    - js/room-config.js: Room mapping, display names, colours
+  <!--
+    Utility functions moved to js/utils.js:
+    - isBookingWithin24Hours, formatDateTimeForSimplybookMe
+    - getLocationIdFromRoom, getRoomsForLocation
+    - restoreSessionState, convertRoomNameToUnderscore
+    - getWeekStartDate, formatDate
     
-    Functions now in utils.js:
-    - formatDate(), formatDateYMD(), formatDateLong()
-    - formatDateTimeForSimplybookMe()
-    - getWeekStartDate(), getMondayOfWeek()
-    - isBookingWithin24Hours()
-    - getLocationIdFromRoom(), getRoomsForLocation()
-    - convertRoomNameToUnderscore(), convertRoomNameToDisplay()
-    - restoreSessionState(), getSessionInfo()
-    - showToast()
-    - updateRoomLabelForLocation()
-    
-    Functions now in room-config.js:
-    - getRoomKey(), getRoomMapping(), getRoomDisplayName(), getRoomColor()
-    - loadRoomConfig(), enabledRooms, roomConfig
+    Room functions moved to js/room-config.js:
+    - getRoomDisplayName, getRoomMapping
   -->
   <script>
-    // Any page-specific utilities that can't be shared go here
-    // Currently empty - all utilities moved to external files
-  </script>
+    // FIXED: Token validation function WITH DEBUGGING
+    async function validateAccessToken(token) {
+      console.log('🔐 validateAccessToken called with token:', token);
+      
+      try {
+        console.log('📡 Checking Firebase for token:', token);
+        const snap = await database.ref('therapist_tokens/' + token).once('value');
+        const t = snap.val();
+        
+        console.log('📦 Firebase returned:', t);
+        
+        if (t && t.active) {
+          console.log('✅ Token is valid and active');
+          console.log('👤 Counsellor name:', t.name);
+          console.log('🆔 Client ID:', t.clientId);
+          
+          sessionStorage.setItem('accessToken', token);
+          sessionStorage.setItem('counsellorName', t.name || '');
+          window.clientId = t.clientId || null;
+          selectedCounsellor = t.name || '';
+          
+          console.log('💾 Stored in sessionStorage:');
+          console.log('  - accessToken:', sessionStorage.getItem('accessToken'));
+          console.log('  - counsellorName:', sessionStorage.getItem('counsellorName'));
+          console.log('  - selectedCounsellor global:', selectedCounsellor);
+          console.log('  - window.clientId:', window.clientId);
+          
+          return true;
+        } else {
+          console.log('❌ Token invalid or inactive');
+          console.log('  - Token data exists?', !!t);
+          console.log('  - Token active?', t?.active);
+        }
+        return false;
+      } catch (e) {
+        console.error('🚨 Token validation error:', e);
+        console.error('  - Error message:', e.message);
+        console.error('  - Stack:', e.stack);
+        return false;
+      }
+    }
+
+    // FIXED: Process valid session function WITH DEBUGGING
+    function processValidSession(params) {
+      console.log('🎯 processValidSession called with params:', Object.fromEntries(params));
+      
+      const view = params.get('view');
+      const date = params.get('date');
+      const bookingId = params.get('booking');
+      const room = params.get('room');
+      const time = params.get('time');
+      const modify = params.get('modify');
+
+      console.log('📋 Extracted params:');
+      console.log('  - view:', view);
+      console.log('  - date:', date);
+      console.log('  - modify:', modify);
+
+      if (view === 'day' || view === 'week') {
+        currentView = view;
+        console.log('  - Set currentView to:', currentView);
+      }
+
+      if (date) {
+        currentDate = date;
+        const dateEl = document.getElementById('dateSelector');
+        if (dateEl) {
+          dateEl.value = currentDate;
+          console.log('  - Set date selector to:', currentDate);
+        }
+        const d = new Date(date + 'T12:00:00');
+        currentWeekStart = getWeekStartDate(d);
+        console.log('  - Set week start to:', formatDate(currentWeekStart));
+      }
+
+      if (modify === 'true' && bookingId && room && date && time) {
+        window.bookingToModify = {
+          bookingId,
+          room: decodeURIComponent(room),
+          date,
+          time: decodeURIComponent(time)
+        };
+        console.log('  - Set booking to modify:', window.bookingToModify);
+      }
+
+      console.log('🚀 Calling initializeWithFullAccess...');
+      initializeWithFullAccess();
+    }
+
+    // Parse non-token parameters
+    function parseNonTokenParams(params) {
+      const view = params.get('view');
+      const counsellor = params.get('counsellor');
+      const clientName = params.get('name');
+      const clientId = params.get('clientId');
+      const date = params.get('date');
+      const bookingId = params.get('booking');
+      const room = params.get('room');
+      const time = params.get('time');
+      const modify = params.get('modify');
+
+      if (view === 'day' || view === 'week') currentView = view;
+
+      if (clientId && clientName) {
+        selectedCounsellor = decodeURIComponent(clientName);
+        window.clientId = clientId;
+      } else if (counsellor) {
+        selectedCounsellor = decodeURIComponent(counsellor);
+        window.clientId = null;
+      } else {
+        const storedName = sessionStorage.getItem('counsellorName');
+        if (storedName) selectedCounsellor = storedName;
+      }
+
+      if (date) {
+        currentDate = date;
+        const dateEl = document.getElementById('dateSelector');
+        if (dateEl) dateEl.value = currentDate;
+        const d = new Date(date + 'T12:00:00');
+        currentWeekStart = getWeekStartDate(d);
+      }
+
+      if (modify === 'true' && bookingId && room && date && time) {
+        window.bookingToModify = {
+          bookingId,
+          room: decodeURIComponent(room),
+          date,
+          time: decodeURIComponent(time)
+        };
+      }
+
+      initializeWithReadOnlyAccess();
+    }
+
+    // FIXED: Parse URL parameters - token-first and async
+    function parseURLParams() {
+      const params = new URLSearchParams(window.location.search);
+      const tokenFromURL = params.get('token');
+      const tokenFromSession = sessionStorage.getItem('accessToken');
+
+      if (tokenFromURL) {
+        validateAccessToken(tokenFromURL).then(ok => {
+          if (ok) {
+            processValidSession(params);
+            updateURL();
+          } else {
+            sessionStorage.removeItem('accessToken');
+            sessionStorage.removeItem('counsellorName');
+            parseNonTokenParams(params);
+          }
+        });
+      } else if (tokenFromSession) {
+        validateAccessToken(tokenFromSession).then(ok => {
+          if (ok) {
+            processValidSession(params);
+            updateURL();
+          } else {
+            sessionStorage.removeItem('accessToken');
+            sessionStorage.removeItem('counsellorName');
+            parseNonTokenParams(params);
+          }
+        });
+      } else {
+        parseNonTokenParams(params);
+      }
+    }
+    
+    // Initialize with full access
+    function initializeWithFullAccess() {
+      console.log('Initializing with full access');
+      
+      updateViewButtons();
+      updateControlsVisibility();
+      
+      const grid = document.getElementById('calendarGrid');
+      if (grid) {
+        grid.className = `calendar-grid ${currentView}-view`;
+        createCalendarGrid();
+      }
+      
+      initializeData();
+      
+      const changeForm = document.getElementById('bookingChangeForm');
+      if (changeForm) {
+        changeForm.addEventListener('submit', handleFormSubmit);
+      }
+      
+      document.getElementById('dateSelector').addEventListener('change', function() {
+        currentDate = this.value;
+        populateCalendar();
+        updateURL();
+      });
+      
+      if (window.bookingToModify) {
+        setTimeout(() => {
+          prefillForm(
+            window.bookingToModify.bookingId,
+            window.bookingToModify.room,
+            window.bookingToModify.date,
+            window.bookingToModify.time
+          );
+          
+          const formContainer = document.querySelector('.form-container');
+          if (formContainer) {
+            formContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          }
+        }, 500);
+      }
+    }
+    
+    // Initialize with read-only access
+    function initializeWithReadOnlyAccess() {
 
 
-
+      
 
   
   <!-- ================================ -->
