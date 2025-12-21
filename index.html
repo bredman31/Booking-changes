@@ -1694,7 +1694,44 @@ function restoreSessionState() {
       
       return true; // Slot is available
     }
-  </script>
+// Mark available slots for new bookings (called from populateDayView)
+    function markAvailableSlotsForNewBookings(selectedDate) {
+      const hasValidToken = !!sessionStorage.getItem('accessToken');
+      if (!hasValidToken) return;
+      
+      const now = new Date();
+      const isPastDate = new Date(selectedDate + 'T23:59:59') < now;
+      if (isPastDate) return;
+      
+      const roomIds = {
+        'Room 1': '1', 'Room 2': '2', 'Room 4': '4', 
+        'Room 5': '5', 'Room 6': '6', 'Room 7': '7', 'Online': 'online'
+      };
+      
+      Object.entries(roomIds).forEach(([roomName, roomId]) => {
+        businessHours.forEach(time => {
+          const cellId = `cell-${roomId}-${time}`;
+          const cell = document.getElementById(cellId);
+          
+          if (!cell || cell.classList.contains('booked')) return;
+          
+          // Check if slot is in the past
+          const slotDateTime = new Date(`${selectedDate}T${time}:00`);
+          if (slotDateTime < now) return;
+          
+          // Make clickable
+          cell.classList.add('available-slot');
+          cell.style.cursor = 'pointer';
+          cell.title = `Book ${roomName} at ${time}`;
+          
+          cell.addEventListener('click', function(e) {
+            if (e.target.closest('.booked')) return;
+            openNewBookingModal(roomName, selectedDate, time);
+          });
+        });
+      });
+    }
+      </script>
 
 
 <!-- ================================ -->
@@ -1717,9 +1754,9 @@ function restoreSessionState() {
       console.log(`Holding room bookings: ${holdingRoomBookings.length}`);
     }
     
-    // UPDATED: Switch between day and week views
+// UPDATED: Switch between day and week views
     function switchView(view) {
-        restoreSessionState(); 
+      restoreSessionState(); 
       currentView = view;
       
       const buttons = document.querySelectorAll('.view-btn');
@@ -1729,15 +1766,16 @@ function restoreSessionState() {
         if (clickedButton) clickedButton.classList.add('active');
       }
       
-      const weekNav = document.querySelector('.week-navigation');
-      const dateSelector = document.getElementById('dateSelector');
+      // FIX: Target the container divs, not the input directly
+      const weekControls = document.getElementById('weekControls');
+      const dayControls = document.getElementById('dayControls');
       
       if (view === 'day') {
-        if (weekNav) weekNav.style.display = 'none';
-        if (dateSelector) dateSelector.style.display = 'block';
+        if (weekControls) weekControls.classList.add('hidden');
+        if (dayControls) dayControls.classList.remove('hidden');
       } else {
-        if (weekNav) weekNav.style.display = 'flex';
-        if (dateSelector) dateSelector.style.display = 'none';
+        if (weekControls) weekControls.classList.remove('hidden');
+        if (dayControls) dayControls.classList.add('hidden');
       }
       
       createCalendarGrid();
