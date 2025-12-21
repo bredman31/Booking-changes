@@ -1,9 +1,9 @@
 /**
  * UTILS.JS - Cherry Tree Centre Utility Functions
  * ===============================================
- * Centralized utility functions for the booking system
+ * Pure utility functions used across the booking system
  * 
- * Usage: Include in <head> after Firebase but before main scripts
+ * Usage: Include in <head> BEFORE main scripts
  * <script src="js/utils.js"></script>
  */
 
@@ -27,9 +27,6 @@
     const day = String(date.getDate()).padStart(2, '0');
     return `${year}-${month}-${day}`;
   };
-
-  // Alias for compatibility
-  window.formatDateYMD = window.formatDate;
 
   /**
    * Format date for display: "Monday, 15 December 2025"
@@ -89,9 +86,6 @@
     
     return result;
   };
-
-  // Alias for compatibility
-  window.getMondayOfWeek = window.getWeekStartDate;
 
   // ================================
   // BOOKING TIME CHECKS
@@ -167,18 +161,6 @@
     return roomName;
   };
 
-  /**
-   * Convert room underscore format to display name
-   * @param {string} roomName - Room name (e.g., "Room_1")
-   * @returns {string} Display name (e.g., "Room 1")
-   */
-  window.convertRoomNameToDisplay = function(roomName) {
-    if (roomName && roomName.startsWith('Room_')) {
-      return roomName.replace('Room_', 'Room ');
-    }
-    return roomName;
-  };
-
   // ================================
   // SESSION MANAGEMENT
   // ================================
@@ -186,7 +168,7 @@
   /**
    * Restore session state from storage
    * Call this at start of any navigation to restore counsellor
-   * @returns {boolean} True if session was restored
+   * @returns {boolean} True if session was restored or no token needed
    */
   window.restoreSessionState = function() {
     const token = sessionStorage.getItem('accessToken');
@@ -206,22 +188,7 @@
       return false;
     }
     
-    return !token; // Return true if no token (nothing to restore)
-  };
-
-  /**
-   * Get current client info from session
-   * @returns {Object} Client info object
-   */
-  window.getSessionInfo = function() {
-    return {
-      token: sessionStorage.getItem('accessToken') || '',
-      counsellorName: sessionStorage.getItem('counsellorName') || '',
-      clientId: sessionStorage.getItem('clientId') || '',
-      henleyClientId: sessionStorage.getItem('henleyClientId') || '',
-      newSystemId: sessionStorage.getItem('newSystemId') || '',
-      email: sessionStorage.getItem('clientEmail') || ''
-    };
+    return !!token;
   };
 
   // ================================
@@ -265,18 +232,6 @@
       toast.style.opacity = '0';
       setTimeout(() => toast.remove(), 300);
     }, duration);
-  };
-
-  /**
-   * Update room label based on location
-   * @param {string} locationId - Location ID
-   */
-  window.updateRoomLabelForLocation = function(locationId) {
-    const roomLabel = document.getElementById('newRoomLabel');
-    const locationName = locationId === '1' ? 'Buckhurst Hill' : 'Henley';
-    if (roomLabel) {
-      roomLabel.textContent = `New Room (if changing) - ${locationName} only:`;
-    }
   };
 
   console.log('✅ utils.js loaded');
