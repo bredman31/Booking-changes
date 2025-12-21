@@ -2371,17 +2371,21 @@ const activeUpdatedBookings = updatedArray.filter(booking =>
       }
     }
     
-    // Initialize data
-    function initializeData() {
-      const priorityCounsellor = selectedCounsellor || sessionStorage.getItem('counsellorName') || null;
-      
-      // Load pricing config first, then booking data
-      loadPricingConfig().then(() => {
-        return loadBookingDataWithPriority(priorityCounsellor);
-      }).then(() => {
-        populateCalendar();
-      });
-    }
+function initializeData() {
+  const priorityCounsellor = selectedCounsellor || sessionStorage.getItem('counsellorName') || null;
+  
+  // Load room config first, then pricing, then bookings
+  if (typeof loadRoomConfig === 'function') {
+    loadRoomConfig().then(() => loadPricingConfig())
+      .then(() => loadBookingDataWithPriority(priorityCounsellor))
+      .then(() => populateCalendar());
+  } else {
+    // Fallback if room-config.js not loaded
+    loadPricingConfig()
+      .then(() => loadBookingDataWithPriority(priorityCounsellor))
+      .then(() => populateCalendar());
+  }
+}
     
     // Initialize when DOM is ready - CORRECTED VERSION
     document.addEventListener('DOMContentLoaded', function() {
@@ -2396,6 +2400,7 @@ const activeUpdatedBookings = updatedArray.filter(booking =>
   <!-- SECTION 8: EXTERNAL JS FILES -->
   <!-- ================================ -->
   <!-- Token auth override - must load first -->
+  <script src="js/room-config.js"></script>
   <script src="js/token-auth-update.js"></script>
   <!-- Booking enhancements (£0 bookings, basket, etc) -->
   <script src="js/booking-enhancements.js"></script>
