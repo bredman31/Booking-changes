@@ -2028,14 +2028,13 @@ function restoreSessionState() {
         }
       });
       
-      // Handle empty slots for new bookings
-      console.log('Empty slot check:', { hasValidToken, hasPricingConfig: !!pricingConfig });
-      if (hasValidToken && pricingConfig) {
-        markAvailableSlotsForNewBookings(selectedDate);
-      } else if (hasValidToken && !pricingConfig) {
-        console.warn('Pricing config not loaded - new booking feature disabled. Please save pricing config via admin panel.');
-      }
-    }
+// Handle empty slots for new bookings
+console.log('Empty slot check:', { hasValidToken, hasPricingConfig: !!pricingConfig });
+if (hasValidToken && pricingConfig && typeof markAvailableSlotsForNewBookings === 'function') {
+  markAvailableSlotsForNewBookings(selectedDate);
+} else if (hasValidToken && !pricingConfig) {
+  console.warn('Pricing config not loaded - new booking feature disabled.');
+}
     
     // FIXED: Populate week view - handles multiple bookings per cell (Room + Car Park etc)
     function populateWeekView(filteredBookings) {
