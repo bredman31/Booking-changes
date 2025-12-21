@@ -8,12 +8,8 @@
   <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-database-compat.js"></script>
   
-  <!-- Shared utilities (must load before inline scripts) -->
-  <script src="js/utils.js"></script>
-  
   <!-- Stylesheet -->
   <link rel="stylesheet" href="css/styles.css">
-  
 </head>
 <body>
   <!-- ================================ -->
@@ -290,18 +286,7 @@
     currentWeekStart.setDate(today.getDate() - daysToSubtract);
     currentWeekStart.setHours(0, 0, 0, 0);
   </script>
-
-
-
-
-
-
-
-
-
-
-
-<!-- ================================ -->
+  <!-- ================================ -->
   <!-- SECTION 4: UTILITY FUNCTIONS -->
   <!-- ================================ -->
   <script>
@@ -841,17 +826,6 @@ function restoreSessionState() {
       return {roomNumber, roomClass};
     }
   </script>
-
-
-
-
-
-
-  
-
-      
-
-  
   <!-- ================================ -->
   <!-- SECTION 5: BOOKING FORM FUNCTIONS -->
   <!-- ================================ -->
@@ -2257,10 +2231,8 @@ const activeBookings = bookingArray.filter(booking =>
         
         console.log(`Firebase: Loaded ${bookingData.length} bookings in ${Date.now() - startTime}ms`);
         
-updateHoldingRoomCount();
-if (typeof updateCounsellorInfo === 'function') {
-  updateCounsellorInfo();
-}
+        updateHoldingRoomCount();
+        updateCounsellorInfo();
         
         if (statusElement) {
           let statusText = `Loaded ${bookingData.length} bookings`;
@@ -2398,20 +2370,18 @@ const activeUpdatedBookings = updatedArray.filter(booking =>
         counsellorContainer.style.display = 'none';
       }
     }
-
-function initializeData() {
-  const priorityCounsellor = selectedCounsellor || sessionStorage.getItem('counsellorName') || null;
-  
-  // Load room config first (for dynamic colours), then pricing, then bookings
-  loadRoomConfig().then(() => {
-    return loadPricingConfig();
-  }).then(() => {
-    return loadBookingDataWithPriority(priorityCounsellor);
-  }).then(() => {
-    populateCalendar();
-  });
-}
     
+    // Initialize data
+    function initializeData() {
+      const priorityCounsellor = selectedCounsellor || sessionStorage.getItem('counsellorName') || null;
+      
+      // Load pricing config first, then booking data
+      loadPricingConfig().then(() => {
+        return loadBookingDataWithPriority(priorityCounsellor);
+      }).then(() => {
+        populateCalendar();
+      });
+    }
     
     // Initialize when DOM is ready - CORRECTED VERSION
     document.addEventListener('DOMContentLoaded', function() {
@@ -2421,15 +2391,11 @@ function initializeData() {
       parseURLParams(); // This handles everything now
     });
   </script>
-
-
   
   <!-- ================================ -->
   <!-- SECTION 8: EXTERNAL JS FILES -->
   <!-- ================================ -->
-  <!-- Room config - loads colours from Firebase (must load first) -->
-  <script src="js/room-config.js"></script>
-  <!-- Token auth override -->
+  <!-- Token auth override - must load first -->
   <script src="js/token-auth-update.js"></script>
   <!-- Booking enhancements (£0 bookings, basket, etc) -->
   <script src="js/booking-enhancements.js"></script>
