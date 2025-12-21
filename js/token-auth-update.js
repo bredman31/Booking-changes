@@ -1,7 +1,7 @@
 /**
  * TOKEN-AUTH-UPDATE.JS
  * ====================
- * Updates token validation to use the 'clients' database
+ * Updates token validation to use the  'clients' database
  * instead of 'therapist_tokens' - single source of truth
  * 
  * This gives access to:
