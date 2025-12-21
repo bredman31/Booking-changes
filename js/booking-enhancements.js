@@ -2,7 +2,7 @@
  * BOOKING-ENHANCEMENTS.JS
  * =======================
  * Cherry Tree Centre - Booking System Enhancements
- * 
+ *  
  * Features:
  * 1. Fixes £0 booking issue (greyed out button)
  * 2. Adds multi-booking basket functionality
