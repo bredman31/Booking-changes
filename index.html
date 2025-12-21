@@ -2232,7 +2232,6 @@ const activeBookings = bookingArray.filter(booking =>
         console.log(`Firebase: Loaded ${bookingData.length} bookings in ${Date.now() - startTime}ms`);
         
         updateHoldingRoomCount();
-        updateCounsellorInfo();
         
         if (statusElement) {
           let statusText = `Loaded ${bookingData.length} bookings`;
