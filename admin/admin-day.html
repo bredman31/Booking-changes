@@ -403,52 +403,7 @@
       border-radius: 4px;
       border: 2px solid;
     }
-    
-    /* Holding Room Section */
-    .holding-room-section {
-      background: #e3f2fd;
-      border-radius: 8px;
-      padding: 15px 20px;
-      margin-top: 15px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
-    }
-    
-    .holding-info {
-      display: flex;
-      align-items: center;
-      gap: 15px;
-    }
-    
-    .holding-count {
-      background: #1976d2;
-      color: white;
-      padding: 5px 12px;
-      border-radius: 15px;
-      font-weight: 600;
-    }
-    
-    .holding-btn {
-      background: #1976d2;
-      color: white;
-      border: none;
-      padding: 10px 20px;
-      border-radius: 6px;
-      cursor: pointer;
-      font-weight: 600;
-    }
-    
-    .holding-btn:hover {
-      background: #1565c0;
-    }
-    
-    .holding-btn:disabled {
-      background: #90caf9;
-      cursor: not-allowed;
-    }
-    
+
     /* Dynamic room styles will be injected here */
     #dynamicStyles {
     }
@@ -569,28 +524,7 @@
       .booking-cell .booking-code {
         font-size: 8px;
       }
-      
-      /* Holding Room */
-      .holding-room-bar {
-        padding: 8px 10px;
-        flex-wrap: wrap;
-        gap: 8px;
-      }
-      
-      .holding-info h3 {
-        font-size: 13px;
-      }
-      
-      .holding-count {
-        font-size: 12px;
-        padding: 4px 10px;
-      }
-      
-      .holding-btn {
-        padding: 8px 14px;
-        font-size: 11px;
-      }
-      
+
       /* Form Panel - Slide up from bottom on mobile */
       .form-panel {
         position: fixed;
@@ -758,18 +692,6 @@
           <!-- Grid will be populated by JavaScript -->
         </div>
       </div>
-      
-      <!-- Holding Room Section -->
-      <div class="holding-room-section">
-        <div class="holding-info">
-          <span style="font-weight: 600; color: #1976d2;">📦 Holding Room</span>
-          <span class="holding-count" id="holdingCount">0</span>
-          <span style="color: #666; font-size: 13px;">bookings available</span>
-        </div>
-        <button class="holding-btn" id="holdingBtn" onclick="selectHoldingBooking()" disabled>
-          Select Holding Booking
-        </button>
-      </div>
     </div>
     
     <!-- Form Panel -->
@@ -887,7 +809,7 @@
     const ROOM_ID_MAPPING = {
       'Room_1': '3', 'Room_2': '7', 'Room_4': '8', 'Room_5': '13',
       'Room_6': '9', 'Room_7': '10', 'Room_8': '14', 'Room_9': '15',
-      'Car_Park': '12', 'Online': '11', 'Henley_Holding_Room': '18'
+      'Car_Park': '12', 'Online': '11'
     };
     
     // Default room config (fallback)
@@ -913,7 +835,6 @@
     let roomConfig = {};
     let enabledRooms = [];
     let bookingData = [];
-// holdingRoomBookings removed
     let selectedBooking = null;
     let currentDate = new Date().toISOString().split('T')[0];
     
@@ -1043,7 +964,7 @@
           b.date !== '2030-01-01'
         );
         
-        console.log(`Loaded ${bookingData.length} bookings, ${holdingRoomBookings.length} in holding room`);
+        console.log(`Loaded ${bookingData.length} bookings`);
         
         createCalendarGrid();
         populateCalendar();
@@ -1187,7 +1108,6 @@
       return null;
     }
     
-    
     // ================================
     // BOOKING SELECTION
     // ================================
@@ -1196,17 +1116,15 @@
       document.querySelectorAll('.grid-cell.selected').forEach(c => c.classList.remove('selected'));
       
       // Highlight selected cells
-      if (booking.date !== '2030-01-01') {
-        const roomKey = getRoomKey(booking);
-        if (roomKey) {
-          const startHour = parseInt(booking.start.split(':')[0]);
-          const endHour = parseInt(booking.end.split(':')[0]);
-          
-          for (let hour = startHour; hour < endHour; hour++) {
-            const timeStr = `${String(hour).padStart(2, '0')}:00`;
-            const cell = document.getElementById(`cell-${roomKey}-${timeStr}`);
-            if (cell) cell.classList.add('selected');
-          }
+      const roomKey = getRoomKey(booking);
+      if (roomKey) {
+        const startHour = parseInt(booking.start.split(':')[0]);
+        const endHour = parseInt(booking.end.split(':')[0]);
+        
+        for (let hour = startHour; hour < endHour; hour++) {
+          const timeStr = `${String(hour).padStart(2, '0')}:00`;
+          const cell = document.getElementById(`cell-${roomKey}-${timeStr}`);
+          if (cell) cell.classList.add('selected');
         }
       }
       
@@ -1222,7 +1140,7 @@
       document.getElementById('displayCounsellor').textContent = booking.client || '-';
       document.getElementById('displayCode').textContent = booking.bookingId || '-';
       document.getElementById('displayRoom').textContent = roomName;
-      document.getElementById('displayDate').textContent = booking.date === '2030-01-01' ? 'Holding Room' : booking.date;
+      document.getElementById('displayDate').textContent = booking.date;
       document.getElementById('displayTime').textContent = `${booking.start} - ${booking.end}`;
       document.getElementById('displayPayment').textContent = booking.isPaid ? '💳 Paid' : '📝 Unpaid';
       
@@ -1330,9 +1248,8 @@
         const counsellorId = selectedBooking.clientId || '6';
         const roomKey = getRoomKey(selectedBooking) || 'Room_1';
         
-        let payload;
-      // All cancellations now use cancel action directly
-        payload = {
+        // All cancellations now use cancel action directly
+        const payload = {
           timestamp: new Date().toISOString(),
           action: 'cancel',
           counsellor_id: counsellorId,
