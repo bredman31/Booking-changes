@@ -42,9 +42,6 @@
           <h3>Modify Booking</h3>
           <p style="margin-bottom: 15px; font-size: 14px; color: #666;">Click on a booking in the calendar to modify it.</p>
         </div>
-        <div id="holdingFormHeader" class="holding-room-form-header hidden">
-          Move Booking from Holding Room
-        </div>
         
         <form id="bookingChangeForm">
           <div id="currentBookingDisplay" style="margin-bottom: 15px;">
@@ -52,8 +49,6 @@
               <div style="margin-bottom: 8px;"><strong>Current Room:</strong> <span id="currentRoomDisplay"></span></div>
               <div id="currentDateRow" style="margin-bottom: 8px;"><strong>Current Date:</strong> <span id="currentDateDisplay"></span></div>
               <div id="currentTimeRow" style="margin-bottom: 8px;"><strong>Current Time:</strong> <span id="currentTimeDisplay"></span></div>
-              <div id="bookingCodeRow" class="hidden" style="margin-bottom: 8px;"><strong>Booking Code:</strong> <span id="bookingCodeDisplay"></span></div>
-              <div id="clientNameRow" class="hidden" style="margin-bottom: 8px;"><strong>Client:</strong> <span id="clientNameDisplay"></span></div>
             </div>
           </div>
           
@@ -63,7 +58,6 @@
           <input type="hidden" id="currentDateInput">
           <input type="hidden" id="currentTimeInput">
           <input type="hidden" id="counsellorNameInput">
-          <input type="hidden" id="isHoldingRoomBooking" value="false">
           
           <!-- Past booking notice -->
           <div id="pastBookingNotice" class="past-booking-notice hidden">
@@ -156,21 +150,7 @@
           <!-- Dynamic grid will be inserted here -->
         </div>
       </div>
-      
-      <!-- Holding Room Section -->
-      <div class="holding-room-section" id="holdingRoomSection">
-        <div class="holding-room-header">
-          <span class="holding-room-title">Available Holding Room Bookings</span>
-          <span class="holding-room-count" id="holdingRoomCount">0</span>
-          <button class="select-holding-btn" id="selectHoldingBtn" onclick="selectHoldingRoomBooking()">
-            Select Holding Room Booking
-          </button>
-        </div>
-        <div class="holding-room-info">
-          Click the button above to move a booking from the holding room to a new time slot.
-        </div>
-      </div>
-    </div>
+     </div>
   </div>
   
   <!-- New Booking Modal -->
@@ -259,7 +239,7 @@
     
     // Global state variables
     let bookingData = [];
-    let holdingRoomBookings = [];
+// holdingRoomBookings removed - no longer using holding room
     let currentView = 'day';
     let currentDate = new Date().toISOString().split('T')[0];
     let currentWeekStart = new Date();
@@ -613,7 +593,7 @@ function restoreSessionState() {
         return;
       }
       
-      const isHoldingRoom = document.getElementById('isHoldingRoomBooking').value === 'true';
+      // Holding room functionality removed
       
       const changeData = {
         originalBookingCode: document.getElementById('bookingCodeInput').value,
@@ -830,81 +810,7 @@ function restoreSessionState() {
   <!-- SECTION 5: BOOKING FORM FUNCTIONS -->
   <!-- ================================ -->
   <script>
-    // Select a holding room booking
-    function selectHoldingRoomBooking() {
-      if (holdingRoomBookings.length === 0) {
-        alert('No bookings available in the holding room.');
-        return;
-      }
-      
-      // Get the booking with the lowest booking ID
-      const selectedBooking = holdingRoomBookings.reduce((min, booking) => {
-        const currentId = parseInt(booking.bookingId) || 999999;
-        const minId = parseInt(min.bookingId) || 999999;
-        return currentId < minId ? booking : min;
-      }, holdingRoomBookings[0]);
-      
-      console.log('Selected holding room booking:', selectedBooking);
-      
-      // Switch to holding room mode
-      document.getElementById('isHoldingRoomBooking').value = 'true';
-      
-      // Update form UI for holding room booking
-      document.getElementById('normalFormHeader').classList.add('hidden');
-      document.getElementById('holdingFormHeader').classList.remove('hidden');
-      
-      // Hide normal booking info, show holding room info
-      document.getElementById('currentDateRow').classList.add('hidden');
-      document.getElementById('currentTimeRow').classList.add('hidden');
-      document.getElementById('bookingCodeRow').classList.remove('hidden');
-      document.getElementById('clientNameRow').classList.remove('hidden');
-      
-      // Update displays
-      document.getElementById('currentRoomDisplay').textContent = 'Holding Room';
-      document.getElementById('bookingCodeDisplay').textContent = selectedBooking.bookingId || selectedBooking.code || '';
-      document.getElementById('clientNameDisplay').textContent = selectedBooking.client || '';
-      
-      // Hide cancel button and divider for holding room bookings
-      document.getElementById('cancelButtonSection').classList.add('hidden');
-      document.getElementById('formDivider').classList.add('hidden');
-      document.getElementById('changeRequestHeader').classList.add('hidden');
-      document.getElementById('holdingMoveHeader').classList.remove('hidden');
-      
-      // Update hidden inputs - keep fallback for display, but we'll fix in webhook
-      document.getElementById('bookingCodeInput').value = selectedBooking.bookingId || selectedBooking.code || '';
-      document.getElementById('currentRoomInput').value = 'Henley_Holding_Room';
-      document.getElementById('currentDateInput').value = '2030-01-01';
-      document.getElementById('currentTimeInput').value = selectedBooking.start || '09:00';
-      
-      // Enable all form controls (no 24-hour restriction for holding room)
-      document.getElementById('pastBookingNotice').classList.add('hidden');
-      document.getElementById('submitChangeBtn').disabled = false;
-      document.getElementById('newRoomInput').disabled = false;
-      document.getElementById('newDateInput').disabled = false;
-      document.getElementById('newTimeInput').disabled = false;
-      
-      // Populate room dropdown with all rooms
-      populateRoomDropdown('Holding Room');
-      
-      // Make all fields required for holding room bookings
-      document.getElementById('newRoomInput').required = true;
-      document.getElementById('newDateInput').required = true;
-      document.getElementById('newTimeInput').required = true;
-      
-      // Clear any previous selections
-      document.getElementById('newRoomInput').value = '';
-      document.getElementById('newDateInput').value = '';
-      document.getElementById('newTimeInput').value = '';
-      
-      // Update submit button text
-      document.getElementById('submitChangeBtn').textContent = 'Move from Holding Room';
-      
-      // Scroll to form
-      const formContainer = document.querySelector('.form-container');
-      if (formContainer) {
-        formContainer.scrollIntoView({ behavior: 'smooth' });
-      }
-    }
+
     
     // Prefill the booking form with selected booking details
     function prefillForm(bookingCode, room, date, time) {
@@ -1103,50 +1009,18 @@ function restoreSessionState() {
         
         let payload;
         
-        if (isPaidBooking) {
-          const ROOM_MAPPING = {
-            'Room_1': '3',
-            'Room_2': '7',
-            'Room_4': '8',
-            'Room_5': '13',
-            'Room_6': '9',
-            'Room_7': '10',
-            'Car Park': '12',
-            'Online': '11',
-            'Online Counselling': '11',
-            'Henley_Holding_Room': '18'
-          };
-          
-          payload = {
-            timestamp: new Date().toISOString(),
-            action: 'modify',
-            counsellor_id: counsellorId,
-            original_booking_code: booking.bookingId || bookingCode,  // FIXED: Prefer bookingId
-            original_room: roomForWebhook,
-            original_room_id: ROOM_MAPPING[roomForWebhook] || '3',
-            original_location_id: getLocationIdFromRoom(roomForWebhook),
-            original_datetime: `${date}T${time}:00`,
-            requested_room: 'Henley_Holding_Room',
-            requested_room_id: '18',
-            requested_location_id: '2',
-            requested_datetime: `2030-01-01T${time}:00`,
-            service_id: '2',
-            comments: booking ? (booking.comments || '') : '',
-            is_paid: 'True'
-          };
-        } else {
-          payload = {
-            timestamp: new Date().toISOString(),
-            action: 'cancel',
-            counsellor_id: counsellorId,
-            booking_code: booking.bookingId || bookingCode,  // FIXED: Prefer bookingId
-            original_datetime: `${date}T${time}:00`,
-            original_room: roomForWebhook,
-            service_id: '2',
-            comments: booking ? (booking.comments || '') : '',
-            is_paid: 'No'
-          };
-        }
+        // All cancellations now use cancel action (no more holding room)
+        payload = {
+          timestamp: new Date().toISOString(),
+          action: 'cancel',
+          counsellor_id: counsellorId,
+          booking_code: booking.bookingId || bookingCode,
+          original_datetime: `${date}T${time}:00`,
+          original_room: roomForWebhook,
+          service_id: '2',
+          comments: booking ? (booking.comments || '') : '',
+          is_paid: isPaidBooking ? 'True' : 'No'
+        };
         
         cancelStatusDiv.textContent = 'Sending cancellation request...';
         const CANCEL_WEBHOOK_URL = 'https://hook.eu2.make.com/p754q5eks857boisu6m3unr6qer6be4t';
@@ -1192,7 +1066,7 @@ function restoreSessionState() {
         statusDiv.style.background = '#fff3cd';
         statusDiv.style.color = '#856404';
         statusDiv.style.border = '1px solid #ffeaa7';
-        statusDiv.textContent = isHoldingRoom ? 'Moving booking from holding room...' : 'Submitting change request...';
+        statusDiv.textContent = 'Submitting change request...';
         
         let counsellorId = window.clientId;
         
@@ -1738,22 +1612,7 @@ function restoreSessionState() {
   <!-- SECTION 6: CALENDAR FUNCTIONS -->
   <!-- ================================ -->
   <script>
-    // Update holding room count
-    function updateHoldingRoomCount() {
-      const countElement = document.getElementById('holdingRoomCount');
-      const selectBtn = document.getElementById('selectHoldingBtn');
-      
-      if (countElement) {
-        countElement.textContent = holdingRoomBookings.length.toString();
-      }
-      
-      if (selectBtn) {
-        selectBtn.disabled = holdingRoomBookings.length === 0;
-      }
-      
-      console.log(`Holding room bookings: ${holdingRoomBookings.length}`);
-    }
-    
+
 // UPDATED: Switch between day and week views
     function switchView(view) {
       restoreSessionState(); 
@@ -2254,13 +2113,7 @@ const activeBookings = bookingArray.filter(booking =>
           console.log(`Filtered out ${cancelledCount} cancelled bookings`);
         }
         
-        // Separate holding room bookings from regular bookings (excluding cancelled)
-        holdingRoomBookings = activeBookings.filter(booking => 
-          booking.room === 'Henley_Holding_Room' || 
-          booking.room === '18' ||
-          booking.date === '2030-01-01'
-        );
-        
+        // Filter out holding room bookings (legacy cleanup)
         bookingData = activeBookings.filter(booking => 
           booking.room !== 'Henley_Holding_Room' && 
           booking.room !== '18' &&
@@ -2269,13 +2122,8 @@ const activeBookings = bookingArray.filter(booking =>
         
         console.log(`Firebase: Loaded ${bookingData.length} bookings in ${Date.now() - startTime}ms`);
         
-        updateHoldingRoomCount();
-        
-        if (statusElement) {
+if (statusElement) {
           let statusText = `Loaded ${bookingData.length} bookings`;
-          if (holdingRoomBookings.length > 0) {
-            statusText += ` (${holdingRoomBookings.length} in holding room)`;
-          }
           if (priorityCounsellor) {
             const priorityCount = bookingData.filter(b => b.client === priorityCounsellor).length;
             statusText += ` - ${priorityCount} for ${priorityCounsellor}`;
@@ -2298,20 +2146,12 @@ const activeUpdatedBookings = updatedArray.filter(booking =>
   booking.status !== 'cancelled' && booking.status !== 'cancel'
 );
           
-          // Update local data (excluding cancelled)
-          holdingRoomBookings = activeUpdatedBookings.filter(booking => 
-            booking.room === 'Henley_Holding_Room' || 
-            booking.room === '18' ||
-            booking.date === '2030-01-01'
-          );
-          
+          // Update local data (excluding cancelled and legacy holding room)
           bookingData = activeUpdatedBookings.filter(booking => 
             booking.room !== 'Henley_Holding_Room' && 
             booking.room !== '18' &&
             booking.date !== '2030-01-01'
           );
-          
-          updateHoldingRoomCount();
           populateCalendar();
           console.log('Data updated in real-time!');
         });
