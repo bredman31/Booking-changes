@@ -516,6 +516,83 @@ body {
 .booking-segment.online { background: #7dd87d; }
 .booking-segment.car-park { background: #90caf9; }
 
+/* Payment Toast Notification */
+.payment-toast {
+  position: fixed;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 16px 24px;
+  border-radius: 10px;
+  font-size: 16px;
+  font-weight: 500;
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  box-shadow: 0 4px 25px rgba(0, 0, 0, 0.25);
+  animation: paymentToastSlideDown 0.4s ease;
+  max-width: 90%;
+}
+
+.payment-toast.success {
+  background: linear-gradient(135deg, #4caf50 0%, #2e7d32 100%);
+  color: white;
+}
+
+.payment-toast.warning {
+  background: linear-gradient(135deg, #ff9800 0%, #ef6c00 100%);
+  color: white;
+}
+
+.payment-toast.error {
+  background: linear-gradient(135deg, #f44336 0%, #c62828 100%);
+  color: white;
+}
+
+@keyframes paymentToastSlideDown {
+  from {
+    transform: translateX(-50%) translateY(-100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(-50%) translateY(0);
+    opacity: 1;
+  }
+}
+
+/* Processing state in booking modal */
+.booking-status.processing {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 15px;
+  border-radius: 8px;
+  text-align: center;
+}
+
+/* Mobile responsiveness */
+@media (max-width: 600px) {
+  .payment-toast {
+    top: 10px;
+    left: 10px;
+    right: 10px;
+    transform: none;
+    max-width: calc(100% - 20px);
+  }
+  
+  @keyframes paymentToastSlideDown {
+    from {
+      transform: translateY(-100%);
+      opacity: 0;
+    }
+    to {
+      transform: translateY(0);
+      opacity: 1;
+    }
+  }
+}
+
+
 /* Past booking styling for segments */
 .booking-segment.past-booking {
   opacity: 0.5;
