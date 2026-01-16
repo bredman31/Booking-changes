@@ -913,7 +913,7 @@
     let roomConfig = {};
     let enabledRooms = [];
     let bookingData = [];
-    let holdingRoomBookings = [];
+// holdingRoomBookings removed
     let selectedBooking = null;
     let currentDate = new Date().toISOString().split('T')[0];
     
@@ -1036,14 +1036,7 @@
           b.status !== 'cancelled' && b.status !== 'cancel'
         );
         
-        // Separate holding room bookings
-        holdingRoomBookings = activeBookings.filter(b => 
-          b.room === 'Henley_Holding_Room' || 
-          b.room === '18' || 
-          b.date === '2030-01-01'
-        );
-        
-        // Regular bookings
+        // Filter out legacy holding room bookings
         bookingData = activeBookings.filter(b => 
           b.room !== 'Henley_Holding_Room' && 
           b.room !== '18' && 
@@ -1052,7 +1045,6 @@
         
         console.log(`Loaded ${bookingData.length} bookings, ${holdingRoomBookings.length} in holding room`);
         
-        updateHoldingCount();
         createCalendarGrid();
         populateCalendar();
         
@@ -1195,27 +1187,6 @@
       return null;
     }
     
-    // ================================
-    // HOLDING ROOM
-    // ================================
-    function updateHoldingCount() {
-      const count = holdingRoomBookings.length;
-      document.getElementById('holdingCount').textContent = count;
-      document.getElementById('holdingBtn').disabled = count === 0;
-    }
-    
-    function selectHoldingBooking() {
-      if (holdingRoomBookings.length === 0) return;
-      
-      // Select the oldest holding room booking
-      const booking = holdingRoomBookings.reduce((min, b) => {
-        const minId = parseInt(min.bookingId) || 999999;
-        const bId = parseInt(b.bookingId) || 999999;
-        return bId < minId ? b : min;
-      }, holdingRoomBookings[0]);
-      
-      selectBooking(booking, 'Holding Room');
-    }
     
     // ================================
     // BOOKING SELECTION
@@ -1360,39 +1331,18 @@
         const roomKey = getRoomKey(selectedBooking) || 'Room_1';
         
         let payload;
-        if (selectedBooking.isPaid) {
-          // Move to holding room
-          payload = {
-            timestamp: new Date().toISOString(),
-            action: 'modify',
-            counsellor_id: counsellorId,
-            original_booking_code: selectedBooking.bookingId,
-            original_room: roomKey,
-            original_room_id: ROOM_ID_MAPPING[roomKey] || '3',
-            original_location_id: getLocationId(roomKey),
-            original_datetime: `${selectedBooking.date}T${selectedBooking.start}:00`,
-            requested_room: 'Henley_Holding_Room',
-            requested_room_id: '18',
-            requested_location_id: '2',
-            requested_datetime: `2030-01-01T${selectedBooking.start}:00`,
-            service_id: '2',
-            is_paid: 'True',
-            admin_override: 'true'
-          };
-        } else {
-          // Cancel directly
-          payload = {
-            timestamp: new Date().toISOString(),
-            action: 'cancel',
-            counsellor_id: counsellorId,
-            booking_code: selectedBooking.bookingId,
-            original_datetime: `${selectedBooking.date}T${selectedBooking.start}:00`,
-            original_room: roomKey,
-            service_id: '2',
-            is_paid: 'No',
-            admin_override: 'true'
-          };
-        }
+      // All cancellations now use cancel action directly
+        payload = {
+          timestamp: new Date().toISOString(),
+          action: 'cancel',
+          counsellor_id: counsellorId,
+          booking_code: selectedBooking.bookingId,
+          original_datetime: `${selectedBooking.date}T${selectedBooking.start}:00`,
+          original_room: roomKey,
+          service_id: '2',
+          is_paid: selectedBooking.isPaid ? 'True' : 'No',
+          admin_override: 'true'
+        };
         
         const response = await fetch(WEBHOOK_URL, {
           method: 'POST',
