@@ -538,8 +538,7 @@ function restoreSessionState() {
         parseNonTokenParams(params);
       }
     }
-    
-    // Initialize with full access
+ // Initialize with full access
     function initializeWithFullAccess() {
       console.log('Initializing with full access');
       
@@ -547,16 +546,15 @@ function restoreSessionState() {
       updateViewButtons();
       updateControlsVisibility();
       
-      const grid = document.getElementById('calendarGrid');
-      if (grid) {
-        grid.className = `calendar-grid ${currentView}-view`;
-        createCalendarGrid();
-      }
-      
-// Load room config first, then booking data
-loadRoomConfig().then(() => {
-  initializeData();
-});
+      // Load room config FIRST, then create grid and load data
+      loadRoomConfig().then(() => {
+        const grid = document.getElementById('calendarGrid');
+        if (grid) {
+          grid.className = `calendar-grid ${currentView}-view`;
+          createCalendarGrid();
+        }
+        initializeData();
+      });
       
       // Enable form submission
       const changeForm = document.getElementById('bookingChangeForm');
@@ -587,7 +585,7 @@ loadRoomConfig().then(() => {
           }
         }, 500);
       }
-    }
+    }   
     
     // Initialize with read-only access
     function initializeWithReadOnlyAccess() {
