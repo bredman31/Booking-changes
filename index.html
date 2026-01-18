@@ -1882,8 +1882,11 @@ function isSlotAvailable(room, date, time) {
     }
     
 function createDayGrid(grid) {
-  // Set grid columns based on enabled rooms from room-config.js
+  // DEBUG: Check if rooms are loaded
   const rooms = window.enabledRooms || [];
+  console.log('🔍 createDayGrid called - rooms:', rooms.length, rooms.map(r => r.displayName));
+  
+  // Set grid columns based on enabled rooms from room-config.js
   const numRooms = rooms.length;
   grid.style.gridTemplateColumns = `60px repeat(${numRooms}, 1fr)`;
   
