@@ -1806,6 +1806,7 @@ enabledRooms.forEach((room) => {
             if (e.target.closest('.booked')) return;
             openNewBookingModal(roomName, selectedDate, time);
           });
+        });
       });
     }
       </script>
@@ -2469,7 +2470,6 @@ function initializeData() {
       .then(() => loadBookingDataWithPriority(priorityCounsellor))
       .then(() => populateCalendar());
   }
-}
     
     // Initialize when DOM is ready - CORRECTED VERSION
     document.addEventListener('DOMContentLoaded', function() {
