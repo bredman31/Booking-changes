@@ -232,9 +232,8 @@
     firebase.initializeApp(firebaseConfig);
     const database = firebase.database();
     
-// Room config - loaded dynamically from Firebase
-let roomConfig = {};
-let enabledRooms = [];
+// Room config - loaded dynamically from Firebase via room-config.js
+// Uses window.roomConfig and window.enabledRooms
 const businessHours = Array.from({length: 13}, (_, i) => `${String(i + 8).padStart(2, '0')}:00`);
     const weekDays = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
@@ -268,41 +267,6 @@ const STRIPE_CONFIG = {
     window.bookingToModify = null;
     // Global variable for pricing configuration
     let pricingConfig = null;
-	
-	// Load room configuration from Firebase
-async function loadRoomConfig() {
-  try {
-    const snapshot = await database.ref('room_config').once('value');
-    const config = snapshot.val();
-    
-    if (config && Object.keys(config).length > 0) {
-      roomConfig = config;
-    }
-    
-    // Filter enabled rooms (exclude holding room) and sort by order
-    enabledRooms = Object.entries(roomConfig)
-      .filter(([key, room]) => room.enabled && key !== 'Henley_Holding_Room')
-      .sort((a, b) => (a[1].order || 99) - (b[1].order || 99))
-      .map(([key, room]) => ({ 
-        key, 
-        displayName: room.displayName,
-        color: room.color,
-        borderColor: room.borderColor,
-        capacity: room.capacity || 1,
-        ...room 
-      }));
-    
-    console.log(`✅ Loaded ${enabledRooms.length} enabled rooms:`, enabledRooms.map(r => r.displayName));
-    
-    // Generate dynamic CSS for room colours
-    generateRoomStyles();
-    
-  } catch (error) {
-    console.error('Error loading room config:', error);
-    // Fallback to empty - will show no rooms
-    enabledRooms = [];
-  }
-}
 
 // Generate dynamic CSS for room colours
 function generateRoomStyles() {
@@ -1740,7 +1704,7 @@ function showPaymentToast(message, type) {
 function isSlotAvailable(room, date, time) {
   // Find room config
   const roomKey = room.replace(' ', '_');
-  const roomCfg = enabledRooms.find(r => r.displayName === room || r.key === roomKey);
+  const roomCfg = (window.enabledRooms || []).find(r => r.displayName === room || r.key === roomKey);
   const capacity = roomCfg?.capacity || 1;
   
   // Get all room key variants for matching
@@ -1784,7 +1748,7 @@ function isSlotAvailable(room, date, time) {
       if (isPastDate) return;
       
 // Use dynamic enabled rooms from config
-enabledRooms.forEach((room) => {
+(window.enabledRooms || []).forEach((room) => {
   const roomName = room.displayName;
   const roomId = room.key.toLowerCase().replace('_', '-');
         businessHours.forEach(time => {
@@ -1917,10 +1881,10 @@ enabledRooms.forEach((room) => {
       }
     }
     
-// Create day view grid - DYNAMIC FROM ROOM CONFIG
 function createDayGrid(grid) {
-  // Set grid columns based on enabled rooms
-  const numRooms = enabledRooms.length;
+  // Set grid columns based on enabled rooms from room-config.js
+  const rooms = window.enabledRooms || [];
+  const numRooms = rooms.length;
   grid.style.gridTemplateColumns = `60px repeat(${numRooms}, 1fr)`;
   
   const emptyCell = document.createElement("div");
@@ -1928,7 +1892,7 @@ function createDayGrid(grid) {
   emptyCell.textContent = "Time";
   grid.appendChild(emptyCell);
   
-  enabledRooms.forEach(room => {
+  rooms.forEach(room => {
     const header = document.createElement("div");
     header.className = "grid-header";
     header.textContent = room.displayName;
@@ -1941,7 +1905,7 @@ function createDayGrid(grid) {
     timeCell.textContent = time;
     grid.appendChild(timeCell);
     
-    enabledRooms.forEach((room) => {
+    rooms.forEach((room) => {
       const cell = document.createElement("div");
       cell.className = "grid-cell";
       
