@@ -153,7 +153,7 @@
     if (room === '7' || room === 'Room_7' || room === 'Room 7') return 'Room_7';
     if (room === '8' || room === 'Room_8' || room === 'Room 8') return 'Room_8';
     if (room === '9' || room === 'Room_9' || room === 'Room 9') return 'Room_9';
-    if (room === 'Car Park' || room === 'Car_Park' || room === 'Car park')
+    if (room === 'Car Park' || room === 'Car_Park' || room.toLowerCase() === 'car park') return 'Car_Park';
     if (room === 'Online' || room === 'online') return 'Online';
     
     return null;
