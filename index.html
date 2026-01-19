@@ -2200,23 +2200,37 @@ function isSlotAvailable(room, date, time) {
     }
   </script>
   
-<!-- ================================ -->
+  <!-- ================================ -->
 <!-- SECTION 7.4: WEEK VIEW POPULATION -->
 <!-- ================================ -->
   <script>
     // FIXED: Populate week view - handles multiple bookings per cell (Room + Car Park etc)
     function populateWeekView(filteredBookings) {
-      // if a token set the name earlier, reuse it
+      // Get counsellor from session or global
       if (!selectedCounsellor) {
         const stored = sessionStorage.getItem('counsellorName');
         if (stored) selectedCounsellor = stored;
       }
-      if (!selectedCounsellor) return;
+      
+      // Debug logging
+      console.log('🗓️ populateWeekView called - counsellor:', selectedCounsellor, 'bookings:', filteredBookings.length);
+      
+      if (!selectedCounsellor) {
+        console.warn('⚠️ No counsellor selected - week view requires a logged-in user');
+        return;
+      }
+      
+      // Filter to only this counsellor's bookings
+      const counsellorBookings = filteredBookings.filter(booking => 
+        booking.client && booking.client.toLowerCase().includes(selectedCounsellor.toLowerCase())
+      );
+      
+      console.log('🗓️ Filtered to', counsellorBookings.length, 'bookings for', selectedCounsellor);
       
       // Build a map of cellId -> array of bookings
       const cellBookings = {};
       
-      filteredBookings.forEach(booking => {
+      counsellorBookings.forEach(booking => {
         const bookingDate = new Date(booking.date + 'T12:00:00');
         
         const weekStartNoon = new Date(currentWeekStart);
@@ -2262,10 +2276,15 @@ function isSlotAvailable(room, date, time) {
         }
       });
       
+      console.log('🗓️ Mapped bookings to', Object.keys(cellBookings).length, 'cells');
+      
       // Now populate cells
       Object.entries(cellBookings).forEach(([cellId, bookings]) => {
         const cell = document.getElementById(cellId);
-        if (!cell) return;
+        if (!cell) {
+          console.warn('⚠️ Cell not found:', cellId);
+          return;
+        }
         
         cell.classList.add('booked');
         
@@ -2318,7 +2337,7 @@ function isSlotAvailable(room, date, time) {
           });
           
         } else {
-          // Single booking - existing behaviour
+          // Single booking
           const b = bookings[0];
           const bookingCode = b.booking.bookingId || b.booking.code || '';
           const paymentIndicator = b.booking.isPaid ? '' : ' (Old system)';
