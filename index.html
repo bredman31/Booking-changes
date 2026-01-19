@@ -12,9 +12,9 @@
   <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
-  <!-- ================================ -->
-  <!-- SECTION 2: HTML STRUCTURE -->
-  <!-- ================================ -->
+<!-- ================================ -->
+<!-- SECTION 1: HTML STRUCTURE -->
+<!-- ================================ -->
   <div class="header">
     <h2 id="pageTitle">Cherry Tree Centre - Room Booking Calendar</h2>
     <div class="view-selector">
@@ -153,7 +153,9 @@
      </div>
   </div>
   
-  <!-- New Booking Modal -->
+<!-- ================================ -->
+<!-- SECTION 2: NEW BOOKING MODAL -->
+<!-- ================================ -->
   <div class="modal-overlay" id="newBookingModal">
     <div class="booking-modal">
       <div class="modal-header" style="position: relative;">
@@ -211,9 +213,9 @@
   <input type="hidden" id="newBookingLocationId">
   <input type="hidden" id="newBookingPrice">
   
-  <!-- ================================ -->
-  <!-- SECTION 3: GLOBAL CONFIGURATION -->
-  <!-- ================================ -->
+<!-- ================================ -->
+<!-- SECTION 3: GLOBAL CONFIGURATION -->
+<!-- ================================ -->
   <script>
     // Google Apps Script configuration
     const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxaMATLZvtAxJULI2l3teqb0u6FkBiP8LBuGMV7VrcU2NxMEbH92aj8Q4YI6aZ1GLUm4Q/exec';
@@ -303,9 +305,10 @@ function generateRoomStyles() {
     currentWeekStart.setDate(today.getDate() - daysToSubtract);
     currentWeekStart.setHours(0, 0, 0, 0);
   </script>
-  <!-- ================================ -->
-  <!-- SECTION 4: UTILITY FUNCTIONS -->
-  <!-- ================================ -->
+  
+<!-- ================================ -->
+<!-- SECTION 4: BASIC UTILITY FUNCTIONS -->
+<!-- ================================ -->
   <script>
     // 24-hour check function
     function isBookingWithin24Hours(bookingDate, bookingTime) {
@@ -367,7 +370,12 @@ function restoreSessionState() {
   
   return !!token;
 }
-    
+  </script>
+  
+<!-- ================================ -->
+<!-- SECTION 4.1: TOKEN AUTHENTICATION -->
+<!-- ================================ -->
+  <script>
     // FIXED: Token validation function WITH DEBUGGING
     async function validateAccessToken(token) {
       console.log('🔐 validateAccessToken called with token:', token);
@@ -409,7 +417,12 @@ function restoreSessionState() {
         return false;
       }
     }
-
+  </script>
+  
+<!-- ================================ -->
+<!-- SECTION 4.2: URL PARAMETER PARSING -->
+<!-- ================================ -->
+  <script>
     // FIXED: Process valid session function WITH DEBUGGING
     function processValidSession(params) {
       console.log('🎯 processValidSession called with params:', Object.fromEntries(params));
@@ -538,6 +551,12 @@ function restoreSessionState() {
         parseNonTokenParams(params);
       }
     }
+  </script>
+  
+<!-- ================================ -->
+<!-- SECTION 4.3: ACCESS LEVEL INITIALIZATION -->
+<!-- ================================ -->
+  <script>
  // Initialize with full access
     function initializeWithFullAccess() {
       console.log('Initializing with full access');
@@ -729,7 +748,12 @@ loadRoomConfig().then(() => {
       // Still initialize the calendar for viewing
       initializeWithReadOnlyAccess();
     }
-    
+  </script>
+  
+<!-- ================================ -->
+<!-- SECTION 4.4: ROOM & DATE UTILITIES -->
+<!-- ================================ -->
+  <script>
     // Populate room dropdown based on current booking's location - ADDED ROOM 5
     function populateRoomDropdown(currentRoom) {
       const newRoomInput = document.getElementById('newRoomInput');
@@ -845,12 +869,11 @@ function getRoomMapping(booking) {
   return { roomNumber, roomClass };
 }
   </script>
-  <!-- ================================ -->
-  <!-- SECTION 5: BOOKING FORM FUNCTIONS -->
-  <!-- ================================ -->
+  
+<!-- ================================ -->
+<!-- SECTION 5: FORM PREFILL & CLEARING -->
+<!-- ================================ -->
   <script>
-
-    
     // Prefill the booking form with selected booking details
     function prefillForm(bookingCode, room, date, time) {
       // Reset to normal mode
@@ -992,7 +1015,12 @@ function getRoomMapping(booking) {
       
       document.getElementById('submitChangeBtn').textContent = 'Submit Change Request';
     }
-
+  </script>
+  
+<!-- ================================ -->
+<!-- SECTION 5.1: PAYMENT RETURN HANDLING -->
+<!-- ================================ -->
+  <script>
 function handlePaymentReturn() {
   const params = new URLSearchParams(window.location.search);
   const paymentStatus = params.get('payment');
@@ -1049,8 +1077,12 @@ function showPaymentToast(message, type) {
     if (toast.parentElement) toast.remove();
   }, 8000);
 }
-
-    
+  </script>
+  
+<!-- ================================ -->
+<!-- SECTION 5.2: BOOKING CANCELLATION -->
+<!-- ================================ -->
+  <script>
     // Handle booking cancellation - UPDATED ROOM MAPPING WITH ROOM 5
     async function cancelBooking() {
       const bookingCode = document.getElementById('bookingCodeInput').value;
@@ -1152,7 +1184,12 @@ function showPaymentToast(message, type) {
         cancelStatusDiv.textContent = `Error: ${error.message}`;
       }
     }
-    
+  </script>
+  
+<!-- ================================ -->
+<!-- SECTION 5.3: BOOKING CHANGE SUBMISSION -->
+<!-- ================================ -->
+  <script>
     // Submit booking change request - UPDATED ROOM MAPPING WITH ROOM 5
     async function submitBookingChange(changeData) {
       const statusDiv = document.getElementById('submitStatus');
@@ -1268,7 +1305,12 @@ function showPaymentToast(message, type) {
         statusDiv.textContent = `Error: ${error.message}`;
       }
     }
-    
+  </script>
+  
+<!-- ================================ -->
+<!-- SECTION 5.4: COUNSELLOR & LOGGING FUNCTIONS -->
+<!-- ================================ -->
+  <script>
     // Fallback counsellor ID lookup
     async function lookupCounsellorId(counsellorName) {
       try {
@@ -1330,9 +1372,10 @@ function showPaymentToast(message, type) {
       }
     }
   </script>
-  <!-- ================================ -->
-  <!-- SECTION 5.5: PRICING & NEW BOOKINGS -->
-  <!-- ================================ -->
+  
+<!-- ================================ -->
+<!-- SECTION 6: PRICING CONFIGURATION -->
+<!-- ================================ -->
   <script>
     // Load pricing configuration from Firebase
     async function loadPricingConfig() {
@@ -1464,7 +1507,12 @@ function showPaymentToast(message, type) {
       };
       return ROOM_MAPPING[roomName] || null;
     }
-    
+  </script>
+  
+<!-- ================================ -->
+<!-- SECTION 6.1: NEW BOOKING MODAL FUNCTIONS -->
+<!-- ================================ -->
+  <script>
     // Open new booking modal
     function openNewBookingModal(room, date, time) {
       const locationId = getRoomLocationId(room);
@@ -1525,7 +1573,12 @@ function showPaymentToast(message, type) {
     function closeNewBookingModal() {
       document.getElementById('newBookingModal').classList.remove('active');
     }
-    
+  </script>
+  
+<!-- ================================ -->
+<!-- SECTION 6.2: CONFIRM NEW BOOKING -->
+<!-- ================================ -->
+  <script>
     // Confirm new booking (placeholder for Stripe integration)
     async function confirmNewBooking() {
       const room = document.getElementById('newBookingRoom').value;
@@ -1697,7 +1750,12 @@ function showPaymentToast(message, type) {
         confirmBtn.disabled = false;
       }
     }
-    
+  </script>
+  
+<!-- ================================ -->
+<!-- SECTION 6.3: SLOT AVAILABILITY CHECKING -->
+<!-- ================================ -->
+  <script>
 // Check if a time slot is available (supports capacity for Car Park)
 function isSlotAvailable(room, date, time) {
   // Find room config
@@ -1736,6 +1794,12 @@ function isSlotAvailable(room, date, time) {
   
   return true; // Has availability
 }
+  </script>
+  
+<!-- ================================ -->
+<!-- SECTION 6.4: AVAILABLE SLOT MARKING -->
+<!-- ================================ -->
+  <script>
 // Mark available slots for new bookings (called from populateDayView)
     function markAvailableSlotsForNewBookings(selectedDate) {
       const hasValidToken = !!sessionStorage.getItem('accessToken');
@@ -1771,14 +1835,12 @@ function isSlotAvailable(room, date, time) {
         });
       });
     }
-      </script>
-
-
+  </script>
+  
 <!-- ================================ -->
-  <!-- SECTION 6: CALENDAR FUNCTIONS -->
-  <!-- ================================ -->
+<!-- SECTION 7: CALENDAR VIEW SWITCHING -->
+<!-- ================================ -->
   <script>
-
 // UPDATED: Switch between day and week views
     function switchView(view) {
       restoreSessionState(); 
@@ -1860,7 +1922,12 @@ function isSlotAvailable(room, date, time) {
       
       document.getElementById('weekDisplay').textContent = `${startStr} - ${endStr}`;
     }
-    
+  </script>
+  
+<!-- ================================ -->
+<!-- SECTION 7.1: CALENDAR GRID CREATION -->
+<!-- ================================ -->
+  <script>
     // Create calendar grid based on current view
     function createCalendarGrid() {
       const grid = document.getElementById("calendarGrid");
@@ -1879,51 +1946,65 @@ function isSlotAvailable(room, date, time) {
       }
     }
     
-function createDayGrid(grid) {
-  // DEBUG: Check if rooms are loaded
-  const rooms = window.enabledRooms || [];
-  console.log('🔍 createDayGrid called - rooms:', rooms.length, rooms.map(r => r.displayName));
-  
-  // Set grid columns based on enabled rooms from room-config.js
-  const numRooms = rooms.length;
-  grid.style.gridTemplateColumns = `60px repeat(${numRooms}, 1fr)`;
-  
-  const emptyCell = document.createElement("div");
-  emptyCell.className = "grid-header";
-  emptyCell.textContent = "Time";
-  grid.appendChild(emptyCell);
-  
-  rooms.forEach(room => {
-    const header = document.createElement("div");
-    header.className = "grid-header";
-    header.textContent = room.displayName;
-    grid.appendChild(header);
-  });
-  
-  businessHours.forEach(time => {
-    const timeCell = document.createElement("div");
-    timeCell.className = "time-header";
-    timeCell.textContent = time;
-    grid.appendChild(timeCell);
-    
-    rooms.forEach((room) => {
-      const cell = document.createElement("div");
-      cell.className = "grid-cell";
+    // Create day view grid - DYNAMIC FROM ROOM CONFIG
+    function createDayGrid(grid) {
+      const rooms = window.enabledRooms || [];
+      console.log('🔍 createDayGrid called - rooms:', rooms.length, rooms.map(r => r.displayName));
       
-      // Generate cell ID from room key
-      const roomId = room.key.toLowerCase().replace('_', '-');
-      cell.id = `cell-${roomId}-${time}`;
+      // Set grid columns based on enabled rooms
+      const numRooms = rooms.length;
+      grid.style.gridTemplateColumns = `60px repeat(${numRooms}, 1fr)`;
       
-      // Mark car park cells for special handling
-      if (room.key === 'Car_Park') {
-        cell.classList.add('car-park-cell');
-        cell.dataset.capacity = room.capacity || 1;
-      }
+      const emptyCell = document.createElement("div");
+      emptyCell.className = "grid-header";
+      emptyCell.textContent = "Time";
+      grid.appendChild(emptyCell);
       
-      grid.appendChild(cell);
-    });
-  });
-}
+      rooms.forEach(room => {
+        const header = document.createElement("div");
+        header.className = "grid-header";
+        header.textContent = room.displayName;
+        grid.appendChild(header);
+      });
+      
+      businessHours.forEach(time => {
+        const timeCell = document.createElement("div");
+        timeCell.className = "time-header";
+        timeCell.textContent = time;
+        grid.appendChild(timeCell);
+        
+        rooms.forEach((room) => {
+          const cell = document.createElement("div");
+          cell.className = "grid-cell";
+          
+          // Generate cell ID to match populateDayView format
+          let roomId;
+          if (room.key.startsWith('Room_')) {
+            roomId = room.key.replace('Room_', ''); // "Room_6" -> "6"
+          } else if (room.key === 'Car_Park') {
+            roomId = 'car-park';
+          } else if (room.key === 'Online') {
+            roomId = 'online';
+          } else {
+            roomId = room.key.toLowerCase().replace('_', '-');
+          }
+          
+          cell.id = `cell-${roomId}-${time}`;
+          
+          // Data attributes for future drag-and-drop support
+          cell.dataset.room = room.key;
+          cell.dataset.time = time;
+          
+          // Mark car park cells for special handling
+          if (room.key === 'Car_Park') {
+            cell.classList.add('car-park-cell');
+            cell.dataset.capacity = room.capacity || 1;
+          }
+          
+          grid.appendChild(cell);
+        });
+      });
+    }
     
     // Create week view grid
     function createWeekGrid(grid) {
@@ -1962,7 +2043,12 @@ function createDayGrid(grid) {
       
       updateWeekDisplay();
     }
-    
+  </script>
+  
+<!-- ================================ -->
+<!-- SECTION 7.2: CALENDAR POPULATION -->
+<!-- ================================ -->
+  <script>
     // UPDATED: Populate calendar with booking data
     function populateCalendar() {
         restoreSessionState(); 
@@ -2005,7 +2091,12 @@ function createDayGrid(grid) {
         populateWeekView(filteredBookings);
       }
     }
-    
+  </script>
+  
+<!-- ================================ -->
+<!-- SECTION 7.3: DAY VIEW POPULATION -->
+<!-- ================================ -->
+  <script>
    // UPDATED: Populate day view - NOW WITH CLICK HANDLERS FOR OWN BOOKINGS
     function populateDayView(filteredBookings) {
       const selectedDate = document.getElementById('dateSelector').value;
@@ -2107,7 +2198,12 @@ function createDayGrid(grid) {
         console.warn('Pricing config not loaded - new booking feature disabled.');
       }
     }
-    
+  </script>
+  
+<!-- ================================ -->
+<!-- SECTION 7.4: WEEK VIEW POPULATION -->
+<!-- ================================ -->
+  <script>
     // FIXED: Populate week view - handles multiple bookings per cell (Room + Car Park etc)
     function populateWeekView(filteredBookings) {
       // if a token set the name earlier, reuse it
@@ -2256,11 +2352,10 @@ function createDayGrid(grid) {
       });
     }
   </script>
-
-
-  <!-- ================================ -->
-  <!-- SECTION 7: DATA MANAGEMENT FUNCTIONS -->
-  <!-- ================================ -->
+  
+<!-- ================================ -->
+<!-- SECTION 8: DATA LOADING FUNCTIONS -->
+<!-- ================================ -->
   <script>
     // Load booking data with priority for specific counsellor
     async function loadBookingDataWithPriority(priorityCounsellor = null) {
@@ -2362,7 +2457,12 @@ const activeUpdatedBookings = updatedArray.filter(booking =>
         populateCalendar();
       });
     }
-    
+  </script>
+  
+<!-- ================================ -->
+<!-- SECTION 8.1: URL & STATE MANAGEMENT -->
+<!-- ================================ -->
+  <script>
     // FIXED: Update URL with token preservation
     function updateURL() {
       // start from current query so we don't drop unknown params
@@ -2421,7 +2521,12 @@ const activeUpdatedBookings = updatedArray.filter(booking =>
         counsellorContainer.style.display = 'none';
       }
     }
-    
+  </script>
+  
+<!-- ================================ -->
+<!-- SECTION 8.2: DATA INITIALIZATION -->
+<!-- ================================ -->
+  <script>
 function initializeData() {
   const priorityCounsellor = selectedCounsellor || sessionStorage.getItem('counsellorName') || null;
   
@@ -2447,9 +2552,9 @@ function initializeData() {
     });
   </script>
   
-  <!-- ================================ -->
-  <!-- SECTION 8: EXTERNAL JS FILES -->
-  <!-- ================================ -->
+<!-- ================================ -->
+<!-- SECTION 9: EXTERNAL JS FILES -->
+<!-- ================================ -->
   <!-- Token auth override - must load first -->
   <script src="js/room-config.js"></script>
   <script src="js/token-auth-update.js"></script>
