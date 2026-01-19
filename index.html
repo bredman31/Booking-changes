@@ -1756,45 +1756,72 @@ function showPaymentToast(message, type) {
 <!-- SECTION 6.3: SLOT AVAILABILITY CHECKING -->
 <!-- ================================ -->
   <script>
-// Check if a time slot is available (supports capacity for Car Park)
-function isSlotAvailable(room, date, time) {
-  // Find room config
-  const roomKey = room.replace(' ', '_');
-  const roomCfg = (window.enabledRooms || []).find(r => r.displayName === room || r.key === roomKey);
-  const capacity = roomCfg?.capacity || 1;
-  
-  // Get all room key variants for matching
-  const roomVariants = [room, roomKey, room.replace('Room ', '')];
-  
-  const hour = parseInt(time.split(':')[0]);
-  const dayBookings = bookingData.filter(booking => booking.date === date);
-  
-  // Count bookings for this room/hour
-  let bookingCount = 0;
-  
-  for (const booking of dayBookings) {
-    const bookingRoomMatches = roomVariants.some(variant => 
-      booking.room === variant || 
-      booking.room === roomKey ||
-      (booking.location && booking.location.toLowerCase().includes('online') && room === 'Online')
-    );
-    
-    if (bookingRoomMatches) {
-      const startHour = parseInt(booking.start.split(':')[0]);
-      const endHour = parseInt(booking.end.split(':')[0]);
+    // Check if a time slot is available (supports capacity for Car Park)
+    function isSlotAvailable(room, date, time) {
+      // Find room config
+      const roomKey = room.replace(' ', '_');
+      const roomCfg = (window.enabledRooms || []).find(r => r.displayName === room || r.key === roomKey);
+      const capacity = roomCfg?.capacity || 1;
       
-      if (hour >= startHour && hour < endHour) {
-        bookingCount++;
-        if (bookingCount >= capacity) {
-          return false; // At capacity
+      // Get all room key variants for matching
+      const roomVariants = [room, roomKey, room.replace('Room ', ''), 'Car_Park', 'Car Park'];
+      
+      const hour = parseInt(time.split(':')[0]);
+      const dayBookings = bookingData.filter(booking => booking.date === date);
+      
+      // Count bookings for this room/hour
+      let bookingCount = 0;
+      
+      for (const booking of dayBookings) {
+        const bookingRoomMatches = roomVariants.some(variant => 
+          booking.room === variant || 
+          booking.room === roomKey ||
+          (booking.location && booking.location.toLowerCase().includes('online') && room === 'Online')
+        );
+        
+        if (bookingRoomMatches) {
+          const startHour = parseInt(booking.start.split(':')[0]);
+          const endHour = parseInt(booking.end.split(':')[0]);
+          
+          if (hour >= startHour && hour < endHour) {
+            bookingCount++;
+          }
         }
       }
+      
+      return bookingCount < capacity;
     }
-  }
-  
-  return true; // Has availability
-}
+    
+    // Get current booking count for a room/date/time (for capacity display)
+    function getSlotBookingCount(room, date, time) {
+      const roomKey = room.replace(' ', '_');
+      const roomVariants = [room, roomKey, room.replace('Room ', ''), 'Car_Park', 'Car Park'];
+      
+      const hour = parseInt(time.split(':')[0]);
+      const dayBookings = bookingData.filter(booking => booking.date === date);
+      
+      let bookingCount = 0;
+      
+      for (const booking of dayBookings) {
+        const bookingRoomMatches = roomVariants.some(variant => 
+          booking.room === variant || 
+          booking.room === roomKey
+        );
+        
+        if (bookingRoomMatches) {
+          const startHour = parseInt(booking.start.split(':')[0]);
+          const endHour = parseInt(booking.end.split(':')[0]);
+          
+          if (hour >= startHour && hour < endHour) {
+            bookingCount++;
+          }
+        }
+      }
+      
+      return bookingCount;
+    }
   </script>
+  
   
   <!-- ================================ -->
 <!-- SECTION 6.4: AVAILABLE SLOT MARKING -->
