@@ -2006,7 +2006,7 @@ function createDayGrid(grid) {
       }
     }
     
-    // UPDATED: Populate day view - NOW WITH CLICK HANDLERS FOR OWN BOOKINGS
+   // UPDATED: Populate day view - NOW WITH CLICK HANDLERS FOR OWN BOOKINGS
     function populateDayView(filteredBookings) {
       const selectedDate = document.getElementById('dateSelector').value;
       
@@ -2018,8 +2018,9 @@ function createDayGrid(grid) {
       const loggedInCounsellor = selectedCounsellor || sessionStorage.getItem('counsellorName') || '';
       const hasValidToken = !!sessionStorage.getItem('accessToken');
       
-       const {roomNumber, roomClass} = getRoomMapping(booking);
-       console.log('🔍 Booking:', booking.client, 'room:', booking.room, '→ roomNumber:', roomNumber, '→ cellId:', `cell-${roomNumber}-${booking.start}` );
+      dayBookings.forEach(booking => {
+        const {roomNumber, roomClass} = getRoomMapping(booking);
+        console.log('🔍 Booking:', booking.client, 'room:', booking.room, '→ roomNumber:', roomNumber, '→ cellId:', `cell-${roomNumber}-${booking.start}`);
         if (!roomNumber) return;
         
         const startHour = parseInt(booking.start.split(':')[0]);
@@ -2098,14 +2099,14 @@ function createDayGrid(grid) {
         }
       });
       
-// Handle empty slots for new bookings
-console.log('Empty slot check:', { hasValidToken, hasPricingConfig: !!pricingConfig });
-if (hasValidToken && pricingConfig && typeof markAvailableSlotsForNewBookings === 'function') {
-  markAvailableSlotsForNewBookings(selectedDate);
-} else if (hasValidToken && !pricingConfig) {
-  console.warn('Pricing config not loaded - new booking feature disabled.');
-}
-}
+      // Handle empty slots for new bookings
+      console.log('Empty slot check:', { hasValidToken, hasPricingConfig: !!pricingConfig });
+      if (hasValidToken && pricingConfig && typeof markAvailableSlotsForNewBookings === 'function') {
+        markAvailableSlotsForNewBookings(selectedDate);
+      } else if (hasValidToken && !pricingConfig) {
+        console.warn('Pricing config not loaded - new booking feature disabled.');
+      }
+    }
     
     // FIXED: Populate week view - handles multiple bookings per cell (Room + Car Park etc)
     function populateWeekView(filteredBookings) {
