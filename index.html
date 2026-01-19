@@ -2018,8 +2018,8 @@ function createDayGrid(grid) {
       const loggedInCounsellor = selectedCounsellor || sessionStorage.getItem('counsellorName') || '';
       const hasValidToken = !!sessionStorage.getItem('accessToken');
       
-      dayBookings.forEach(booking => {
-        const {roomNumber, roomClass} = getRoomMapping(booking);
+       const {roomNumber, roomClass} = getRoomMapping(booking);
+       console.log('🔍 Booking:', booking.client, 'room:', booking.room, '→ roomNumber:', roomNumber, '→ cellId:', `cell-${roomNumber}-${booking.start}` );
         if (!roomNumber) return;
         
         const startHour = parseInt(booking.start.split(':')[0]);
