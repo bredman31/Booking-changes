@@ -10,6 +10,32 @@
   
   <!-- Stylesheet -->
   <link rel="stylesheet" href="css/styles.css">
+  
+  <!-- Day navigation styling -->
+  <style>
+    .day-navigation {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+    .day-navigation button {
+      padding: 6px 12px;
+      border: 1px solid #ddd;
+      background: white;
+      cursor: pointer;
+      border-radius: 4px;
+      font-size: 14px;
+    }
+    .day-navigation button:hover {
+      background: #f0f0f0;
+    }
+    .day-navigation input[type="date"] {
+      padding: 6px 10px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 14px;
+    }
+  </style>
 </head>
 <body>
 <!-- ================================ -->
@@ -130,8 +156,12 @@
       <div class="calendar-container">
         <div class="controls">
           <div id="dayControls">
-            <label class="date-selector">Date:</label>
-            <input type="date" id="dateSelector" />
+            <div class="day-navigation">
+              <button onclick="changeDay(-1)">← Previous Day</button>
+              <input type="date" id="dateSelector" />
+              <button onclick="changeDay(1)">Next Day →</button>
+              <button onclick="goToToday()" style="margin-left: 10px;">Today</button>
+            </div>
           </div>
           
           <div id="weekControls" class="hidden">
@@ -846,22 +876,47 @@ loadRoomConfig().then(() => {
       return booking.room || 'Unknown';
     }
     
-    // Get room mapping for CSS classes - ADDED ROOM 5
+    // Get room mapping for CSS classes - UPDATED FOR CAR PARK
 function getRoomMapping(booking) {
   let roomNumber = null;
   let roomClass = '';
   
-  // Try to find room in enabled rooms config
-  const roomKey = getRoomKey(booking);
+  // Try to find room in enabled rooms config (uses window.getRoomKey from room-config.js)
+  const roomKey = typeof window.getRoomKey === 'function' ? window.getRoomKey(booking) : null;
+  
   if (roomKey) {
-    roomNumber = roomKey.toLowerCase().replace('_', '-');
+    // Match the cell ID format used in createDayGrid
+    if (roomKey.startsWith('Room_')) {
+      roomNumber = roomKey.replace('Room_', ''); // "Room_6" -> "6"
+    } else if (roomKey === 'Car_Park') {
+      roomNumber = 'car-park';
+    } else if (roomKey === 'Online') {
+      roomNumber = 'online';
+    } else {
+      roomNumber = roomKey.toLowerCase().replace('_', '-');
+    }
     roomClass = roomKey.toLowerCase().replace('_', '-');
     return { roomNumber, roomClass };
   }
   
-  // Fallback for legacy data
+  // Fallback: handle Car Park directly if getRoomKey failed (missing return bug in room-config.js)
+  if (booking.room && (booking.room.toLowerCase() === 'car park' || booking.room.toLowerCase() === 'car_park')) {
+    return { roomNumber: 'car-park', roomClass: 'car-park' };
+  }
+  
+  // Fallback for legacy room data
   if (booking.room === 'Room_1' || booking.room === '1') {
-    roomNumber = 'room-1'; roomClass = 'room-1';
+    roomNumber = '1'; roomClass = 'room-1';
+  } else if (booking.room === 'Room_2' || booking.room === '2') {
+    roomNumber = '2'; roomClass = 'room-2';
+  } else if (booking.room === 'Room_4' || booking.room === '4') {
+    roomNumber = '4'; roomClass = 'room-4';
+  } else if (booking.room === 'Room_5' || booking.room === '5') {
+    roomNumber = '5'; roomClass = 'room-5';
+  } else if (booking.room === 'Room_6' || booking.room === '6') {
+    roomNumber = '6'; roomClass = 'room-6';
+  } else if (booking.room === 'Room_7' || booking.room === '7') {
+    roomNumber = '7'; roomClass = 'room-7';
   } else if (booking.location && booking.location.toLowerCase().includes('online')) {
     roomNumber = 'online'; roomClass = 'online';
   }
@@ -1968,6 +2023,49 @@ function showPaymentToast(message, type) {
         restoreSessionState(); 
       currentWeekStart.setDate(currentWeekStart.getDate() + (direction * 7));
       updateWeekDisplay();
+      createCalendarGrid();
+      populateCalendar();
+      updateURL();
+    }
+    
+    // Change day navigation
+    function changeDay(direction) {
+      restoreSessionState();
+      const dateSelector = document.getElementById('dateSelector');
+      if (!dateSelector) return;
+      
+      const currentDateObj = new Date(dateSelector.value + 'T12:00:00');
+      currentDateObj.setDate(currentDateObj.getDate() + direction);
+      
+      // Format as YYYY-MM-DD
+      const year = currentDateObj.getFullYear();
+      const month = String(currentDateObj.getMonth() + 1).padStart(2, '0');
+      const day = String(currentDateObj.getDate()).padStart(2, '0');
+      const newDate = `${year}-${month}-${day}`;
+      
+      dateSelector.value = newDate;
+      currentDate = newDate;
+      
+      createCalendarGrid();
+      populateCalendar();
+      updateURL();
+    }
+    
+    // Jump to today
+    function goToToday() {
+      restoreSessionState();
+      const dateSelector = document.getElementById('dateSelector');
+      if (!dateSelector) return;
+      
+      const today = new Date();
+      const year = today.getFullYear();
+      const month = String(today.getMonth() + 1).padStart(2, '0');
+      const day = String(today.getDate()).padStart(2, '0');
+      const todayStr = `${year}-${month}-${day}`;
+      
+      dateSelector.value = todayStr;
+      currentDate = todayStr;
+      
       createCalendarGrid();
       populateCalendar();
       updateURL();
