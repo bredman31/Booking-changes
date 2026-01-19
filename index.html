@@ -1796,11 +1796,11 @@ function isSlotAvailable(room, date, time) {
 }
   </script>
   
-<!-- ================================ -->
+  <!-- ================================ -->
 <!-- SECTION 6.4: AVAILABLE SLOT MARKING -->
 <!-- ================================ -->
   <script>
-// Mark available slots for new bookings (called from populateDayView)
+    // Mark available slots for new bookings (called from populateDayView)
     function markAvailableSlotsForNewBookings(selectedDate) {
       const hasValidToken = !!sessionStorage.getItem('accessToken');
       if (!hasValidToken) return;
@@ -1809,29 +1809,71 @@ function isSlotAvailable(room, date, time) {
       const isPastDate = new Date(selectedDate + 'T23:59:59') < now;
       if (isPastDate) return;
       
-// Use dynamic enabled rooms from config
-(window.enabledRooms || []).forEach((room) => {
-  const roomName = room.displayName;
-  const roomId = room.key.toLowerCase().replace('_', '-');
+      // Use dynamic enabled rooms from config
+      (window.enabledRooms || []).forEach((room) => {
+        const roomName = room.displayName;
+        const capacity = room.capacity || 1;
+        const isCarPark = room.key === 'Car_Park';
+        
+        // Generate cell ID to match createDayGrid format
+        let roomId;
+        if (room.key.startsWith('Room_')) {
+          roomId = room.key.replace('Room_', '');
+        } else if (room.key === 'Car_Park') {
+          roomId = 'car-park';
+        } else if (room.key === 'Online') {
+          roomId = 'online';
+        } else {
+          roomId = room.key.toLowerCase().replace('_', '-');
+        }
+        
         businessHours.forEach(time => {
           const cellId = `cell-${roomId}-${time}`;
           const cell = document.getElementById(cellId);
           
-          if (!cell || cell.classList.contains('booked')) return;
+          if (!cell) return;
           
           // Check if slot is in the past
           const slotDateTime = new Date(`${selectedDate}T${time}:00`);
           if (slotDateTime < now) return;
           
-          // Make clickable
-          cell.classList.add('available-slot');
-          cell.style.cursor = 'pointer';
-          cell.title = `Book ${roomName} at ${time}`;
-          
-          cell.addEventListener('click', function(e) {
-            if (e.target.closest('.booked')) return;
-            openNewBookingModal(roomName, selectedDate, time);
-          });
+          // For Car Park: check capacity, not just if booked
+          if (isCarPark) {
+            const currentCount = getSlotBookingCount(roomName, selectedDate, time);
+            const hasAvailability = currentCount < capacity;
+            
+            // Update cell display for Car Park
+            if (currentCount > 0) {
+              cell.classList.add('car-park-partial');
+              cell.innerHTML = `<div class="capacity-display">${currentCount}/${capacity} booked</div>`;
+            }
+            
+            if (hasAvailability) {
+              cell.classList.add('available-slot');
+              cell.style.cursor = 'pointer';
+              cell.title = `Book Car Park at ${time} (${capacity - currentCount} spaces available)`;
+              
+              cell.addEventListener('click', function(e) {
+                openNewBookingModal(roomName, selectedDate, time);
+              });
+            } else {
+              cell.classList.add('at-capacity');
+              cell.title = `Car Park full at ${time}`;
+            }
+          } else {
+            // Normal rooms - skip if already booked
+            if (cell.classList.contains('booked')) return;
+            
+            // Make clickable
+            cell.classList.add('available-slot');
+            cell.style.cursor = 'pointer';
+            cell.title = `Book ${roomName} at ${time}`;
+            
+            cell.addEventListener('click', function(e) {
+              if (e.target.closest('.booked')) return;
+              openNewBookingModal(roomName, selectedDate, time);
+            });
+          }
         });
       });
     }
