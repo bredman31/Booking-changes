@@ -1763,8 +1763,8 @@ function showPaymentToast(message, type) {
       const roomCfg = (window.enabledRooms || []).find(r => r.displayName === room || r.key === roomKey);
       const capacity = roomCfg?.capacity || 1;
       
-      // Get all room key variants for matching
-      const roomVariants = [room, roomKey, room.replace('Room ', ''), 'Car_Park', 'Car Park'];
+      // Get all room key variants for matching (including 'Car park' lowercase)
+      const roomVariants = [room, roomKey, room.replace('Room ', ''), 'Car_Park', 'Car Park', 'Car park'];
       
       const hour = parseInt(time.split(':')[0]);
       const dayBookings = bookingData.filter(booking => booking.date === date);
@@ -1795,7 +1795,7 @@ function showPaymentToast(message, type) {
     // Get current booking count for a room/date/time (for capacity display)
     function getSlotBookingCount(room, date, time) {
       const roomKey = room.replace(' ', '_');
-      const roomVariants = [room, roomKey, room.replace('Room ', ''), 'Car_Park', 'Car Park'];
+      const roomVariants = [room, roomKey, room.replace('Room ', ''), 'Car_Park', 'Car Park', 'Car park'];
       
       const hour = parseInt(time.split(':')[0]);
       const dayBookings = bookingData.filter(booking => booking.date === date);
@@ -2008,6 +2008,10 @@ function showPaymentToast(message, type) {
       
       grid.innerHTML = '';
       
+      // Toggle CSS classes for view-specific styling
+      grid.classList.remove('day-view', 'week-view');
+      grid.classList.add(currentView === 'day' ? 'day-view' : 'week-view');
+      
       if (currentView === 'day') {
         createDayGrid(grid);
       } else {
@@ -2077,6 +2081,9 @@ function showPaymentToast(message, type) {
     
     // Create week view grid
     function createWeekGrid(grid) {
+      // FIXED: Set grid columns for week view (1 time column + 7 day columns)
+      grid.style.gridTemplateColumns = '80px repeat(7, 1fr)';
+      
       const emptyCell = document.createElement("div");
       emptyCell.className = "grid-header";
       emptyCell.textContent = "Time";
@@ -2645,6 +2652,31 @@ function initializeData() {
 <!-- ================================ -->
   <!-- Token auth override - must load first -->
   <script src="js/room-config.js"></script>
+  
+  <!-- PATCH: Fix Car Park case sensitivity (room-config.js has missing return statement) -->
+  <script>
+  (function() {
+    // Wrap the getRoomKey function to handle 'Car park' (lowercase p)
+    // and fix missing return statement in room-config.js
+    const originalGetRoomKey = window.getRoomKey;
+    if (typeof originalGetRoomKey === 'function') {
+      window.getRoomKey = function(booking) {
+        if (!booking) return null;
+        
+        // Check for Car park with any case variation (fixes missing return in room-config.js)
+        const room = booking.room;
+        if (room && (room.toLowerCase() === 'car park' || room.toLowerCase() === 'car_park')) {
+          return 'Car_Park';
+        }
+        
+        // Call original function for other cases
+        return originalGetRoomKey(booking);
+      };
+      console.log('✅ Car Park case-sensitivity patch applied');
+    }
+  })();
+  </script>
+  
   <script src="js/token-auth-update.js"></script>
   <!-- Booking enhancements (£0 bookings, basket, etc) -->
   <script src="js/booking-enhancements.js"></script>
