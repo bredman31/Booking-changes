@@ -592,6 +592,33 @@ body {
   }
 }
 
+/* Car Park capacity display */
+.car-park-partial {
+  background: #fff3e0 !important;
+  border-left: 4px solid #ff9800 !important;
+}
+
+.car-park-partial.available-slot {
+  cursor: pointer;
+}
+
+.capacity-display {
+  font-size: 0.75em;
+  color: #e65100;
+  font-weight: bold;
+  text-align: center;
+  padding: 2px;
+}
+
+.at-capacity {
+  background: #ffebee !important;
+  border-left: 4px solid #f44336 !important;
+  cursor: not-allowed;
+}
+
+.at-capacity .capacity-display {
+  color: #c62828;
+}
 
 /* Past booking styling for segments */
 .booking-segment.past-booking {
