@@ -1135,7 +1135,7 @@ function showPaymentToast(message, type) {
 <!-- SECTION 5.2: BOOKING CANCELLATION -->
 <!-- ================================ -->
   <script>
-    // Handle booking cancellation - UPDATED ROOM MAPPING WITH ROOM 5
+    // Handle booking cancellation
     async function cancelBooking() {
       const bookingCode = document.getElementById('bookingCodeInput').value;
       const room = document.getElementById('currentRoomInput').value;
@@ -1160,6 +1160,7 @@ function showPaymentToast(message, type) {
       );
       
       const isPaidBooking = booking && booking.isPaid;
+      const bookingId = booking?.bookingId || bookingCode;
       
       if (!confirm(`Are you sure you want to cancel this appointment?\n\nDate: ${date}\nTime: ${time}\nRoom: ${room}\n\nThis action cannot be undone.`)) {
         return;
@@ -1188,19 +1189,21 @@ function showPaymentToast(message, type) {
           roomForWebhook = room.replace('Room ', 'Room_');
         }
         
-        let payload;
-        
         // All cancellations now use cancel action (no more holding room)
-        payload = {
+        const payload = {
           timestamp: new Date().toISOString(),
           action: 'cancel',
           counsellor_id: counsellorId,
-          booking_code: booking.bookingId || bookingCode,
+          booking_code: bookingId,
           original_datetime: `${date}T${time}:00`,
           original_room: roomForWebhook,
           service_id: '2',
           comments: booking ? (booking.comments || '') : '',
-          is_paid: isPaidBooking ? 'True' : 'No'
+          is_paid: isPaidBooking ? 'True' : 'No',
+          payment: isPaidBooking ? {
+            paymentId: booking.paymentId || null,
+            paymentAmount: booking.paymentAmount || 0
+          } : null
         };
         
         cancelStatusDiv.textContent = 'Sending cancellation request...';
@@ -1216,10 +1219,22 @@ function showPaymentToast(message, type) {
           throw new Error(`Cancellation failed: ${response.status} - ${await response.text()}`);
         }
         
-        cancelStatusDiv.style.background = '#d4edda';
-        cancelStatusDiv.style.color = '#155724';
-        cancelStatusDiv.style.border = '1px solid #c3e6cb';
-        cancelStatusDiv.textContent = 'Appointment cancelled successfully!';
+        // Wait for Firebase to confirm the cancellation
+        cancelStatusDiv.textContent = 'Confirming cancellation...';
+        
+        const confirmed = await waitForCancellationConfirmation(bookingId, 15000);
+        
+        if (confirmed) {
+          cancelStatusDiv.style.background = '#d4edda';
+          cancelStatusDiv.style.color = '#155724';
+          cancelStatusDiv.style.border = '1px solid #c3e6cb';
+          cancelStatusDiv.textContent = 'Appointment cancelled successfully!';
+        } else {
+          cancelStatusDiv.style.background = '#fff3cd';
+          cancelStatusDiv.style.color = '#856404';
+          cancelStatusDiv.style.border = '1px solid #ffeaa7';
+          cancelStatusDiv.textContent = 'Cancellation request sent. Please refresh to confirm.';
+        }
         
         clearBookingForm();
         
@@ -1235,6 +1250,30 @@ function showPaymentToast(message, type) {
         cancelStatusDiv.style.border = '1px solid #f5c6cb';
         cancelStatusDiv.textContent = `Error: ${error.message}`;
       }
+    }
+    
+    // Wait for Firebase to confirm booking is cancelled
+    async function waitForCancellationConfirmation(bookingId, timeoutMs) {
+      const startTime = Date.now();
+      const pollInterval = 1000; // Check every second
+      
+      while (Date.now() - startTime < timeoutMs) {
+        try {
+          const snapshot = await database.ref(`bookings/${bookingId}/status`).once('value');
+          const status = snapshot.val();
+          
+          if (status === 'cancelled' || status === 'cancel') {
+            return true;
+          }
+        } catch (e) {
+          console.warn('Error checking cancellation status:', e);
+        }
+        
+        // Wait before next poll
+        await new Promise(resolve => setTimeout(resolve, pollInterval));
+      }
+      
+      return false; // Timeout
     }
   </script>
   
