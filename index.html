@@ -427,7 +427,9 @@ function restoreSessionState() {
           
           sessionStorage.setItem('accessToken', token);
           sessionStorage.setItem('counsellorName', t.name || '');
+          sessionStorage.setItem('henleyClientId', t.henleyClientId || '');
           window.clientId = t.clientId || null;
+          window.henleyClientId = t.henleyClientId || null;
           selectedCounsellor = t.name || '';
           
           console.log('💾 Stored in sessionStorage:');
@@ -1751,7 +1753,7 @@ function showPaymentToast(message, type) {
             // Prepare checkout request payload
             const checkoutPayload = {
               counsellor_name: counsellorName,
-              counsellor_id: window.clientId || sessionStorage.getItem('counsellorId') || '',
+              counsellor_id: window.henleyClientId || sessionStorage.getItem('henleyClientId') || '',
               client_id: window.clientId || '',
               room_name: room,
               room_id: roomId,
