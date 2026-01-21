@@ -183,6 +183,7 @@
      </div>
   </div>
   
+
 <!-- ================================ -->
 <!-- SECTION 2: NEW BOOKING MODAL -->
 <!-- ================================ -->
@@ -242,6 +243,8 @@
   <input type="hidden" id="newBookingEndTime">
   <input type="hidden" id="newBookingLocationId">
   <input type="hidden" id="newBookingPrice">
+  <input type="hidden" id="newBookingServiceId">
+  
   
 <!-- ================================ -->
 <!-- SECTION 3: GLOBAL CONFIGURATION -->
@@ -1564,6 +1567,7 @@ function showPaymentToast(message, type) {
     }
   </script>
   
+
 <!-- ================================ -->
 <!-- SECTION 6.1: NEW BOOKING MODAL FUNCTIONS -->
 <!-- ================================ -->
@@ -1600,6 +1604,12 @@ function showPaymentToast(message, type) {
       document.getElementById('newBookingLocationId').value = locationId;
       document.getElementById('newBookingPrice').value = priceResult.amount;
       
+      // Get serviceId from room config (defaults to '2' for standard room hire)
+      const roomKey = room.replace(' ', '_');
+      const roomCfg = (window.enabledRooms || []).find(r => r.displayName === room || r.key === roomKey);
+      const serviceId = roomCfg?.serviceId || '2';
+      document.getElementById('newBookingServiceId').value = serviceId;
+      
       // Update price display
       const priceDisplay = document.getElementById('priceDisplay');
       const priceAmount = document.getElementById('priceAmount');
@@ -1634,7 +1644,7 @@ function showPaymentToast(message, type) {
 <!-- SECTION 6.2: CONFIRM NEW BOOKING -->
 <!-- ================================ -->
   <script>
-    // Confirm new booking (placeholder for Stripe integration)
+    // Confirm new booking (with Stripe integration)
     async function confirmNewBooking() {
       const room = document.getElementById('newBookingRoom').value;
       const roomId = document.getElementById('newBookingRoomId').value;
@@ -1643,6 +1653,7 @@ function showPaymentToast(message, type) {
       const endTime = document.getElementById('newBookingEndTime').value;
       const locationId = document.getElementById('newBookingLocationId').value;
       const price = parseInt(document.getElementById('newBookingPrice').value) || 0;
+      const serviceId = document.getElementById('newBookingServiceId').value || '2';
       
       const statusDiv = document.getElementById('bookingStatus');
       const confirmBtn = document.getElementById('confirmBookingBtn');
@@ -1665,7 +1676,7 @@ function showPaymentToast(message, type) {
           timestamp: new Date().toISOString(),
           client_id: window.clientId,
           counsellor_name: counsellorName,
-          service_id: '2',
+          service_id: serviceId,
           provider_id: roomId,
           location_id: locationId,
           room_name: room,
@@ -1716,87 +1727,86 @@ function showPaymentToast(message, type) {
             refreshData();
           }, 3000);
           
-} else {
-  // PAID BOOKING - Redirect to Stripe Checkout
-  statusDiv.className = 'booking-status processing';
-  statusDiv.innerHTML = `
-    <strong>💳 Preparing payment...</strong><br>
-    <small>Redirecting to secure checkout...</small>
-  `;
-  
-  try {
-    // Get location name from locationId
-    const locationName = locationId === '1' ? 'Henley' : 'Buckhurst Hill';
-    
-    // Format date for display in Stripe
-    const dateObj = new Date(date + 'T00:00:00');
-    const formattedDate = dateObj.toLocaleDateString('en-GB', { 
-      weekday: 'short', 
-      day: 'numeric', 
-      month: 'short' 
-    });
-    
-    // Build description for Stripe receipt
-    const bookingDescription = `Room hire: ${room} at ${locationName} - ${formattedDate} (${time}-${endTime})`;
-    
-    // Prepare checkout request payload
-    const checkoutPayload = {
-      counsellor_name: counsellorName,
-      counsellor_id: window.counsellorId || sessionStorage.getItem('counsellorId') || '',
-      client_id: window.clientId || '',
-      room_name: room,
-      room_id: roomId,
-      location_id: locationId,
-      location_name: locationName,
-      date: date,
-      start_time: time,
-      end_time: endTime,
-      amount: price,
-      description: bookingDescription,
-      success_url: STRIPE_CONFIG.successUrl + '&date=' + date,
-      cancel_url: STRIPE_CONFIG.cancelUrl + '&date=' + date
-    };
-    
-    console.log('💳 Creating Stripe checkout session:', checkoutPayload);
-    
-    // Call Make.com to create Stripe checkout session
-    const response = await fetch(STRIPE_CONFIG.createCheckoutWebhook, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(checkoutPayload)
-    });
-    
-    if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(`Checkout creation failed: ${response.status}`);
-    }
-    
-    const result = await response.json();
-    console.log('💳 Checkout session created:', result);
-    
-    if (result.checkout_url) {
-      // Redirect to Stripe Checkout
-      statusDiv.innerHTML = `
-        <strong>💳 Redirecting to Stripe...</strong><br>
-        <small>Please complete your payment.</small>
-      `;
-      window.location.href = result.checkout_url;
-    } else {
-      throw new Error('No checkout URL returned');
-    }
-    
-  } catch (error) {
-    console.error('💳 Checkout error:', error);
-    statusDiv.className = 'booking-status error';
-    statusDiv.innerHTML = `
-      <strong>Payment Error</strong><br>
-      <small>${error.message}<br>Please try again.</small>
-    `;
-    confirmBtn.disabled = false;
-  }
-}
-
-/*  --- END: Paid booking replacement code --- */
+        } else {
+          // PAID BOOKING - Redirect to Stripe Checkout
+          statusDiv.className = 'booking-status processing';
+          statusDiv.innerHTML = `
+            <strong>💳 Preparing payment...</strong><br>
+            <small>Redirecting to secure checkout...</small>
+          `;
+          
+          try {
+            // Get location name from locationId (1=Buckhurst Hill, 2=Henley)
+            const locationName = locationId === '1' ? 'Buckhurst Hill' : 'Henley';
+            
+            // Format date for display in Stripe
+            const dateObj = new Date(date + 'T00:00:00');
+            const formattedDate = dateObj.toLocaleDateString('en-GB', { 
+              weekday: 'short', 
+              day: 'numeric', 
+              month: 'short' 
+            });
+            
+            // Build description for Stripe receipt
+            const bookingDescription = `Room hire: ${room} at ${locationName} - ${formattedDate} (${time}-${endTime})`;
+            
+            // Prepare checkout request payload
+            const checkoutPayload = {
+              counsellor_name: counsellorName,
+              counsellor_id: window.counsellorId || sessionStorage.getItem('counsellorId') || '',
+              client_id: window.clientId || '',
+              room_name: room,
+              room_id: roomId,
+              location_id: locationId,
+              location_name: locationName,
+              service_id: serviceId,
+              date: date,
+              start_time: time,
+              end_time: endTime,
+              amount: price,
+              description: bookingDescription,
+              success_url: STRIPE_CONFIG.successUrl + '&date=' + date,
+              cancel_url: STRIPE_CONFIG.cancelUrl + '&date=' + date
+            };
+            
+            console.log('💳 Creating Stripe checkout session:', checkoutPayload);
+            
+            // Call Make.com to create Stripe checkout session
+            const response = await fetch(STRIPE_CONFIG.createCheckoutWebhook, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(checkoutPayload)
+            });
+            
+            if (!response.ok) {
+              const errorText = await response.text();
+              throw new Error(`Checkout creation failed: ${response.status}`);
+            }
+            
+            const result = await response.json();
+            console.log('💳 Checkout session created:', result);
+            
+            if (result.checkout_url) {
+              // Redirect to Stripe Checkout
+              statusDiv.innerHTML = `
+                <strong>💳 Redirecting to Stripe...</strong><br>
+                <small>Please complete your payment.</small>
+              `;
+              window.location.href = result.checkout_url;
+            } else {
+              throw new Error('No checkout URL returned');
+            }
+            
+          } catch (error) {
+            console.error('💳 Checkout error:', error);
+            statusDiv.className = 'booking-status error';
+            statusDiv.innerHTML = `
+              <strong>Payment Error</strong><br>
+              <small>${error.message}<br>Please try again.</small>
+            `;
+            confirmBtn.disabled = false;
+          }
+        }
         
       } catch (error) {
         console.error('Booking error:', error);
