@@ -7,14 +7,17 @@
  * 1. Fixes £0 booking issue (greyed out button)
  * 2. Adds multi-booking basket functionality
  * 3. Changes button text based on price
+ * 4. FIXED: Basket payment now works with Stripe and Credits
+ * 
+ * Version: 2.0 - January 2026
  * 
  * Installation: Add this line AFTER your main scripts in index.html:
- * <script src="booking-enhancements.js"></script>
+ * <script src="js/booking-enhancements.js"></script>
  */
 
 (function() {
   'use strict';
-  console.log('🛒 booking-enhancements.js loading...');
+  console.log('🛒 booking-enhancements.js v2.0 loading...');
 
   // ============================================
   // BASKET STATE
@@ -164,6 +167,18 @@
       }
       .basket-total-amount { color: #4caf50; }
       
+      /* Credit info in basket */
+      .basket-credit-info {
+        display: flex;
+        justify-content: space-between;
+        font-size: 14px;
+        color: #667eea;
+        margin-bottom: 10px;
+        padding: 8px 12px;
+        background: #f0f0ff;
+        border-radius: 6px;
+      }
+      
       .basket-actions { display: flex; gap: 10px; }
       .basket-clear {
         flex: 1;
@@ -271,6 +286,10 @@
         </div>
       </div>
       <div class="basket-footer">
+        <div id="basketCreditInfo" class="basket-credit-info" style="display: none;">
+          <span>💳 Your Credit:</span>
+          <span id="basketCreditAmount">£0.00</span>
+        </div>
         <div class="basket-total">
           <span>Total:</span>
           <span class="basket-total-amount" id="basketTotal">£0.00</span>
@@ -300,6 +319,11 @@
     const overlay = document.getElementById('basketOverlay');
     panel.classList.toggle('open');
     overlay.classList.toggle('open');
+    
+    // Update credit display when opening
+    if (panel.classList.contains('open')) {
+      updateBasketCreditDisplay();
+    }
   };
 
   window.addToBasket = function(booking) {
@@ -338,6 +362,24 @@
       showBasketToast('🗑️ Basket cleared');
     }
   };
+
+  function updateBasketCreditDisplay() {
+    const creditInfoEl = document.getElementById('basketCreditInfo');
+    const creditAmountEl = document.getElementById('basketCreditAmount');
+    
+    if (!creditInfoEl || !creditAmountEl) return;
+    
+    const credit = window.counsellorCreditBalance || 0;
+    const total = window.bookingBasket.reduce((sum, b) => sum + (b.price || 0), 0);
+    
+    // Only show credit info if there's credit and the basket has paid items
+    if (credit > 0 && total > 0) {
+      creditInfoEl.style.display = 'flex';
+      creditAmountEl.textContent = '£' + (credit / 100).toFixed(2);
+    } else {
+      creditInfoEl.style.display = 'none';
+    }
+  }
 
   function updateBasketUI() {
     const count = window.bookingBasket.length;
@@ -386,6 +428,9 @@
         checkoutBtn.textContent = 'Confirm All Bookings';
       }
     }
+    
+    // Update credit display
+    updateBasketCreditDisplay();
   }
 
   function showBasketToast(message) {
@@ -397,97 +442,192 @@
     }
   }
 
+  // ============================================
+  // CHECKOUT - FIXED VERSION
+  // ============================================
   window.checkoutBasket = async function() {
     if (window.bookingBasket.length === 0) return;
 
     const total = window.bookingBasket.reduce((sum, b) => sum + (b.price || 0), 0);
     const checkoutBtn = document.getElementById('basketCheckout');
     
-    if (total > 0) {
-      // Paid bookings - Stripe integration needed
-      showBasketToast('💳 Stripe payment integration coming soon');
-      console.log('Basket checkout - payment required:', window.bookingBasket);
-      return;
-    }
+    if (total === 0) {
+      // ========================================
+      // FREE BOOKINGS - Process directly
+      // ========================================
+      checkoutBtn.disabled = true;
+      checkoutBtn.textContent = 'Processing...';
 
-    // Free bookings - process all
-    checkoutBtn.disabled = true;
-    checkoutBtn.textContent = 'Processing...';
+      const webhookUrl = 'https://hook.eu2.make.com/eq57vfwrpkw2rtozjeiy71j88e5sw1kr';
+      const counsellorName = window.selectedCounsellor || sessionStorage.getItem('counsellorName');
+      let successCount = 0;
+      let failCount = 0;
 
-    const webhookUrl = 'https://hook.eu2.make.com/eq57vfwrpkw2rtozjeiy71j88e5sw1kr';
-    const counsellorName = window.selectedCounsellor || sessionStorage.getItem('counsellorName');
-    let successCount = 0;
-    let failCount = 0;
+      for (const booking of window.bookingBasket) {
+        try {
+          const payload = {
+            action: 'create',
+            timestamp: new Date().toISOString(),
+            client_id: window.clientId || sessionStorage.getItem('clientId') || '',
+            counsellor_name: counsellorName,
+            service_id: '2',
+            provider_id: booking.roomId,
+            location_id: booking.locationId,
+            room_name: booking.room,
+            start_datetime: `${booking.date}T${booking.time}:00`,
+            end_datetime: `${booking.date}T${booking.endTime}:00`,
+            additional_fields: {
+              comments: `Basket booking by ${counsellorName}`
+            },
+            payment: {
+              paymentId: null,
+              paymentAmount: 0,
+              paymentStatus: 'free',
+              paymentMethod: 'none'
+            }
+          };
 
-    for (const booking of window.bookingBasket) {
-      try {
-        // Get all client IDs
-        const clientInfo = window.getClientInfo ? window.getClientInfo() : {
-          clientId: window.clientId || sessionStorage.getItem('clientId') || '',
-          henleyClientId: window.henleyClientId || sessionStorage.getItem('henleyClientId') || '',
-          newSystemId: window.newSystemId || sessionStorage.getItem('newSystemId') || ''
-        };
-        
-        const payload = {
-          action: 'create',
-          timestamp: new Date().toISOString(),
-          client_id: clientInfo.clientId,
-          henley_client_id: clientInfo.henleyClientId,
-          new_system_id: clientInfo.newSystemId,
-          counsellor_name: counsellorName,
-          service_id: '2',
-          provider_id: booking.roomId,
-          location_id: booking.locationId,
-          room_name: booking.room,
-          start_datetime: `${booking.date}T${booking.time}:00`,
-          end_datetime: `${booking.date}T${booking.endTime}:00`,
-          additional_fields: {
-            comments: `Basket booking by ${counsellorName}`
-          },
-          payment: {
-            paymentId: null,
-            paymentAmount: 0,
-            paymentStatus: 'free',
-            paymentMethod: 'none'
+          const response = await fetch(webhookUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+          });
+
+          if (response.ok) {
+            successCount++;
+          } else {
+            failCount++;
+            console.error('Booking failed:', booking, await response.text());
           }
-        };
-
-        const response = await fetch(webhookUrl, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload)
-        });
-
-        if (response.ok) {
-          successCount++;
-        } else {
+        } catch (error) {
           failCount++;
-          console.error('Booking failed:', booking, await response.text());
+          console.error('Booking error:', booking, error);
         }
-      } catch (error) {
-        failCount++;
-        console.error('Booking error:', booking, error);
+      }
+
+      // Clear basket and show result
+      window.bookingBasket = [];
+      updateBasketUI();
+      toggleBasketPanel();
+
+      if (failCount === 0) {
+        showBasketToast(`✅ ${successCount} booking(s) confirmed!`);
+      } else {
+        showBasketToast(`⚠️ ${successCount} confirmed, ${failCount} failed`);
+      }
+
+      // Refresh calendar
+      setTimeout(() => {
+        if (typeof refreshData === 'function') refreshData();
+      }, 2000);
+
+      checkoutBtn.disabled = false;
+      
+    } else {
+      // ========================================
+      // PAID BOOKINGS - Use payment choice modal
+      // ========================================
+      const paymentDetails = {
+        totalAmount: total,
+        items: window.bookingBasket.map(b => ({
+          room: b.room,
+          date: b.date,
+          time: b.time,
+          endTime: b.endTime,
+          formattedDate: b.formattedDate,
+          price: b.price,
+          roomId: b.roomId,
+          locationId: b.locationId
+        }))
+      };
+      
+      // Check if payment choice modal exists
+      if (typeof showPaymentChoiceModal === 'function') {
+        // Close basket panel first
+        toggleBasketPanel();
+        // Show payment options
+        showPaymentChoiceModal(paymentDetails, true);
+      } else {
+        // Fallback: Direct to Stripe without credit option
+        console.log('💳 Payment modal not available, using direct Stripe');
+        checkoutBtn.disabled = true;
+        checkoutBtn.textContent = 'Preparing payment...';
+        
+        try {
+          await directStripeCheckout(paymentDetails);
+        } catch (error) {
+          console.error('Checkout error:', error);
+          showBasketToast('❌ Payment error: ' + error.message);
+          checkoutBtn.disabled = false;
+          checkoutBtn.textContent = `Pay & Confirm (£${(total / 100).toFixed(2)})`;
+        }
       }
     }
-
-    // Clear basket and show result
-    window.bookingBasket = [];
-    updateBasketUI();
-    toggleBasketPanel();
-
-    if (failCount === 0) {
-      showBasketToast(`✅ ${successCount} booking(s) confirmed!`);
-    } else {
-      showBasketToast(`⚠️ ${successCount} confirmed, ${failCount} failed`);
-    }
-
-    // Refresh calendar
-    setTimeout(() => {
-      if (typeof refreshData === 'function') refreshData();
-    }, 2000);
-
-    checkoutBtn.disabled = false;
   };
+
+  /**
+   * Direct Stripe checkout (fallback if payment modal not available)
+   */
+  async function directStripeCheckout(paymentDetails) {
+    const counsellorName = window.selectedCounsellor || sessionStorage.getItem('counsellorName');
+    const total = paymentDetails.totalAmount;
+    
+    // Build description from items
+    const itemDescriptions = paymentDetails.items.map(item => 
+      `${item.room} ${item.formattedDate} ${item.time}`
+    ).join(', ');
+    
+    const description = `Room bookings: ${itemDescriptions}`;
+    
+    // Store basket for after payment
+    sessionStorage.setItem('pendingBasket', JSON.stringify(paymentDetails.items));
+    
+    const checkoutPayload = {
+      counsellor_name: counsellorName,
+      counsellor_id: window.clientId || '',
+      client_id: window.clientId || '',
+      room_name: 'Multiple Rooms',
+      room_id: paymentDetails.items[0]?.roomId || '',
+      location_id: paymentDetails.items[0]?.locationId || '2',
+      location_name: 'Henley',
+      date: paymentDetails.items[0]?.date || '',
+      start_time: paymentDetails.items[0]?.time || '',
+      end_time: paymentDetails.items[0]?.endTime || '',
+      amount: total,
+      description: description,
+      is_basket: true,
+      basket_items: JSON.stringify(paymentDetails.items),
+      success_url: window.STRIPE_CONFIG?.successUrl || (window.location.href + '?payment=success'),
+      cancel_url: window.STRIPE_CONFIG?.cancelUrl || (window.location.href + '?payment=cancelled')
+    };
+    
+    console.log('💳 Creating Stripe checkout:', checkoutPayload);
+    
+    const webhookUrl = window.STRIPE_CONFIG?.createCheckoutWebhook || 
+                       'https://hook.eu2.make.com/cpg4px3j3jcbj5k7ea7kniu3vfy3c7gq';
+    
+    const response = await fetch(webhookUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(checkoutPayload)
+    });
+    
+    if (!response.ok) {
+      throw new Error('Could not create checkout session');
+    }
+    
+    const result = await response.json();
+    
+    if (result.checkout_url) {
+      // Clear basket before redirect
+      window.bookingBasket = [];
+      updateBasketUI();
+      
+      window.location.href = result.checkout_url;
+    } else {
+      throw new Error('No checkout URL returned');
+    }
+  }
 
   // ============================================
   // FIX: OVERRIDE MODAL TO ADD BASKET OPTION
@@ -619,7 +759,7 @@
     injectBasketUI();
     enhanceBookingModal();
     fixEmptySlots();
-    console.log('✅ booking-enhancements.js loaded - £0 fix + basket ready!');
+    console.log('✅ booking-enhancements.js v2.0 loaded - £0 fix + basket + payments ready!');
   }
 
   // Run when DOM is ready
