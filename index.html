@@ -936,24 +936,10 @@ function getRoomMapping(booking) {
   <script>
     // Prefill the booking form with selected booking details
     function prefillForm(bookingCode, room, date, time) {
-      // Reset to normal mode
-      document.getElementById('isHoldingRoomBooking').value = 'false';
-      
-      // Show normal headers
-      document.getElementById('normalFormHeader').classList.remove('hidden');
-      document.getElementById('holdingFormHeader').classList.add('hidden');
-      
-      // Show normal booking info
-      document.getElementById('currentDateRow').classList.remove('hidden');
-      document.getElementById('currentTimeRow').classList.remove('hidden');
-      document.getElementById('bookingCodeRow').classList.add('hidden');
-      document.getElementById('clientNameRow').classList.add('hidden');
-      
-      // Show cancel button and divider
+      // Show form elements
       document.getElementById('cancelButtonSection').classList.remove('hidden');
       document.getElementById('formDivider').classList.remove('hidden');
       document.getElementById('changeRequestHeader').classList.remove('hidden');
-      document.getElementById('holdingMoveHeader').classList.add('hidden');
       
       // Update displays
       const roomDisplay = document.getElementById('currentRoomDisplay');
@@ -1036,32 +1022,36 @@ function getRoomMapping(booking) {
     
     // Clear the booking form
     function clearBookingForm() {
-      document.getElementById('currentRoomDisplay').textContent = '';
-      document.getElementById('currentDateDisplay').textContent = '';
-      document.getElementById('currentTimeDisplay').textContent = '';
-      document.getElementById('bookingCodeDisplay').textContent = '';
-      document.getElementById('clientNameDisplay').textContent = '';
-      document.getElementById('bookingCodeInput').value = '';
-      document.getElementById('currentRoomInput').value = '';
-      document.getElementById('currentDateInput').value = '';
-      document.getElementById('currentTimeInput').value = '';
-      document.getElementById('counsellorNameInput').value = '';
-      document.getElementById('newRoomInput').value = '';
-      document.getElementById('newDateInput').value = '';
-      document.getElementById('newTimeInput').value = '';
-      document.getElementById('isHoldingRoomBooking').value = 'false';
+      const roomDisplay = document.getElementById('currentRoomDisplay');
+      const dateDisplay = document.getElementById('currentDateDisplay');
+      const timeDisplay = document.getElementById('currentTimeDisplay');
       
-      // Reset to normal mode
-      document.getElementById('normalFormHeader').classList.remove('hidden');
-      document.getElementById('holdingFormHeader').classList.add('hidden');
-      document.getElementById('currentDateRow').classList.remove('hidden');
-      document.getElementById('currentTimeRow').classList.remove('hidden');
-      document.getElementById('bookingCodeRow').classList.add('hidden');
-      document.getElementById('clientNameRow').classList.add('hidden');
+      if (roomDisplay) roomDisplay.textContent = '';
+      if (dateDisplay) dateDisplay.textContent = '';
+      if (timeDisplay) timeDisplay.textContent = '';
+      
+      const bookingCodeInput = document.getElementById('bookingCodeInput');
+      const currentRoomInput = document.getElementById('currentRoomInput');
+      const currentDateInput = document.getElementById('currentDateInput');
+      const currentTimeInput = document.getElementById('currentTimeInput');
+      const counsellorNameInput = document.getElementById('counsellorNameInput');
+      const newRoomInput = document.getElementById('newRoomInput');
+      const newDateInput = document.getElementById('newDateInput');
+      const newTimeInput = document.getElementById('newTimeInput');
+      
+      if (bookingCodeInput) bookingCodeInput.value = '';
+      if (currentRoomInput) currentRoomInput.value = '';
+      if (currentDateInput) currentDateInput.value = '';
+      if (currentTimeInput) currentTimeInput.value = '';
+      if (counsellorNameInput) counsellorNameInput.value = '';
+      if (newRoomInput) newRoomInput.value = '';
+      if (newDateInput) newDateInput.value = '';
+      if (newTimeInput) newTimeInput.value = '';
+      
+      // Show form elements
       document.getElementById('cancelButtonSection').classList.remove('hidden');
       document.getElementById('formDivider').classList.remove('hidden');
       document.getElementById('changeRequestHeader').classList.remove('hidden');
-      document.getElementById('holdingMoveHeader').classList.add('hidden');
       
       const cancelBtn = document.getElementById('cancelBookingBtn');
       if (cancelBtn) {
@@ -1073,9 +1063,11 @@ function getRoomMapping(booking) {
         pastNotice.classList.add('hidden');
       }
       
-      document.getElementById('submitChangeBtn').textContent = 'Submit Change Request';
+      const submitBtn = document.getElementById('submitChangeBtn');
+      if (submitBtn) submitBtn.textContent = 'Submit Change Request';
     }
   </script>
+
   
 <!-- ================================ -->
 <!-- SECTION 5.1: PAYMENT RETURN HANDLING -->
