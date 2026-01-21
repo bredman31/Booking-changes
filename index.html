@@ -1604,10 +1604,8 @@ function showPaymentToast(message, type) {
       document.getElementById('newBookingLocationId').value = locationId;
       document.getElementById('newBookingPrice').value = priceResult.amount;
       
-      // Get serviceId from room config (defaults to '2' for standard room hire)
-      const roomKey = room.replace(' ', '_');
-      const roomCfg = (window.enabledRooms || []).find(r => r.displayName === room || r.key === roomKey);
-      const serviceId = roomCfg?.serviceId || '2';
+      // Set serviceId: Car Park = 9, all other rooms = 1
+      const serviceId = (room === 'Car Park' || room === 'Car_Park') ? '9' : '1';
       document.getElementById('newBookingServiceId').value = serviceId;
       
       // Update price display
@@ -1753,7 +1751,7 @@ function showPaymentToast(message, type) {
             // Prepare checkout request payload
             const checkoutPayload = {
               counsellor_name: counsellorName,
-              counsellor_id: window.counsellorId || sessionStorage.getItem('counsellorId') || '',
+              counsellor_id: window.clientId || sessionStorage.getItem('counsellorId') || '',
               client_id: window.clientId || '',
               room_name: room,
               room_id: roomId,
