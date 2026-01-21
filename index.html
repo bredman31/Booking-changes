@@ -1555,18 +1555,13 @@ function showPaymentToast(message, type) {
     }
     
     // Get room ID for SimplybookMe
-    function getRoomProviderId(roomName) {
-      const ROOM_MAPPING = {
-        'Room 1': '3',
-        'Room 2': '7',
-        'Room 4': '8',
-        'Room 5': '13',
-        'Room 6': '9',
-        'Room 7': '10',
-        'Online': '11'
-      };
-      return ROOM_MAPPING[roomName] || null;
+	function getRoomProviderId(roomName) {
+      const roomKey = roomName.replace(' ', '_');
+      const roomCfg = (window.enabledRooms || []).find(r => r.displayName === roomName || r.key === roomKey);
+      return roomCfg?.henleyRoomId || null;
     }
+
+	
   </script>
   
 
