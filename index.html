@@ -1357,7 +1357,7 @@ function showPaymentToast(message, type) {
   </script>
 
 
-<!-- ================================ -->
+  <!-- ================================ -->
 <!-- SECTION 5.1.2: PAYMENT CHOICE MODAL -->
 <!-- ================================ -->
   <script>
@@ -1567,6 +1567,7 @@ function showPaymentToast(message, type) {
       
       const payload = {
         client_id: window.clientId,
+        counsellor_id: window.henleyClientId,
         counsellor_name: counsellorName,
         room_id: payment.roomId,
         room_name: payment.room,
@@ -1629,7 +1630,7 @@ function showPaymentToast(message, type) {
       
       const checkoutPayload = {
         counsellor_name: counsellorName,
-        counsellor_id: window.clientId || '',
+        counsellor_id: window.henleyClientId || '',
         client_id: window.clientId || '',
         room_name: payment.room,
         room_id: payment.roomId,
@@ -1685,6 +1686,7 @@ function showPaymentToast(message, type) {
           
           const payload = {
             client_id: window.clientId,
+            counsellor_id: window.henleyClientId,
             counsellor_name: counsellorName,
             room_id: item.roomId,
             room_name: item.room,
@@ -1756,7 +1758,7 @@ function showPaymentToast(message, type) {
       
       const checkoutPayload = {
         counsellor_name: counsellorName,
-        counsellor_id: window.clientId || '',
+        counsellor_id: window.henleyClientId || '',
         client_id: window.clientId || '',
         room_name: 'Multiple Rooms',
         room_id: payment.items[0]?.roomId || '',
@@ -1800,7 +1802,6 @@ function showPaymentToast(message, type) {
       }
     }
   </script>
-  
   
   
   
