@@ -1356,6 +1356,7 @@ function showPaymentToast(message, type) {
     }
   </script>
 
+
 <!-- ================================ -->
 <!-- SECTION 5.1.2: PAYMENT CHOICE MODAL -->
 <!-- ================================ -->
@@ -1559,31 +1560,29 @@ function showPaymentToast(message, type) {
      * Process a single booking paid with credit
      */
     async function processSingleBookingWithCredit(payment) {
-      const webhookUrl = 'https://hook.eu2.make.com/eq57vfwrpkw2rtozjeiy71j88e5sw1kr';
+      const webhookUrl = 'https://hook.eu2.make.com/a6ua2a1yl13y7h7k9aphi9iow53dvwpv';
+      
       const counsellorName = selectedCounsellor || sessionStorage.getItem('counsellorName');
+      const locationName = payment.locationId === '2' ? 'Henley' : 'Buckhurst Hill';
       
       const payload = {
-        action: 'create',
-        timestamp: new Date().toISOString(),
         client_id: window.clientId,
         counsellor_name: counsellorName,
-        service_id: '2',
-        provider_id: payment.roomId,
-        location_id: payment.locationId,
+        room_id: payment.roomId,
         room_name: payment.room,
-        start_datetime: `${payment.date}T${payment.time}:00`,
-        end_datetime: `${payment.date}T${payment.endTime}:00`,
-        additional_fields: {
-          comments: `Booked via calendar by ${counsellorName}`
-        },
-        payment: {
-          paymentId: null,
-          paymentAmount: payment.totalAmount,
-          paymentStatus: 'paid_with_credit',
-          paymentMethod: 'credit',
-          creditUsed: payment.totalAmount
-        }
+        service_id: '2',
+        location_id: payment.locationId,
+        location_name: locationName,
+        date: payment.date,
+        start_time: payment.time,
+        end_time: payment.endTime,
+        amount: payment.totalAmount,
+        deduct_credit: true,
+        source: 'calendar',
+        timestamp: new Date().toISOString()
       };
+      
+      console.log('💳 Processing credit payment:', payload);
       
       const response = await fetch(webhookUrl, {
         method: 'POST',
@@ -1592,12 +1591,19 @@ function showPaymentToast(message, type) {
       });
       
       if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Credit payment failed:', errorText);
         throw new Error('Booking creation failed');
       }
       
-      // Deduct credit locally (Firebase will sync)
-      window.counsellorCreditBalance -= payment.totalAmount;
-      updateCreditBalanceDisplay(window.counsellorCreditBalance);
+      const result = await response.json();
+      console.log('💳 Credit payment successful:', result);
+      
+      // Update credit display with new balance from response
+      if (result.newBalance !== undefined) {
+        window.counsellorCreditBalance = result.newBalance;
+        updateCreditBalanceDisplay(result.newBalance);
+      }
     }
     
     /**
@@ -1665,35 +1671,33 @@ function showPaymentToast(message, type) {
      * Process basket with credit only
      */
     async function processBasketWithCredit(payment) {
-      const webhookUrl = 'https://hook.eu2.make.com/eq57vfwrpkw2rtozjeiy71j88e5sw1kr';
+      const webhookUrl = 'https://hook.eu2.make.com/a6ua2a1yl13y7h7k9aphi9iow53dvwpv';
+      
       const counsellorName = selectedCounsellor || sessionStorage.getItem('counsellorName');
       
       let successCount = 0;
       let failCount = 0;
+      let newBalance = window.counsellorCreditBalance;
       
       for (const item of payment.items) {
         try {
+          const locationName = item.locationId === '2' ? 'Henley' : 'Buckhurst Hill';
+          
           const payload = {
-            action: 'create',
-            timestamp: new Date().toISOString(),
             client_id: window.clientId,
             counsellor_name: counsellorName,
-            service_id: '2',
-            provider_id: item.roomId,
-            location_id: item.locationId,
+            room_id: item.roomId,
             room_name: item.room,
-            start_datetime: `${item.date}T${item.time}:00`,
-            end_datetime: `${item.date}T${item.endTime}:00`,
-            additional_fields: {
-              comments: `Basket booking by ${counsellorName}`
-            },
-            payment: {
-              paymentId: null,
-              paymentAmount: item.price,
-              paymentStatus: 'paid_with_credit',
-              paymentMethod: 'credit',
-              creditUsed: item.price
-            }
+            service_id: '2',
+            location_id: item.locationId,
+            location_name: locationName,
+            date: item.date,
+            start_time: item.time,
+            end_time: item.endTime,
+            amount: item.price,
+            deduct_credit: true,
+            source: 'calendar',
+            timestamp: new Date().toISOString()
           };
           
           const response = await fetch(webhookUrl, {
@@ -1702,9 +1706,17 @@ function showPaymentToast(message, type) {
             body: JSON.stringify(payload)
           });
           
-          if (response.ok) successCount++;
-          else failCount++;
+          if (response.ok) {
+            const result = await response.json();
+            successCount++;
+            if (result.newBalance !== undefined) {
+              newBalance = result.newBalance;
+            }
+          } else {
+            failCount++;
+          }
         } catch (e) {
+          console.error('Basket item credit payment failed:', e);
           failCount++;
         }
       }
@@ -1714,8 +1726,8 @@ function showPaymentToast(message, type) {
       if (typeof updateBasketUI === 'function') updateBasketUI();
       
       // Update credit display
-      window.counsellorCreditBalance -= payment.totalAmount;
-      updateCreditBalanceDisplay(window.counsellorCreditBalance);
+      window.counsellorCreditBalance = newBalance;
+      updateCreditBalanceDisplay(newBalance);
       
       if (failCount > 0) {
         throw new Error(`${successCount} succeeded, ${failCount} failed`);
@@ -1787,8 +1799,7 @@ function showPaymentToast(message, type) {
         throw new Error('No checkout URL returned');
       }
     }
-  </script> 
-  
+  </script>
   
   
   
