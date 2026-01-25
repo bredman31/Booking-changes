@@ -2429,7 +2429,7 @@ if (!requestedRoomId) {
 <!-- SECTION 6.2: CONFIRM NEW BOOKING -->
 <!-- ================================ -->
   <script>
-    // Confirm new booking (with Stripe integration)
+    // Confirm new booking (with payment choice modal for paid bookings)
     async function confirmNewBooking() {
       const room = document.getElementById('newBookingRoom').value;
       const roomId = document.getElementById('newBookingRoomId').value;
@@ -2443,49 +2443,45 @@ if (!requestedRoomId) {
       const statusDiv = document.getElementById('bookingStatus');
       const confirmBtn = document.getElementById('confirmBookingBtn');
       
-      // Webhook URL for new bookings
-      const NEW_BOOKING_WEBHOOK_URL = 'https://hook.eu2.make.com/eq57vfwrpkw2rtozjeiy71j88e5sw1kr';
-      
-      // Show processing status
-      statusDiv.className = 'booking-status processing';
-      statusDiv.textContent = 'Processing booking...';
-      statusDiv.style.display = 'block';
-      confirmBtn.disabled = true;
+      // Webhook URL for FREE bookings only
+      const FREE_BOOKING_WEBHOOK_URL = 'https://hook.eu2.make.com/eq57vfwrpkw2rtozjeiy71j88e5sw1kr';
       
       try {
         const counsellorName = selectedCounsellor || sessionStorage.getItem('counsellorName');
         
-        // Build booking payload
-        const bookingPayload = {
-          action: 'create',
-          timestamp: new Date().toISOString(),
-          client_id: window.clientId,
-          counsellor_name: counsellorName,
-          service_id: serviceId,
-          provider_id: roomId,
-          location_id: locationId,
-          room_name: room,
-          start_datetime: `${date}T${time}:00`,
-          end_datetime: `${date}T${endTime}:00`,
-          additional_fields: {
-            comments: `Booked via counsellor calendar by ${counsellorName}`
-          },
-          payment: {
-            paymentId: null,
-            paymentAmount: price,
-            paymentStatus: price === 0 ? 'free' : 'pending',
-            paymentMethod: price === 0 ? 'none' : 'card'
-          }
-        };
-        
-        console.log('New booking payload:', bookingPayload);
-        
         // Handle based on price
         if (price === 0) {
           // FREE BOOKING - Send directly to webhook
+          statusDiv.className = 'booking-status processing';
           statusDiv.textContent = 'Creating booking...';
+          statusDiv.style.display = 'block';
+          confirmBtn.disabled = true;
           
-          const response = await fetch(NEW_BOOKING_WEBHOOK_URL, {
+          const bookingPayload = {
+            action: 'create',
+            timestamp: new Date().toISOString(),
+            client_id: window.clientId,
+            counsellor_name: counsellorName,
+            service_id: serviceId,
+            provider_id: roomId,
+            location_id: locationId,
+            room_name: room,
+            start_datetime: `${date}T${time}:00`,
+            end_datetime: `${date}T${endTime}:00`,
+            additional_fields: {
+              comments: `Booked via counsellor calendar by ${counsellorName}`
+            },
+            payment: {
+              paymentId: null,
+              paymentAmount: 0,
+              paymentStatus: 'free',
+              paymentMethod: 'none'
+            }
+          };
+          
+          console.log('Free booking payload:', bookingPayload);
+          
+          const response = await fetch(FREE_BOOKING_WEBHOOK_URL, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(bookingPayload)
@@ -2513,84 +2509,36 @@ if (!requestedRoomId) {
           }, 3000);
           
         } else {
-          // PAID BOOKING - Redirect to Stripe Checkout
-          statusDiv.className = 'booking-status processing';
-          statusDiv.innerHTML = `
-            <strong>💳 Preparing payment...</strong><br>
-            <small>Redirecting to secure checkout...</small>
-          `;
+          // PAID BOOKING - Show payment choice modal
+          // Close the booking modal first
+          closeNewBookingModal();
           
-          try {
-            // Get location name from locationId (1=Buckhurst Hill, 2=Henley)
-            const locationName = locationId === '1' ? 'Buckhurst Hill' : 'Henley';
-            
-            // Format date for display in Stripe
-            const dateObj = new Date(date + 'T00:00:00');
-            const formattedDate = dateObj.toLocaleDateString('en-GB', { 
-              weekday: 'short', 
-              day: 'numeric', 
-              month: 'short' 
-            });
-            
-            // Build description for Stripe receipt
-            const bookingDescription = `Room hire: ${room} at ${locationName} - ${formattedDate} (${time}-${endTime})`;
-            
-            // Prepare checkout request payload
-            const checkoutPayload = {
-              counsellor_name: counsellorName,
-              counsellor_id: window.henleyClientId || sessionStorage.getItem('henleyClientId') || '',
-              client_id: window.clientId || '',
-              room_name: room,
-              room_id: roomId,
-              location_id: locationId,
-              location_name: locationName,
-              service_id: serviceId,
-              date: date,
-              start_time: time,
-              end_time: endTime,
-              amount: price,
-              description: bookingDescription,
-              success_url: STRIPE_CONFIG.successUrl + '&date=' + date,
-              cancel_url: STRIPE_CONFIG.cancelUrl + '&date=' + date
-            };
-            
-            console.log('💳 Creating Stripe checkout session:', checkoutPayload);
-            
-            // Call Make.com to create Stripe checkout session
-            const response = await fetch(STRIPE_CONFIG.createCheckoutWebhook, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify(checkoutPayload)
-            });
-            
-            if (!response.ok) {
-              const errorText = await response.text();
-              throw new Error(`Checkout creation failed: ${response.status}`);
-            }
-            
-            const result = await response.json();
-            console.log('💳 Checkout session created:', result);
-            
-            if (result.checkout_url) {
-              // Redirect to Stripe Checkout
-              statusDiv.innerHTML = `
-                <strong>💳 Redirecting to Stripe...</strong><br>
-                <small>Please complete your payment.</small>
-              `;
-              window.location.href = result.checkout_url;
-            } else {
-              throw new Error('No checkout URL returned');
-            }
-            
-          } catch (error) {
-            console.error('💳 Checkout error:', error);
-            statusDiv.className = 'booking-status error';
-            statusDiv.innerHTML = `
-              <strong>Payment Error</strong><br>
-              <small>${error.message}<br>Please try again.</small>
-            `;
-            confirmBtn.disabled = false;
-          }
+          // Format date for display
+          const dateObj = new Date(date + 'T00:00:00');
+          const formattedDate = dateObj.toLocaleDateString('en-GB', { 
+            weekday: 'short', 
+            day: 'numeric', 
+            month: 'short',
+            year: 'numeric'
+          });
+          
+          // Build payment details for the payment choice modal
+          const paymentDetails = {
+            room: room,
+            roomId: roomId,
+            date: date,
+            time: time,
+            endTime: endTime,
+            formattedDate: formattedDate,
+            locationId: locationId,
+            serviceId: serviceId,
+            totalAmount: price
+          };
+          
+          console.log('💳 Opening payment choice modal:', paymentDetails);
+          
+          // Show the payment choice modal (handles credit vs card)
+          showPaymentChoiceModal(paymentDetails, false);
         }
         
       } catch (error) {
@@ -2601,7 +2549,8 @@ if (!requestedRoomId) {
       }
     }
   </script>
-  
+
+
 <!-- ================================ -->
 <!-- SECTION 6.3: SLOT AVAILABILITY CHECKING -->
 <!-- ================================ -->
