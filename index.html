@@ -1459,10 +1459,55 @@ function showPaymentToast(message, type) {
       modal.style.display = 'flex';
     }
     
-    function closePaymentChoiceModal() {
+   function closePaymentChoiceModal() {
       const modal = document.getElementById('paymentChoiceModal');
       if (modal) modal.style.display = 'none';
       window.pendingPayment = null;
+    }
+    
+    /**
+     * Get the correct SBM service ID based on room name
+     * Service ID 1 = Room bookings, Service ID 9 = Car Park
+     */
+    function getServiceIdForRoom(roomName) {
+      if (!roomName) return '1';
+      const room = roomName.toLowerCase().replace(/_/g, ' ');
+      return (room === 'car park') ? '9' : '1';
+    }
+    
+    /**
+     * Convert payment details to standardized items array
+     * This normalizes single bookings and baskets into the same format
+     */
+    function normalizeToItems(payment) {
+      if (payment.isBasket && payment.items) {
+        return payment.items.map(item => ({
+          room_id: item.roomId,
+          room_name: item.room,
+          location_id: item.locationId,
+          location_name: item.locationId === '2' ? 'Henley' : 'Buckhurst Hill',
+          date: item.date,
+          start_time: item.time,
+          end_time: item.endTime,
+          price: item.price,
+          formatted_date: item.formattedDate,
+          service_id: getServiceIdForRoom(item.room)
+        }));
+      } else {
+        // Single booking - convert to array with one item
+        return [{
+          room_id: payment.roomId,
+          room_name: payment.room,
+          location_id: payment.locationId,
+          location_name: payment.locationId === '2' ? 'Henley' : 'Buckhurst Hill',
+          date: payment.date,
+          start_time: payment.time,
+          end_time: payment.endTime,
+          price: payment.totalAmount,
+          formatted_date: payment.formattedDate,
+          service_id: getServiceIdForRoom(payment.room)
+        }];
+      }
     }
     
     /**
@@ -1614,7 +1659,7 @@ function showPaymentToast(message, type) {
             counsellor_name: counsellorName,
             room_id: item.room_id,
             room_name: item.room_name,
-            service_id: '2',
+            service_id: item.service_id || getServiceIdForRoom(item.room_name),
             location_id: item.location_id,
             location_name: item.location_name,
             date: item.date,
@@ -1688,7 +1733,7 @@ function showPaymentToast(message, type) {
         client_id: window.clientId,
         counsellor_id: window.henleyClientId,
         counsellor_name: counsellorName,
-        service_id: '2',
+        service_id: items[0]?.service_id || '1',
         items: items,
         total_amount: totalAmount,
         total_credit_used: totalCreditUsed,
@@ -1818,7 +1863,7 @@ function showPaymentToast(message, type) {
               counsellor_name: counsellorName,
               room_id: item.room_id,
               room_name: item.room_name,
-              service_id: '2',
+              service_id: booking?.serviceId || getServiceIdForRoom(room),
               location_id: item.location_id,
               location_name: item.location_name,
               date: item.date,
@@ -1955,7 +2000,7 @@ function showPaymentToast(message, type) {
           booking_code: bookingId,
           original_datetime: `${date}T${time}:00`,
           original_room: roomForWebhook,
-          service_id: '2',
+          service_id: booking?.serviceId || getServiceIdForRoom(room),
           comments: booking ? (booking.comments || '') : '',
           is_paid: isPaidBooking ? 'True' : 'No',
           payment: isPaidBooking ? {
@@ -2108,7 +2153,7 @@ if (!requestedRoomId) {
             changeData.newDate || changeData.originalDate,
             changeData.newTime || changeData.originalTime
           ),
-          service_id: '2',
+          service_id: booking?.serviceId || getServiceIdForRoom(changeData.newRoom || changeData.originalRoom),
           comments: booking ? (booking.comments || '') : '',
           is_paid: booking ? (booking.isPaid ? 'True' : 'No') : 'No'
         };
