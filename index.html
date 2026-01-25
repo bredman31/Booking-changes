@@ -1459,7 +1459,7 @@ function showPaymentToast(message, type) {
       modal.style.display = 'flex';
     }
     
-   function closePaymentChoiceModal() {
+      function closePaymentChoiceModal() {
       const modal = document.getElementById('paymentChoiceModal');
       if (modal) modal.style.display = 'none';
       window.pendingPayment = null;
@@ -1509,7 +1509,6 @@ function showPaymentToast(message, type) {
         }];
       }
     }
-    
     /**
      * Convert payment details to standardized items array
      * This normalizes single bookings and baskets into the same format
