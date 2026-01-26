@@ -1513,7 +1513,7 @@ function showPaymentToast(message, type) {
      * Convert payment details to standardized items array
      * This normalizes single bookings and baskets into the same format
      */
-    function normalizeToItems(payment) {
+ function normalizeToItems(payment) {
       if (payment.isBasket && payment.items) {
         return payment.items.map(item => ({
           room_id: item.roomId,
@@ -1524,7 +1524,8 @@ function showPaymentToast(message, type) {
           start_time: item.time,
           end_time: item.endTime,
           price: item.price,
-          formatted_date: item.formattedDate
+          formatted_date: item.formattedDate,
+          service_id: getServiceIdForRoom(item.room)
         }));
       } else {
         // Single booking - convert to array with one item
@@ -1537,7 +1538,8 @@ function showPaymentToast(message, type) {
           start_time: payment.time,
           end_time: payment.endTime,
           price: payment.totalAmount,
-          formatted_date: payment.formattedDate
+          formatted_date: payment.formattedDate,
+          service_id: getServiceIdForRoom(payment.room)
         }];
       }
     }
