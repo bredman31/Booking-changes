@@ -2000,7 +2000,7 @@ function showPaymentToast(message, type) {
           is_paid: isPaidBooking ? 'True' : 'No',
           payment: isPaidBooking ? {
             paymentId: booking.paymentId || null,
-            paymentAmount: booking.paymentAmount || 0
+            paymentAmount: booking.price || booking.stripePaid || booking.paymentAmount || 0
           } : null
         };
         
