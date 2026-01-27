@@ -2,98 +2,148 @@
 <html>
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Cherry Tree Centre - Pricing Configuration</title>
   
+  <!-- Firebase -->
   <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-database-compat.js"></script>
   
   <style>
     * {
+      margin: 0;
+      padding: 0;
       box-sizing: border-box;
     }
     
     body {
-      font-family: Arial, sans-serif;
-      margin: 0;
-      padding: 20px;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
       background: #f5f5f5;
+      min-height: 100vh;
     }
     
-    .header {
-      background: #2c3e50;
+    /* Header */
+    .admin-header {
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
       color: white;
-      padding: 20px;
-      margin: -20px -20px 20px -20px;
+      padding: 15px 20px;
       display: flex;
       justify-content: space-between;
       align-items: center;
+      flex-wrap: wrap;
+      gap: 10px;
     }
     
-    .header h1 {
-      margin: 0;
-      font-size: 24px;
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 20px;
     }
     
-    .save-status {
+    .header-left h1 {
+      font-size: 18px;
+      font-weight: 500;
+    }
+    
+    .back-link {
+      color: rgba(255,255,255,0.7);
+      text-decoration: none;
+      font-size: 13px;
+    }
+    
+    .back-link:hover {
+      color: white;
+    }
+    
+    .header-actions {
+      display: flex;
+      gap: 10px;
+    }
+    
+    .btn {
       padding: 8px 16px;
-      border-radius: 4px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
       font-size: 14px;
+      transition: all 0.2s;
     }
     
-    .save-status.saved {
-      background: #27ae60;
+    .btn-primary {
+      background: #28a745;
+      color: white;
     }
     
-    .save-status.unsaved {
-      background: #e74c3c;
+    .btn-primary:hover {
+      background: #218838;
     }
     
-    .save-status.saving {
-      background: #f39c12;
+    .btn-secondary {
+      background: #6c757d;
+      color: white;
     }
     
-    .container {
+    .btn-secondary:hover {
+      background: #5a6268;
+    }
+    
+    .btn-danger {
+      background: #dc3545;
+      color: white;
+    }
+    
+    .btn-danger:hover {
+      background: #c82333;
+    }
+    
+    .btn-small {
+      padding: 4px 10px;
+      font-size: 12px;
+    }
+    
+    /* Main content */
+    .main-content {
+      padding: 20px;
       max-width: 1400px;
       margin: 0 auto;
     }
     
-    .grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 20px;
-      margin-bottom: 20px;
-    }
-    
+    /* Cards */
     .card {
       background: white;
       border-radius: 8px;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
       padding: 20px;
-    }
-    
-    .card.full-width {
-      grid-column: 1 / -1;
+      margin-bottom: 20px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
     }
     
     .card h2 {
-      margin: 0 0 15px 0;
-      color: #2c3e50;
       font-size: 18px;
-      border-bottom: 2px solid #3498db;
-      padding-bottom: 10px;
+      margin-bottom: 15px;
+      color: #1a1a2e;
+      display: flex;
+      align-items: center;
+      gap: 10px;
     }
     
-    .card h3 {
-      margin: 15px 0 10px 0;
-      color: #7f8c8d;
-      font-size: 14px;
-      text-transform: uppercase;
+    .card-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+      gap: 20px;
     }
     
+    /* Info text */
+    .info-text {
+      color: #666;
+      font-size: 13px;
+      margin-bottom: 15px;
+    }
+    
+    /* Tables */
     table {
       width: 100%;
       border-collapse: collapse;
-      margin-bottom: 15px;
+      font-size: 14px;
     }
     
     th, td {
@@ -104,10 +154,11 @@
     
     th {
       background: #f8f9fa;
-      font-weight: bold;
-      color: #2c3e50;
+      font-weight: 600;
+      color: #333;
     }
     
+    /* Form elements */
     input, select {
       padding: 8px 12px;
       border: 1px solid #ddd;
@@ -117,212 +168,266 @@
     
     input:focus, select:focus {
       outline: none;
-      border-color: #3498db;
+      border-color: #0f3460;
     }
     
-    input[type="number"] {
-      width: 100px;
-    }
-    
-    input[type="text"] {
-      width: 150px;
-    }
-    
-    .btn {
-      padding: 8px 16px;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-      font-size: 14px;
-      transition: background 0.2s;
-    }
-    
-    .btn-primary {
-      background: #3498db;
-      color: white;
-    }
-    
-    .btn-primary:hover {
-      background: #2980b9;
-    }
-    
-    .btn-success {
-      background: #27ae60;
-      color: white;
-    }
-    
-    .btn-success:hover {
-      background: #219a52;
-    }
-    
-    .btn-danger {
-      background: #e74c3c;
-      color: white;
-    }
-    
-    .btn-danger:hover {
-      background: #c0392b;
-    }
-    
-    .btn-small {
-      padding: 4px 8px;
-      font-size: 12px;
-    }
-    
+    /* Add row */
     .add-row {
       display: flex;
       gap: 10px;
+      margin-top: 15px;
+      flex-wrap: wrap;
       align-items: center;
-      margin-top: 10px;
-      padding-top: 10px;
-      border-top: 1px dashed #ddd;
     }
     
-    .day-checkboxes {
+    /* Location section */
+    .location-section {
+      margin-bottom: 30px;
+      border: 1px solid #e0e0e0;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    
+    .location-header {
+      background: #f0f0f0;
+      padding: 12px 15px;
+      font-weight: 600;
+      font-size: 16px;
       display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    
+    .location-rules {
+      padding: 15px;
+    }
+    
+    /* Rule row */
+    .rule-row {
+      background: #fafafa;
+      border: 1px solid #e8e8e8;
+      border-radius: 6px;
+      padding: 15px;
+      margin-bottom: 10px;
+    }
+    
+    .rule-row:last-child {
+      margin-bottom: 0;
+    }
+    
+    .rule-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 15px;
+      align-items: start;
+    }
+    
+    .rule-field {
+      display: flex;
+      flex-direction: column;
       gap: 5px;
+    }
+    
+    .rule-field label {
+      font-size: 12px;
+      font-weight: 600;
+      color: #666;
+    }
+    
+    .rule-field.wide {
+      grid-column: span 2;
+    }
+    
+    /* Days checkboxes */
+    .days-grid {
+      display: flex;
       flex-wrap: wrap;
+      gap: 8px;
     }
     
     .day-checkbox {
       display: flex;
       align-items: center;
-      gap: 3px;
+      gap: 4px;
       font-size: 12px;
     }
     
     .day-checkbox input {
-      width: auto;
+      width: 16px;
+      height: 16px;
     }
     
-    .location-section {
-      margin-bottom: 20px;
-      padding: 15px;
-      background: #f8f9fa;
+    /* Room checkboxes */
+    .rooms-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    
+    .room-checkbox {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 11px;
+      background: #f0f0f0;
+      padding: 4px 8px;
       border-radius: 4px;
     }
     
-    .location-section h4 {
-      margin: 0 0 10px 0;
-      color: #2c3e50;
+    .room-checkbox input {
+      width: 14px;
+      height: 14px;
     }
     
-    /* Calculator section */
+    .room-checkbox.selected {
+      background: #d4edda;
+    }
+    
+    /* Rule actions */
+    .rule-actions {
+      display: flex;
+      justify-content: flex-end;
+      margin-top: 10px;
+      padding-top: 10px;
+      border-top: 1px solid #eee;
+    }
+    
+    /* Status indicators */
+    .status-badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 12px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+    
+    .status-badge.saved {
+      background: #d4edda;
+      color: #155724;
+    }
+    
+    .status-badge.unsaved {
+      background: #fff3cd;
+      color: #856404;
+    }
+    
+    /* Price calculator */
     .calculator {
-      background: #e8f4f8;
-      padding: 20px;
+      background: #f8f9fa;
       border-radius: 8px;
+      padding: 20px;
     }
     
-    .calculator-grid {
+    .calc-grid {
       display: grid;
-      grid-template-columns: repeat(4, 1fr);
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
       gap: 15px;
-      margin-bottom: 15px;
+      margin-bottom: 20px;
     }
     
-    .calculator-field label {
-      display: block;
-      margin-bottom: 5px;
-      font-weight: bold;
-      font-size: 14px;
+    .calc-field {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
     }
     
-    .calculator-field select,
-    .calculator-field input {
-      width: 100%;
+    .calc-field label {
+      font-size: 12px;
+      font-weight: 600;
+      color: #666;
     }
     
-    .calculator-result {
+    .calc-result {
       background: white;
-      padding: 20px;
+      border: 2px solid #28a745;
       border-radius: 8px;
+      padding: 20px;
       text-align: center;
     }
     
-    .calculator-result .price {
+    .calc-price {
       font-size: 36px;
-      font-weight: bold;
-      color: #27ae60;
+      font-weight: 700;
+      color: #28a745;
     }
     
-    .calculator-result .breakdown {
+    .calc-breakdown {
+      color: #666;
       font-size: 14px;
-      color: #7f8c8d;
-      margin-top: 10px;
-    }
-    
-    .info-text {
-      font-size: 12px;
-      color: #7f8c8d;
       margin-top: 5px;
     }
     
-    .action-buttons {
-      display: flex;
-      gap: 10px;
-      margin-top: 20px;
+    /* Loading & messages */
+    .loading {
+      text-align: center;
+      padding: 40px;
+      color: #666;
     }
     
-    .last-updated {
-      font-size: 12px;
-      color: #7f8c8d;
-      margin-top: 10px;
+    .message {
+      padding: 12px 15px;
+      border-radius: 6px;
+      margin-bottom: 15px;
     }
     
-    /* Modal styles */
-    .modal-overlay {
-      display: none;
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background: rgba(0,0,0,0.5);
-      z-index: 1000;
-      justify-content: center;
-      align-items: center;
+    .message.success {
+      background: #d4edda;
+      color: #155724;
     }
     
-    .modal-overlay.active {
-      display: flex;
+    .message.error {
+      background: #f8d7da;
+      color: #721c24;
     }
     
-    .modal {
-      background: white;
-      padding: 30px;
-      border-radius: 8px;
-      max-width: 500px;
-      width: 90%;
-    }
-    
-    .modal h3 {
-      margin: 0 0 20px 0;
-    }
-    
-    .modal-buttons {
-      display: flex;
-      gap: 10px;
-      justify-content: flex-end;
-      margin-top: 20px;
+    /* Mobile */
+    @media (max-width: 768px) {
+      .card-grid {
+        grid-template-columns: 1fr;
+      }
+      
+      .rule-grid {
+        grid-template-columns: 1fr;
+      }
+      
+      .rule-field.wide {
+        grid-column: span 1;
+      }
+      
+      .header-actions {
+        width: 100%;
+        justify-content: stretch;
+      }
+      
+      .header-actions .btn {
+        flex: 1;
+      }
     }
   </style>
 </head>
 <body>
-  <div class="header">
-    <h1>🌳 Cherry Tree Centre - Pricing Configuration</h1>
-    <div>
-      <span class="save-status saved" id="saveStatus">All changes saved</span>
-      <button class="btn btn-success" onclick="saveConfig()" style="margin-left: 10px;">💾 Save All Changes</button>
+  <!-- Header -->
+  <header class="admin-header">
+    <div class="header-left">
+      <a href="admin-index.html" class="back-link">← Admin Portal</a>
+      <h1>💷 Pricing Configuration</h1>
     </div>
-  </div>
+    <div class="header-actions">
+      <span class="status-badge saved" id="statusBadge">Saved</span>
+      <button class="btn btn-primary" onclick="saveConfig()" id="saveBtn">💾 Save Changes</button>
+      <button class="btn btn-secondary" onclick="loadConfig()">↻ Reload</button>
+    </div>
+  </header>
   
-  <div class="container">
-    <!-- Rate Tiers -->
-    <div class="grid">
+  <!-- Main Content -->
+  <main class="main-content">
+    <div id="messageArea"></div>
+    
+    <div class="card-grid">
+      <!-- Rate Tiers -->
       <div class="card">
         <h2>💷 Rate Tiers</h2>
-        <p class="info-text">Define your pricing tiers. These are referenced by location rules below.</p>
+        <p class="info-text">Define rate codes and amounts. These are referenced by location rules.</p>
         
         <table id="ratesTable">
           <thead>
@@ -334,84 +439,14 @@
               <th></th>
             </tr>
           </thead>
-          <tbody id="ratesBody">
-            <!-- Populated by JavaScript -->
-          </tbody>
+          <tbody id="ratesBody"></tbody>
         </table>
         
         <div class="add-row">
-          <input type="text" id="newRateCode" placeholder="Code (e.g. D)" maxlength="2" style="width: 80px;">
-          <input type="number" id="newRateAmount" placeholder="Amount (pence)" style="width: 120px;">
-          <input type="text" id="newRateLabel" placeholder="Label">
-          <button class="btn btn-primary" onclick="addRate()">+ Add Rate</button>
-        </div>
-      </div>
-      
-      <!-- Duration Options -->
-      <div class="card">
-        <h2>⏱️ Duration Options</h2>
-        <p class="info-text">Define booking duration options and how they multiply the hourly rate.</p>
-        
-        <table id="durationsTable">
-          <thead>
-            <tr>
-              <th>Minutes</th>
-              <th>Label</th>
-              <th>Multiplier</th>
-              <th></th>
-            </tr>
-          </thead>
-          <tbody id="durationsBody">
-            <!-- Populated by JavaScript -->
-          </tbody>
-        </table>
-        
-        <div class="add-row">
-          <input type="number" id="newDurationMinutes" placeholder="Minutes" style="width: 80px;">
-          <input type="text" id="newDurationLabel" placeholder="Label">
-          <input type="number" id="newDurationMultiplier" placeholder="Multiplier" step="0.25" style="width: 100px;">
-          <button class="btn btn-primary" onclick="addDuration()">+ Add Duration</button>
-        </div>
-      </div>
-    </div>
-    
-    <!-- Location Rules -->
-    <div class="card full-width">
-      <h2>📍 Location Pricing Rules</h2>
-      <p class="info-text">Define which rate tier applies for each location based on day and time. Rules are checked in order - first match wins.</p>
-      
-      <div id="locationRulesContainer">
-        <!-- Populated by JavaScript -->
-      </div>
-    </div>
-    
-    <!-- Discounts -->
-    <div class="grid">
-      <div class="card">
-        <h2>🏷️ Discount Options</h2>
-        <p class="info-text">Define discount tiers for block bookings or special arrangements.</p>
-        
-        <table id="discountsTable">
-          <thead>
-            <tr>
-              <th>Code</th>
-              <th>Percent Off</th>
-              <th>Label</th>
-              <th>Min Sessions</th>
-              <th></th>
-            </tr>
-          </thead>
-          <tbody id="discountsBody">
-            <!-- Populated by JavaScript -->
-          </tbody>
-        </table>
-        
-        <div class="add-row">
-          <input type="text" id="newDiscountCode" placeholder="Code" style="width: 100px;">
-          <input type="number" id="newDiscountPercent" placeholder="%" style="width: 60px;">
-          <input type="text" id="newDiscountLabel" placeholder="Label">
-          <input type="number" id="newDiscountMin" placeholder="Min" style="width: 60px;">
-          <button class="btn btn-primary" onclick="addDiscount()">+ Add Discount</button>
+          <input type="text" id="newRateCode" placeholder="Code (e.g. D)" maxlength="2" style="width: 60px;">
+          <input type="number" id="newRateAmount" placeholder="Pence" style="width: 80px;">
+          <input type="text" id="newRateLabel" placeholder="Label" style="width: 120px;">
+          <button class="btn btn-primary btn-small" onclick="addRate()">+ Add</button>
         </div>
       </div>
       
@@ -421,80 +456,79 @@
         <p class="info-text">Test your pricing configuration before saving.</p>
         
         <div class="calculator">
-          <div class="calculator-grid">
-            <div class="calculator-field">
+          <div class="calc-grid">
+            <div class="calc-field">
               <label>Location</label>
-              <select id="calcLocation" onchange="calculatePrice()">
+              <select id="calcLocation" onchange="calculateTest()">
                 <option value="2">Henley</option>
                 <option value="1">Buckhurst Hill</option>
               </select>
             </div>
-            <div class="calculator-field">
+            <div class="calc-field">
+              <label>Room</label>
+              <select id="calcRoom" onchange="calculateTest()">
+                <option value="Room_1">Room 1</option>
+                <option value="Room_2">Room 2</option>
+                <option value="Room_4">Room 4</option>
+                <option value="Room_5">Room 5</option>
+                <option value="Room_6">Room 6</option>
+                <option value="Room_7">Room 7</option>
+                <option value="Room_8">Room 8</option>
+                <option value="Room_9">Room 9</option>
+                <option value="Car_Park">Car Park</option>
+                <option value="Online">Online</option>
+              </select>
+            </div>
+            <div class="calc-field">
               <label>Day</label>
-              <select id="calcDay" onchange="calculatePrice()">
+              <select id="calcDay" onchange="calculateTest()">
+                <option value="0">Sunday</option>
                 <option value="1">Monday</option>
                 <option value="2">Tuesday</option>
                 <option value="3">Wednesday</option>
                 <option value="4">Thursday</option>
                 <option value="5">Friday</option>
                 <option value="6">Saturday</option>
-                <option value="0">Sunday</option>
               </select>
             </div>
-            <div class="calculator-field">
-              <label>Time</label>
-              <select id="calcTime" onchange="calculatePrice()">
-                <!-- Populated by JavaScript -->
-              </select>
-            </div>
-            <div class="calculator-field">
-              <label>Duration</label>
-              <select id="calcDuration" onchange="calculatePrice()">
-                <!-- Populated by JavaScript -->
+            <div class="calc-field">
+              <label>Hour</label>
+              <select id="calcHour" onchange="calculateTest()">
+                <option value="8">08:00</option>
+                <option value="9">09:00</option>
+                <option value="10" selected>10:00</option>
+                <option value="11">11:00</option>
+                <option value="12">12:00</option>
+                <option value="13">13:00</option>
+                <option value="14">14:00</option>
+                <option value="15">15:00</option>
+                <option value="16">16:00</option>
+                <option value="17">17:00</option>
+                <option value="18">18:00</option>
+                <option value="19">19:00</option>
+                <option value="20">20:00</option>
               </select>
             </div>
           </div>
           
-          <div class="calculator-field" style="margin-bottom: 15px;">
-            <label>Discount</label>
-            <select id="calcDiscount" onchange="calculatePrice()">
-              <option value="">No discount</option>
-              <!-- Populated by JavaScript -->
-            </select>
-          </div>
-          
-          <div class="calculator-result">
-            <div class="price" id="calcPrice">£0.00</div>
-            <div class="breakdown" id="calcBreakdown">Select options above</div>
+          <div class="calc-result">
+            <div class="calc-price" id="calcPrice">£0.00</div>
+            <div class="calc-breakdown" id="calcBreakdown">Select options above</div>
           </div>
         </div>
       </div>
     </div>
     
-    <!-- Action Buttons -->
-    <div class="card full-width">
-      <div style="display: flex; justify-content: space-between; align-items: center;">
-        <div>
-          <button class="btn btn-success" onclick="saveConfig()">💾 Save Configuration</button>
-          <button class="btn btn-primary" onclick="loadConfig()" style="margin-left: 10px;">🔄 Reload from Firebase</button>
-          <button class="btn btn-danger" onclick="confirmReset()" style="margin-left: 10px;">⚠️ Reset to Defaults</button>
-        </div>
-        <div class="last-updated" id="lastUpdated">Loading...</div>
+    <!-- Location Pricing Rules -->
+    <div class="card">
+      <h2>📍 Location Pricing Rules</h2>
+      <p class="info-text">Define which rate applies for each location, day, time, and room. Rules are checked in order - first matching rule wins. If no rooms are selected, the rule applies to all rooms.</p>
+      
+      <div id="locationsContainer">
+        <!-- Populated by JavaScript -->
       </div>
     </div>
-  </div>
-  
-  <!-- Confirmation Modal -->
-  <div class="modal-overlay" id="confirmModal">
-    <div class="modal">
-      <h3 id="modalTitle">Confirm Action</h3>
-      <p id="modalMessage">Are you sure?</p>
-      <div class="modal-buttons">
-        <button class="btn" onclick="closeModal()">Cancel</button>
-        <button class="btn btn-danger" id="modalConfirm" onclick="executeModalAction()">Confirm</button>
-      </div>
-    </div>
-  </div>
+  </main>
   
   <script>
     // Firebase configuration
@@ -511,21 +545,25 @@
     firebase.initializeApp(firebaseConfig);
     const database = firebase.database();
     
-    // Day names for display
-    const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-    const dayNamesShort = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-    
-    // Current configuration (in memory)
-    let config = {
-      rates: {},
-      locations: {
-        "1": { name: "Buckhurst Hill", rules: [] },
-        "2": { name: "Henley", rules: [] }
-      },
-      durations: [],
-      discounts: {},
-      lastUpdated: null
+    // Room definitions by location
+    const LOCATION_ROOMS = {
+      "1": [ // Buckhurst Hill
+        { key: "Online", name: "Online" }
+      ],
+      "2": [ // Henley
+        { key: "Room_1", name: "Room 1" },
+        { key: "Room_2", name: "Room 2" },
+        { key: "Room_4", name: "Room 4" },
+        { key: "Room_5", name: "Room 5" },
+        { key: "Room_6", name: "Room 6" },
+        { key: "Room_7", name: "Room 7" },
+        { key: "Room_8", name: "Room 8" },
+        { key: "Room_9", name: "Room 9" },
+        { key: "Car_Park", name: "Car Park" }
+      ]
     };
+    
+    const DAY_NAMES = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
     
     // Default configuration
     const defaultConfig = {
@@ -538,167 +576,137 @@
         "1": {
           name: "Buckhurst Hill",
           rules: [
-            { days: [0, 6], startHour: 8, endHour: 21, rate: "A" },
-            { days: [1, 2, 3, 4, 5], startHour: 8, endHour: 17, rate: "A" },
-            { days: [1, 2, 3, 4, 5], startHour: 17, endHour: 21, rate: "B" }
+            { days: [0, 6], startHour: 8, endHour: 21, rate: "A", rooms: [] },
+            { days: [1, 2, 3, 4, 5], startHour: 8, endHour: 17, rate: "A", rooms: [] },
+            { days: [1, 2, 3, 4, 5], startHour: 17, endHour: 21, rate: "B", rooms: [] }
           ]
         },
         "2": {
           name: "Henley",
           rules: [
-            { days: [0], startHour: 8, endHour: 21, rate: "C" },
-            { days: [1, 2, 3, 4, 5, 6], startHour: 8, endHour: 21, rate: "A" }
+            { days: [0], startHour: 8, endHour: 21, rate: "C", rooms: ["Room_1", "Room_2", "Room_4", "Room_5", "Room_6", "Room_7", "Room_8", "Room_9"] },
+            { days: [0, 1, 2, 3, 4, 5, 6], startHour: 8, endHour: 21, rate: "A", rooms: ["Car_Park"] },
+            { days: [1, 2, 3, 4, 5, 6], startHour: 8, endHour: 21, rate: "A", rooms: ["Room_1", "Room_2", "Room_4", "Room_5", "Room_6", "Room_7", "Room_8", "Room_9"] }
           ]
         }
       },
       durations: [
-        { minutes: 60, label: "1 Hour", multiplier: 1 },
-        { minutes: 75, label: "1 Hour 15 Mins", multiplier: 1 },
-        { minutes: 240, label: "4 Hours", multiplier: 4 }
+        { minutes: 60, label: "1 Hour", multiplier: 1 }
       ],
-      discounts: {
-        "block_5": { percent: 5, label: "5+ sessions", minSessions: 5 },
-        "block_10": { percent: 10, label: "10+ sessions", minSessions: 10 },
-        "custom": { percent: 0, label: "Custom discount", minSessions: 0 }
-      },
-      lastUpdated: new Date().toISOString()
+      discounts: {}
     };
     
-    // Track unsaved changes
+    // Current config
+    let config = null;
     let hasUnsavedChanges = false;
-    let modalAction = null;
     
-    // ================================
-    // INITIALIZATION
-    // ================================
+    // Initialize
+    document.addEventListener('DOMContentLoaded', loadConfig);
     
-    document.addEventListener('DOMContentLoaded', function() {
-      loadConfig();
-      populateTimeSelect();
-      
-      // Warn about unsaved changes
-      window.addEventListener('beforeunload', function(e) {
-        if (hasUnsavedChanges) {
-          e.preventDefault();
-          e.returnValue = '';
-        }
-      });
-    });
-    
-    function populateTimeSelect() {
-      const select = document.getElementById('calcTime');
-      for (let hour = 8; hour <= 20; hour++) {
-        const option = document.createElement('option');
-        option.value = hour;
-        option.textContent = `${String(hour).padStart(2, '0')}:00`;
-        select.appendChild(option);
-      }
-    }
-    
-    // ================================
-    // FIREBASE OPERATIONS
-    // ================================
-    
+    // Load configuration
     async function loadConfig() {
       try {
-        const snapshot = await database.ref('pricing_config').once('value');
-        const data = snapshot.val();
+        showMessage('Loading configuration...', 'info');
         
-        if (data) {
-          config = data;
-          console.log('Loaded config from Firebase:', config);
-        } else {
-          console.log('No config found, using defaults');
+        const snapshot = await database.ref('pricing_config').once('value');
+        config = snapshot.val();
+        
+        if (!config) {
           config = JSON.parse(JSON.stringify(defaultConfig));
+          showMessage('No configuration found. Using defaults.', 'info');
+        } else {
+          // Migrate old rules to include rooms array if missing
+          Object.keys(config.locations || {}).forEach(locId => {
+            const location = config.locations[locId];
+            if (location.rules) {
+              location.rules = location.rules.map(rule => ({
+                ...rule,
+                rooms: rule.rooms || []
+              }));
+            }
+          });
+          showMessage('Configuration loaded successfully.', 'success');
         }
         
         renderAll();
-        updateSaveStatus(true);
+        markSaved();
         
       } catch (error) {
         console.error('Error loading config:', error);
-        alert('Error loading configuration. Using defaults.');
-        config = JSON.parse(JSON.stringify(defaultConfig));
-        renderAll();
+        showMessage('Error loading configuration: ' + error.message, 'error');
       }
     }
     
+    // Save configuration
     async function saveConfig() {
       try {
-        updateSaveStatus('saving');
+        document.getElementById('saveBtn').disabled = true;
+        document.getElementById('saveBtn').textContent = 'Saving...';
         
         config.lastUpdated = new Date().toISOString();
         
         await database.ref('pricing_config').set(config);
         
-        console.log('Config saved:', config);
-        updateSaveStatus(true);
-        alert('Configuration saved successfully!');
+        showMessage('Configuration saved successfully!', 'success');
+        markSaved();
         
       } catch (error) {
         console.error('Error saving config:', error);
-        updateSaveStatus(false);
-        alert('Error saving configuration: ' + error.message);
+        showMessage('Error saving configuration: ' + error.message, 'error');
+      } finally {
+        document.getElementById('saveBtn').disabled = false;
+        document.getElementById('saveBtn').textContent = '💾 Save Changes';
       }
     }
     
-    function updateSaveStatus(saved) {
-      const status = document.getElementById('saveStatus');
-      
-      if (saved === 'saving') {
-        status.textContent = 'Saving...';
-        status.className = 'save-status saving';
-      } else if (saved) {
-        status.textContent = 'All changes saved';
-        status.className = 'save-status saved';
-        hasUnsavedChanges = false;
-      } else {
-        status.textContent = 'Unsaved changes';
-        status.className = 'save-status unsaved';
-        hasUnsavedChanges = true;
-      }
+    // Mark as saved/unsaved
+    function markSaved() {
+      hasUnsavedChanges = false;
+      document.getElementById('statusBadge').className = 'status-badge saved';
+      document.getElementById('statusBadge').textContent = 'Saved';
     }
     
     function markUnsaved() {
-      updateSaveStatus(false);
+      hasUnsavedChanges = true;
+      document.getElementById('statusBadge').className = 'status-badge unsaved';
+      document.getElementById('statusBadge').textContent = 'Unsaved';
     }
     
-    // ================================
-    // RENDER FUNCTIONS
-    // ================================
-    
-    function renderAll() {
-      renderRates();
-      renderDurations();
-      renderDiscounts();
-      renderLocationRules();
-      updateCalculatorSelects();
-      calculatePrice();
+    // Show message
+    function showMessage(text, type) {
+      const area = document.getElementById('messageArea');
+      area.innerHTML = `<div class="message ${type}">${text}</div>`;
       
-      const lastUpdated = document.getElementById('lastUpdated');
-      if (config.lastUpdated) {
-        const date = new Date(config.lastUpdated);
-        lastUpdated.textContent = `Last updated: ${date.toLocaleString('en-GB')}`;
-      } else {
-        lastUpdated.textContent = 'Not yet saved';
+      if (type === 'success' || type === 'info') {
+        setTimeout(() => {
+          area.innerHTML = '';
+        }, 3000);
       }
     }
     
+    // Render all sections
+    function renderAll() {
+      renderRates();
+      renderLocations();
+      calculateTest();
+    }
+    
+    // Render rates table
     function renderRates() {
       const tbody = document.getElementById('ratesBody');
       tbody.innerHTML = '';
       
-      Object.entries(config.rates).sort().forEach(([code, rate]) => {
+      Object.entries(config.rates || {}).forEach(([code, rate]) => {
         const tr = document.createElement('tr');
         tr.innerHTML = `
           <td><strong>${code}</strong></td>
           <td>
-            <input type="number" value="${rate.amount}" 
-                   onchange="updateRate('${code}', 'amount', this.value)">
+            <input type="number" value="${rate.amount}" style="width: 80px;"
+                   onchange="updateRate('${code}', 'amount', parseInt(this.value))">
           </td>
           <td>£${(rate.amount / 100).toFixed(2)}</td>
           <td>
-            <input type="text" value="${rate.label}" 
+            <input type="text" value="${rate.label}" style="width: 120px;"
                    onchange="updateRate('${code}', 'label', this.value)">
           </td>
           <td>
@@ -709,449 +717,265 @@
       });
     }
     
-    function renderDurations() {
-      const tbody = document.getElementById('durationsBody');
-      tbody.innerHTML = '';
-      
-      config.durations.forEach((duration, index) => {
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-          <td>
-            <input type="number" value="${duration.minutes}" 
-                   onchange="updateDuration(${index}, 'minutes', this.value)">
-          </td>
-          <td>
-            <input type="text" value="${duration.label}" 
-                   onchange="updateDuration(${index}, 'label', this.value)">
-          </td>
-          <td>
-            <input type="number" value="${duration.multiplier}" step="0.25"
-                   onchange="updateDuration(${index}, 'multiplier', this.value)">
-          </td>
-          <td>
-            <button class="btn btn-danger btn-small" onclick="deleteDuration(${index})">×</button>
-          </td>
-        `;
-        tbody.appendChild(tr);
-      });
+    // Rate functions
+    function updateRate(code, field, value) {
+      config.rates[code][field] = value;
+      markUnsaved();
+      renderRates();
+      calculateTest();
     }
     
-    function renderDiscounts() {
-      const tbody = document.getElementById('discountsBody');
-      tbody.innerHTML = '';
+    function addRate() {
+      const code = document.getElementById('newRateCode').value.toUpperCase().trim();
+      const amount = parseInt(document.getElementById('newRateAmount').value);
+      const label = document.getElementById('newRateLabel').value.trim();
       
-      Object.entries(config.discounts).forEach(([code, discount]) => {
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-          <td><strong>${code}</strong></td>
-          <td>
-            <input type="number" value="${discount.percent}" 
-                   onchange="updateDiscount('${code}', 'percent', this.value)">
-          </td>
-          <td>
-            <input type="text" value="${discount.label}" 
-                   onchange="updateDiscount('${code}', 'label', this.value)">
-          </td>
-          <td>
-            <input type="number" value="${discount.minSessions || 0}" 
-                   onchange="updateDiscount('${code}', 'minSessions', this.value)">
-          </td>
-          <td>
-            <button class="btn btn-danger btn-small" onclick="deleteDiscount('${code}')">×</button>
-          </td>
-        `;
-        tbody.appendChild(tr);
-      });
+      if (!code || !amount || !label) {
+        showMessage('Please fill in all rate fields', 'error');
+        return;
+      }
+      
+      if (config.rates[code]) {
+        showMessage('Rate code already exists', 'error');
+        return;
+      }
+      
+      config.rates[code] = { amount, label };
+      markUnsaved();
+      renderRates();
+      
+      document.getElementById('newRateCode').value = '';
+      document.getElementById('newRateAmount').value = '';
+      document.getElementById('newRateLabel').value = '';
     }
     
-    function renderLocationRules() {
-      const container = document.getElementById('locationRulesContainer');
+    function deleteRate(code) {
+      if (!confirm(`Delete rate ${code}?`)) return;
+      delete config.rates[code];
+      markUnsaved();
+      renderRates();
+    }
+    
+    // Render locations
+    function renderLocations() {
+      const container = document.getElementById('locationsContainer');
       container.innerHTML = '';
       
-      Object.entries(config.locations).forEach(([locationId, location]) => {
+      Object.entries(config.locations || {}).forEach(([locId, location]) => {
         const section = document.createElement('div');
         section.className = 'location-section';
         
         let rulesHtml = '';
-        location.rules.forEach((rule, index) => {
-          const daysCheckboxes = dayNamesShort.map((day, dayIndex) => {
-            const checked = rule.days.includes(dayIndex) ? 'checked' : '';
-            return `
-              <label class="day-checkbox">
-                <input type="checkbox" ${checked} 
-                       onchange="toggleRuleDay('${locationId}', ${index}, ${dayIndex})">
-                ${day}
-              </label>
-            `;
-          }).join('');
-          
-          const rateOptions = Object.keys(config.rates).map(code => 
-            `<option value="${code}" ${rule.rate === code ? 'selected' : ''}>${code}</option>`
-          ).join('');
-          
-          rulesHtml += `
-            <tr>
-              <td>
-                <div class="day-checkboxes">${daysCheckboxes}</div>
-              </td>
-              <td>
-                <input type="number" value="${rule.startHour}" min="0" max="23" style="width: 60px;"
-                       onchange="updateRule('${locationId}', ${index}, 'startHour', this.value)">
-                :00
-              </td>
-              <td>
-                <input type="number" value="${rule.endHour}" min="0" max="24" style="width: 60px;"
-                       onchange="updateRule('${locationId}', ${index}, 'endHour', this.value)">
-                :00
-              </td>
-              <td>
-                <select onchange="updateRule('${locationId}', ${index}, 'rate', this.value)">
-                  ${rateOptions}
-                </select>
-              </td>
-              <td>
-                <button class="btn btn-danger btn-small" onclick="deleteRule('${locationId}', ${index})">×</button>
-              </td>
-            </tr>
-          `;
+        (location.rules || []).forEach((rule, ruleIdx) => {
+          rulesHtml += renderRule(locId, ruleIdx, rule);
         });
         
         section.innerHTML = `
-          <h4>📍 ${location.name} (Location ID: ${locationId})</h4>
-          <table>
-            <thead>
-              <tr>
-                <th>Days</th>
-                <th>From</th>
-                <th>Until</th>
-                <th>Rate</th>
-                <th></th>
-              </tr>
-            </thead>
-            <tbody>${rulesHtml}</tbody>
-          </table>
-          <button class="btn btn-primary btn-small" onclick="addRule('${locationId}')">+ Add Rule</button>
+          <div class="location-header">
+            📍 ${location.name} (ID: ${locId})
+          </div>
+          <div class="location-rules">
+            ${rulesHtml}
+            <div class="add-row">
+              <button class="btn btn-primary btn-small" onclick="addRule('${locId}')">+ Add Rule</button>
+            </div>
+          </div>
         `;
         
         container.appendChild(section);
       });
     }
     
-    function updateCalculatorSelects() {
-      // Duration select
-      const durationSelect = document.getElementById('calcDuration');
-      durationSelect.innerHTML = '';
-      config.durations.forEach((duration, index) => {
-        const option = document.createElement('option');
-        option.value = index;
-        option.textContent = duration.label;
-        durationSelect.appendChild(option);
-      });
+    // Render single rule
+    function renderRule(locId, ruleIdx, rule) {
+      const rateOptions = Object.keys(config.rates || {}).map(code => 
+        `<option value="${code}" ${rule.rate === code ? 'selected' : ''}>${code} - ${config.rates[code].label}</option>`
+      ).join('');
       
-      // Discount select
-      const discountSelect = document.getElementById('calcDiscount');
-      discountSelect.innerHTML = '<option value="">No discount</option>';
-      Object.entries(config.discounts).forEach(([code, discount]) => {
-        const option = document.createElement('option');
-        option.value = code;
-        option.textContent = `${discount.label} (${discount.percent}% off)`;
-        discountSelect.appendChild(option);
-      });
+      const daysHtml = DAY_NAMES.map((name, idx) => `
+        <label class="day-checkbox">
+          <input type="checkbox" ${rule.days.includes(idx) ? 'checked' : ''}
+                 onchange="toggleDay('${locId}', ${ruleIdx}, ${idx})">
+          ${name}
+        </label>
+      `).join('');
+      
+      const locationRooms = LOCATION_ROOMS[locId] || [];
+      const roomsHtml = locationRooms.map(room => {
+        const isSelected = rule.rooms && rule.rooms.includes(room.key);
+        return `
+          <label class="room-checkbox ${isSelected ? 'selected' : ''}">
+            <input type="checkbox" ${isSelected ? 'checked' : ''}
+                   onchange="toggleRoom('${locId}', ${ruleIdx}, '${room.key}')">
+            ${room.name}
+          </label>
+        `;
+      }).join('');
+      
+      const roomsNote = (!rule.rooms || rule.rooms.length === 0) 
+        ? '<em style="font-size: 11px; color: #888;">(Applies to all rooms)</em>' 
+        : '';
+      
+      return `
+        <div class="rule-row">
+          <div class="rule-grid">
+            <div class="rule-field wide">
+              <label>Days</label>
+              <div class="days-grid">${daysHtml}</div>
+            </div>
+            <div class="rule-field">
+              <label>From Hour</label>
+              <input type="number" min="0" max="23" value="${rule.startHour}"
+                     onchange="updateRule('${locId}', ${ruleIdx}, 'startHour', parseInt(this.value))">
+            </div>
+            <div class="rule-field">
+              <label>Until Hour</label>
+              <input type="number" min="0" max="24" value="${rule.endHour}"
+                     onchange="updateRule('${locId}', ${ruleIdx}, 'endHour', parseInt(this.value))">
+            </div>
+            <div class="rule-field">
+              <label>Rate</label>
+              <select onchange="updateRule('${locId}', ${ruleIdx}, 'rate', this.value)">
+                ${rateOptions}
+              </select>
+            </div>
+            <div class="rule-field wide">
+              <label>Rooms ${roomsNote}</label>
+              <div class="rooms-grid">${roomsHtml}</div>
+            </div>
+          </div>
+          <div class="rule-actions">
+            <button class="btn btn-danger btn-small" onclick="deleteRule('${locId}', ${ruleIdx})">Delete Rule</button>
+          </div>
+        </div>
+      `;
     }
     
-    // ================================
-    // RATE FUNCTIONS
-    // ================================
+    // Rule functions
+    function updateRule(locId, ruleIdx, field, value) {
+      config.locations[locId].rules[ruleIdx][field] = value;
+      markUnsaved();
+      calculateTest();
+    }
     
-    function updateRate(code, field, value) {
-      if (field === 'amount') {
-        config.rates[code].amount = parseInt(value) || 0;
+    function toggleDay(locId, ruleIdx, dayIdx) {
+      const rule = config.locations[locId].rules[ruleIdx];
+      const idx = rule.days.indexOf(dayIdx);
+      if (idx > -1) {
+        rule.days.splice(idx, 1);
       } else {
-        config.rates[code][field] = value;
+        rule.days.push(dayIdx);
+        rule.days.sort((a, b) => a - b);
       }
       markUnsaved();
-      renderRates();
-      calculatePrice();
+      calculateTest();
     }
     
-    function addRate() {
-      const code = document.getElementById('newRateCode').value.toUpperCase().trim();
-      const amount = parseInt(document.getElementById('newRateAmount').value) || 0;
-      const label = document.getElementById('newRateLabel').value.trim();
+    function toggleRoom(locId, ruleIdx, roomKey) {
+      const rule = config.locations[locId].rules[ruleIdx];
+      if (!rule.rooms) rule.rooms = [];
       
-      if (!code) {
-        alert('Please enter a rate code');
-        return;
-      }
-      
-      if (config.rates[code]) {
-        alert('Rate code already exists');
-        return;
-      }
-      
-      config.rates[code] = { amount, label: label || code };
-      
-      document.getElementById('newRateCode').value = '';
-      document.getElementById('newRateAmount').value = '';
-      document.getElementById('newRateLabel').value = '';
-      
-      markUnsaved();
-      renderAll();
-    }
-    
-    function deleteRate(code) {
-      // Check if rate is in use
-      let inUse = false;
-      Object.values(config.locations).forEach(location => {
-        location.rules.forEach(rule => {
-          if (rule.rate === code) inUse = true;
-        });
-      });
-      
-      if (inUse) {
-        alert(`Cannot delete rate ${code} - it is being used by location rules`);
-        return;
-      }
-      
-      if (confirm(`Delete rate ${code}?`)) {
-        delete config.rates[code];
-        markUnsaved();
-        renderAll();
-      }
-    }
-    
-    // ================================
-    // DURATION FUNCTIONS
-    // ================================
-    
-    function updateDuration(index, field, value) {
-      if (field === 'minutes') {
-        config.durations[index].minutes = parseInt(value) || 0;
-      } else if (field === 'multiplier') {
-        config.durations[index].multiplier = parseFloat(value) || 0;
+      const idx = rule.rooms.indexOf(roomKey);
+      if (idx > -1) {
+        rule.rooms.splice(idx, 1);
       } else {
-        config.durations[index][field] = value;
+        rule.rooms.push(roomKey);
       }
       markUnsaved();
-      updateCalculatorSelects();
-      calculatePrice();
+      renderLocations();
+      calculateTest();
     }
     
-    function addDuration() {
-      const minutes = parseInt(document.getElementById('newDurationMinutes').value) || 0;
-      const label = document.getElementById('newDurationLabel').value.trim();
-      const multiplier = parseFloat(document.getElementById('newDurationMultiplier').value) || 1;
-      
-      if (!minutes) {
-        alert('Please enter duration in minutes');
-        return;
-      }
-      
-      config.durations.push({ minutes, label: label || `${minutes} mins`, multiplier });
-      
-      // Sort by minutes
-      config.durations.sort((a, b) => a.minutes - b.minutes);
-      
-      document.getElementById('newDurationMinutes').value = '';
-      document.getElementById('newDurationLabel').value = '';
-      document.getElementById('newDurationMultiplier').value = '';
-      
-      markUnsaved();
-      renderAll();
-    }
-    
-    function deleteDuration(index) {
-      if (confirm('Delete this duration option?')) {
-        config.durations.splice(index, 1);
-        markUnsaved();
-        renderAll();
-      }
-    }
-    
-    // ================================
-    // DISCOUNT FUNCTIONS
-    // ================================
-    
-    function updateDiscount(code, field, value) {
-      if (field === 'percent' || field === 'minSessions') {
-        config.discounts[code][field] = parseInt(value) || 0;
-      } else {
-        config.discounts[code][field] = value;
-      }
-      markUnsaved();
-      updateCalculatorSelects();
-      calculatePrice();
-    }
-    
-    function addDiscount() {
-      const code = document.getElementById('newDiscountCode').value.toLowerCase().trim().replace(/\s+/g, '_');
-      const percent = parseInt(document.getElementById('newDiscountPercent').value) || 0;
-      const label = document.getElementById('newDiscountLabel').value.trim();
-      const minSessions = parseInt(document.getElementById('newDiscountMin').value) || 0;
-      
-      if (!code) {
-        alert('Please enter a discount code');
-        return;
-      }
-      
-      if (config.discounts[code]) {
-        alert('Discount code already exists');
-        return;
-      }
-      
-      config.discounts[code] = { percent, label: label || code, minSessions };
-      
-      document.getElementById('newDiscountCode').value = '';
-      document.getElementById('newDiscountPercent').value = '';
-      document.getElementById('newDiscountLabel').value = '';
-      document.getElementById('newDiscountMin').value = '';
-      
-      markUnsaved();
-      renderAll();
-    }
-    
-    function deleteDiscount(code) {
-      if (confirm(`Delete discount ${code}?`)) {
-        delete config.discounts[code];
-        markUnsaved();
-        renderAll();
-      }
-    }
-    
-    // ================================
-    // LOCATION RULE FUNCTIONS
-    // ================================
-    
-    function updateRule(locationId, ruleIndex, field, value) {
-      if (field === 'startHour' || field === 'endHour') {
-        config.locations[locationId].rules[ruleIndex][field] = parseInt(value) || 0;
-      } else {
-        config.locations[locationId].rules[ruleIndex][field] = value;
-      }
-      markUnsaved();
-      calculatePrice();
-    }
-    
-    function toggleRuleDay(locationId, ruleIndex, dayIndex) {
-      const days = config.locations[locationId].rules[ruleIndex].days;
-      const idx = days.indexOf(dayIndex);
-      
-      if (idx >= 0) {
-        days.splice(idx, 1);
-      } else {
-        days.push(dayIndex);
-        days.sort();
-      }
-      
-      markUnsaved();
-      calculatePrice();
-    }
-    
-    function addRule(locationId) {
-      const firstRate = Object.keys(config.rates)[0] || 'A';
-      config.locations[locationId].rules.push({
+    function addRule(locId) {
+      const locationRooms = LOCATION_ROOMS[locId] || [];
+      config.locations[locId].rules.push({
         days: [1, 2, 3, 4, 5],
         startHour: 8,
-        endHour: 17,
-        rate: firstRate
+        endHour: 21,
+        rate: Object.keys(config.rates)[0] || 'A',
+        rooms: []
       });
       markUnsaved();
-      renderLocationRules();
+      renderLocations();
     }
     
-    function deleteRule(locationId, ruleIndex) {
-      if (confirm('Delete this rule?')) {
-        config.locations[locationId].rules.splice(ruleIndex, 1);
-        markUnsaved();
-        renderLocationRules();
-        calculatePrice();
-      }
+    function deleteRule(locId, ruleIdx) {
+      if (!confirm('Delete this rule?')) return;
+      config.locations[locId].rules.splice(ruleIdx, 1);
+      markUnsaved();
+      renderLocations();
     }
     
-    // ================================
-    // PRICE CALCULATOR
-    // ================================
-    
-    function calculatePrice() {
-      const locationId = document.getElementById('calcLocation').value;
+    // Price calculator
+    function calculateTest() {
+      const locId = document.getElementById('calcLocation').value;
+      const room = document.getElementById('calcRoom').value;
       const day = parseInt(document.getElementById('calcDay').value);
-      const hour = parseInt(document.getElementById('calcTime').value);
-      const durationIndex = parseInt(document.getElementById('calcDuration').value);
-      const discountCode = document.getElementById('calcDiscount').value;
+      const hour = parseInt(document.getElementById('calcHour').value);
+      
+      const result = calculatePrice(locId, room, day, hour);
+      
+      document.getElementById('calcPrice').textContent = `£${(result.amount / 100).toFixed(2)}`;
+      document.getElementById('calcBreakdown').textContent = result.breakdown;
+    }
+    
+    function calculatePrice(locationId, roomKey, dayOfWeek, hour) {
+      if (!config) {
+        return { amount: 0, breakdown: 'Config not loaded' };
+      }
       
       const location = config.locations[locationId];
-      const duration = config.durations[durationIndex];
-      
-      if (!location || !duration) {
-        document.getElementById('calcPrice').textContent = '£0.00';
-        document.getElementById('calcBreakdown').textContent = 'Invalid selection';
-        return;
+      if (!location) {
+        return { amount: 0, breakdown: 'Location not found' };
       }
       
-      // Find matching rule
+      // Find matching rule (first match wins)
       let matchedRule = null;
       for (const rule of location.rules) {
-        if (rule.days.includes(day) && hour >= rule.startHour && hour < rule.endHour) {
-          matchedRule = rule;
-          break;
-        }
+        // Check day
+        if (!rule.days.includes(dayOfWeek)) continue;
+        
+        // Check time
+        if (hour < rule.startHour || hour >= rule.endHour) continue;
+        
+        // Check room (empty rooms array means all rooms)
+        if (rule.rooms && rule.rooms.length > 0 && !rule.rooms.includes(roomKey)) continue;
+        
+        matchedRule = rule;
+        break;
       }
       
       if (!matchedRule) {
-        document.getElementById('calcPrice').textContent = '£0.00';
-        document.getElementById('calcBreakdown').textContent = 'No pricing rule matches this time slot';
-        return;
+        return { amount: 0, breakdown: 'No matching rule found' };
       }
       
       const rate = config.rates[matchedRule.rate];
       if (!rate) {
-        document.getElementById('calcPrice').textContent = '£0.00';
-        document.getElementById('calcBreakdown').textContent = `Rate ${matchedRule.rate} not found`;
-        return;
+        return { amount: 0, breakdown: `Rate ${matchedRule.rate} not found` };
       }
       
-      // Calculate base price
-      let price = rate.amount * duration.multiplier;
-      let breakdown = `Rate ${matchedRule.rate} (£${(rate.amount/100).toFixed(2)}) × ${duration.multiplier}`;
+      const roomsDesc = matchedRule.rooms && matchedRule.rooms.length > 0 
+        ? `(${matchedRule.rooms.length} rooms)` 
+        : '(all rooms)';
       
-      // Apply discount
-      if (discountCode && config.discounts[discountCode]) {
-        const discount = config.discounts[discountCode];
-        const discountAmount = price * (discount.percent / 100);
-        price -= discountAmount;
-        breakdown += ` - ${discount.percent}% discount`;
-      }
+      return {
+        amount: rate.amount,
+        breakdown: `${rate.label} rate (${matchedRule.rate}) ${roomsDesc}`
+      };
+    }
+    
+    // Update calc room dropdown based on location
+    document.getElementById('calcLocation').addEventListener('change', function() {
+      const locId = this.value;
+      const roomSelect = document.getElementById('calcRoom');
+      const rooms = LOCATION_ROOMS[locId] || [];
       
-      document.getElementById('calcPrice').textContent = `£${(price/100).toFixed(2)}`;
-      document.getElementById('calcBreakdown').textContent = breakdown;
-    }
-    
-    // ================================
-    // MODAL & RESET FUNCTIONS
-    // ================================
-    
-    function confirmReset() {
-      document.getElementById('modalTitle').textContent = 'Reset to Defaults?';
-      document.getElementById('modalMessage').textContent = 
-        'This will replace all current settings with the default configuration. This cannot be undone.';
-      modalAction = 'reset';
-      document.getElementById('confirmModal').classList.add('active');
-    }
-    
-    function closeModal() {
-      document.getElementById('confirmModal').classList.remove('active');
-      modalAction = null;
-    }
-    
-    function executeModalAction() {
-      if (modalAction === 'reset') {
-        config = JSON.parse(JSON.stringify(defaultConfig));
-        markUnsaved();
-        renderAll();
-        alert('Configuration reset to defaults. Click Save to persist changes.');
-      }
-      closeModal();
-    }
+      roomSelect.innerHTML = rooms.map(r => 
+        `<option value="${r.key}">${r.name}</option>`
+      ).join('');
+      
+      calculateTest();
+    });
   </script>
 </body>
 </html>
