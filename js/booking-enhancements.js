@@ -9,9 +9,9 @@
  * 3. Changes button text based on price
  * 4. FIXED: Basket payment now works with Stripe and Credits
  * 5. FIXED: Comments/Car Registration now captured in basket
- * 6. NEW: Greys out slots that are in the basket
+ * 6. NEW: Greys out slots that are in the basket (v2.3 - icon fix)
  * 
- * Version: 2.2 - January 2026
+ * Version: 2.3 - January 2026
  * 
  * Installation: Add this line AFTER your main scripts in index.html:
  * <script src="js/booking-enhancements.js"></script>
@@ -19,7 +19,7 @@
 
 (function() {
   'use strict';
-  console.log('🛒 booking-enhancements.js v2.2 loading...');
+  console.log('🛒 booking-enhancements.js v2.3 loading...');
 
   // ============================================
   // BASKET STATE
@@ -261,27 +261,29 @@
       .basket-toast.show { opacity: 1; transform: translateY(0); }
 
       /* ==========================================
-         BASKET SLOT HIGHLIGHTING - NEW in v2.2
+         BASKET SLOT HIGHLIGHTING - v2.3 FIXED
          ========================================== */
       .in-basket {
-        background: #b0b0b0 !important;
-        opacity: 0.7;
-        pointer-events: none;
-        position: relative;
+        background: #9e9e9e !important;
+        pointer-events: none !important;
         cursor: not-allowed !important;
+        position: relative !important;
       }
-      .in-basket::after {
-        content: '🛒';
+      
+      /* The icon overlay - injected as a real element */
+      .basket-slot-icon {
         position: absolute;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        font-size: 18px;
-        z-index: 5;
-      }
-      /* Ensure the icon is visible on darker backgrounds */
-      .in-basket * {
-        opacity: 0.5;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 20px;
+        background: rgba(158, 158, 158, 0.9);
+        z-index: 10;
+        pointer-events: none;
       }
     `;
     document.head.appendChild(styles);
@@ -344,51 +346,110 @@
   }
 
   // ============================================
-  // BASKET SLOT HIGHLIGHTING - NEW in v2.2
+  // BASKET SLOT HIGHLIGHTING - v2.3 FIXED
   // ============================================
+  
+  /**
+   * Convert room name to cell ID format
+   * "Room 1" → "1"
+   * "Room_1" → "1" 
+   * "Car Park" or "Car_Park" → "car-park"
+   * "Online" → "online"
+   */
+  function getRoomIdForCell(roomName) {
+    if (!roomName) return null;
+    
+    const normalized = roomName.trim();
+    
+    if (normalized === 'Car Park' || normalized === 'Car_Park') {
+      return 'car-park';
+    }
+    if (normalized === 'Online') {
+      return 'online';
+    }
+    
+    // Extract number from "Room 1", "Room_1", "Room 6", etc.
+    const match = normalized.match(/(\d+)/);
+    if (match) {
+      return match[1];
+    }
+    
+    // Fallback
+    return normalized.toLowerCase().replace(/[\s_]/g, '-');
+  }
+  
   window.updateBasketSlotHighlights = function() {
-    // Remove existing highlights
+    console.log('🛒 updateBasketSlotHighlights called');
+    
+    // Remove existing highlights and icons
     document.querySelectorAll('.in-basket').forEach(cell => {
       cell.classList.remove('in-basket');
+    });
+    document.querySelectorAll('.basket-slot-icon').forEach(icon => {
+      icon.remove();
     });
     
     // Get current basket items
     const basket = window.bookingBasket || [];
-    if (basket.length === 0) return;
+    console.log('🛒 Basket contents:', basket.length, 'items', basket);
+    
+    if (basket.length === 0) {
+      console.log('🛒 Basket empty, no highlights needed');
+      return;
+    }
     
     // Get currently selected date
     const dateSelector = document.getElementById('dateSelector');
     const selectedDate = dateSelector ? dateSelector.value : null;
+    console.log('🛒 Selected date:', selectedDate);
     
     // Highlight each basket item's slot
-    basket.forEach(item => {
+    let highlightedCount = 0;
+    
+    basket.forEach((item, index) => {
+      console.log(`🛒 Item ${index}:`, item.room, item.date, item.time);
+      
       // Only highlight if on the same date
-      if (item.date !== selectedDate) return;
-      
-      // Build cell ID - match the format used in createDayGrid
-      let roomNumber;
-      const roomName = item.room || item.roomName;
-      
-      if (roomName === 'Car Park' || roomName === 'Car_Park') {
-        roomNumber = 'car-park';
-      } else if (roomName === 'Online') {
-        roomNumber = 'online';
-      } else {
-        // Extract number from "Room 1", "Room_1", etc.
-        const match = roomName.match(/(\d+)/);
-        roomNumber = match ? match[1] : roomName;
+      if (item.date !== selectedDate) {
+        console.log(`🛒 Item ${index}: date mismatch (${item.date} vs ${selectedDate})`);
+        return;
       }
       
+      // Get room ID for cell lookup
+      const roomName = item.room || item.roomName;
+      const roomId = getRoomIdForCell(roomName);
       const time = item.time || item.startTime || item.start_time;
-      const cellId = `cell-${roomNumber}-${time}`;
+      
+      const cellId = `cell-${roomId}-${time}`;
+      console.log(`🛒 Looking for cell: ${cellId}`);
+      
       const cell = document.getElementById(cellId);
       
       if (cell) {
+        console.log(`🛒 ✅ Found cell ${cellId}, adding highlight`);
         cell.classList.add('in-basket');
+        
+        // Add icon overlay as a real element
+        if (!cell.querySelector('.basket-slot-icon')) {
+          const icon = document.createElement('div');
+          icon.className = 'basket-slot-icon';
+          icon.textContent = '🛒';
+          cell.style.position = 'relative'; // Ensure relative positioning
+          cell.appendChild(icon);
+        }
+        
+        highlightedCount++;
+      } else {
+        console.log(`🛒 ❌ Cell ${cellId} NOT FOUND`);
+        
+        // Debug: try to find what cells exist
+        const allCells = document.querySelectorAll('[id^="cell-"]');
+        const sampleCells = Array.from(allCells).slice(0, 5).map(c => c.id);
+        console.log('🛒 Sample existing cells:', sampleCells);
       }
     });
     
-    console.log('🛒 Basket slot highlights updated:', basket.length, 'items');
+    console.log(`🛒 Highlighted ${highlightedCount} cells`);
   };
 
   // ============================================
@@ -407,6 +468,8 @@
   };
 
   window.addToBasket = function(booking) {
+    console.log('🛒 addToBasket called with:', booking);
+    
     // Check for duplicates
     const exists = window.bookingBasket.some(b => 
       b.room === booking.room && 
@@ -423,12 +486,15 @@
     updateBasketUI();
     showBasketToast('✅ Added to basket');
     
-    // Update slot highlighting
-    updateBasketSlotHighlights();
-    
     // Close modal if open
     const modal = document.getElementById('newBookingModal');
     if (modal) modal.classList.remove('active');
+    
+    // Update slot highlighting AFTER modal closes (small delay)
+    setTimeout(function() {
+      console.log('🛒 Updating highlights after add');
+      updateBasketSlotHighlights();
+    }, 100);
   };
 
   window.removeFromBasket = function(index) {
@@ -437,7 +503,7 @@
     showBasketToast('🗑️ Removed from basket');
     
     // Update slot highlighting
-    updateBasketSlotHighlights();
+    setTimeout(updateBasketSlotHighlights, 50);
   };
 
   window.clearBasket = function() {
@@ -448,7 +514,7 @@
       showBasketToast('🗑️ Basket cleared');
       
       // Update slot highlighting
-      updateBasketSlotHighlights();
+      setTimeout(updateBasketSlotHighlights, 50);
     }
   };
 
@@ -855,7 +921,8 @@
         });
         
         // Update basket highlights after populating calendar
-        updateBasketSlotHighlights();
+        console.log('🛒 populateDayView complete, updating highlights');
+        setTimeout(updateBasketSlotHighlights, 50);
       };
     }
   }
@@ -868,17 +935,26 @@
     const dateSelector = document.getElementById('dateSelector');
     if (dateSelector) {
       dateSelector.addEventListener('change', function() {
+        console.log('🛒 Date changed to:', this.value);
         // Delay to allow calendar to re-render
-        setTimeout(updateBasketSlotHighlights, 100);
+        setTimeout(updateBasketSlotHighlights, 200);
       });
     }
     
-    // Also watch for navigation button clicks (Previous Day, Next Day, Today)
+    // Also watch for navigation button clicks
     document.addEventListener('click', function(e) {
       const btn = e.target.closest('button');
-      if (btn && (btn.textContent.includes('Previous') || btn.textContent.includes('Next') || btn.textContent.includes('Today'))) {
+      if (!btn) return;
+      
+      const text = btn.textContent || '';
+      const id = btn.id || '';
+      
+      // Check if it's a navigation button
+      if (text.includes('Previous') || text.includes('Next') || text.includes('Today') ||
+          id.includes('prev') || id.includes('next') || id.includes('today')) {
+        console.log('🛒 Navigation button clicked');
         // Delay to allow calendar to re-render
-        setTimeout(updateBasketSlotHighlights, 200);
+        setTimeout(updateBasketSlotHighlights, 300);
       }
     });
   }
@@ -894,7 +970,7 @@
     // Hook into date changes after a short delay to ensure DOM is ready
     setTimeout(hookDateChanges, 500);
     
-    console.log('✅ booking-enhancements.js v2.2 loaded - £0 fix + basket + comments + slot highlighting!');
+    console.log('✅ booking-enhancements.js v2.3 loaded - £0 fix + basket + comments + slot highlighting (fixed)!');
   }
 
   // Run when DOM is ready
