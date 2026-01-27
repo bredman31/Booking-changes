@@ -101,10 +101,10 @@
         <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 15px 20px; border-radius: 8px; margin-bottom: 15px;">
           <div style="display: flex; justify-content: space-between; align-items: center;">
             <div>
-              <div style="font-size: 12px; opacity: 0.9; margin-bottom: 4px;">ðŸ’³ Your Credit Balance</div>
-              <div id="creditBalanceAmount" style="font-size: 24px; font-weight: bold;">Â£0.00</div>
+              <div style="font-size: 12px; opacity: 0.9; margin-bottom: 4px;">💳 Your Credit Balance</div>
+              <div id="creditBalanceAmount" style="font-size: 24px; font-weight: bold;">£0.00</div>
             </div>
-            <div style="font-size: 32px;">ðŸ’°</div>
+            <div style="font-size: 32px;">💰</div>
           </div>
           <div id="creditBalanceNote" style="font-size: 11px; opacity: 0.8; margin-top: 8px; display: none;">
             Credit from cancelled paid bookings
@@ -209,18 +209,18 @@
         <div class="controls">
           <div id="dayControls">
             <div class="day-navigation">
-              <button onclick="changeDay(-1)">â† Previous Day</button>
+              <button onclick="changeDay(-1)">← Previous Day</button>
               <input type="date" id="dateSelector" />
-              <button onclick="changeDay(1)">Next Day â†’</button>
+              <button onclick="changeDay(1)">Next Day →</button>
               <button onclick="goToToday()" style="margin-left: 10px;">Today</button>
             </div>
           </div>
           
           <div id="weekControls" class="hidden">
             <div class="week-navigation">
-              <button onclick="changeWeek(-1)">â† Previous Week</button>
+              <button onclick="changeWeek(-1)">← Previous Week</button>
               <span id="weekDisplay"></span>
-              <button onclick="changeWeek(1)">Next Week â†’</button>
+              <button onclick="changeWeek(1)">Next Week →</button>
             </div>
           </div>
           
@@ -242,7 +242,7 @@
   <div class="modal-overlay" id="newBookingModal">
     <div class="booking-modal">
       <div class="modal-header" style="position: relative;">
-        <h2>ðŸ“… Book This Slot</h2>
+        <h2>📅 Book This Slot</h2>
         <button class="close-btn" onclick="closeNewBookingModal()">&times;</button>
       </div>
       <div class="modal-body">
@@ -285,7 +285,7 @@
 		
         <div class="price-display" id="priceDisplay">
           <div class="price-label">Room Hire Cost</div>
-          <div class="price-amount" id="priceAmount">Â£0.00</div>
+          <div class="price-amount" id="priceAmount">£0.00</div>
           <div class="price-breakdown" id="priceBreakdown">Calculating...</div>
         </div>
         
@@ -307,7 +307,7 @@
   <div id="paymentChoiceModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 2000; justify-content: center; align-items: center;">
     <div class="booking-modal" style="max-width: 450px; animation: slideIn 0.3s ease;">
       <div class="modal-header" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
-        <h2>ðŸ’³ Payment Options</h2>
+        <h2>💳 Payment Options</h2>
         <button class="close-btn" onclick="closePaymentChoiceModal()">&times;</button>
       </div>
       <div class="modal-body" style="padding: 25px;">
@@ -328,7 +328,7 @@
         <!-- Option B: Pay with card (shown always) -->
         <div id="paymentOptionCard" style="margin-bottom: 15px;">
           <button onclick="processPaymentWithCard()" style="width: 100%; padding: 15px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: 600; cursor: pointer;">
-            ðŸ’³ Pay with Card
+            💳 Pay with Card
           </button>
           <p id="paymentOptionCardNote" style="text-align: center; font-size: 12px; color: #666; margin-top: 8px;">
             Pay the full amount by card
@@ -338,7 +338,7 @@
         <!-- Option C: Partial credit + card (shown when 0 < credit < total) -->
         <div id="paymentOptionPartial" style="display: none; margin-bottom: 15px;">
           <button onclick="processPaymentWithPartialCredit()" style="width: 100%; padding: 15px; background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%); color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: 600; cursor: pointer;">
-            ðŸ’³ Use Credit + Pay Remainder
+            💳 Use Credit + Pay Remainder
           </button>
           <p id="paymentOptionPartialNote" style="text-align: center; font-size: 12px; color: #666; margin-top: 8px;">
             <!-- Populated dynamically -->
@@ -563,19 +563,19 @@ function restoreSessionState() {
   <script>
     // FIXED: Token validation function WITH DEBUGGING
     async function validateAccessToken(token) {
-      console.log('ðŸ” validateAccessToken called with token:', token);
+      console.log('🔍 validateAccessToken called with token:', token);
       
       try {
-        console.log('ðŸ“¡ Checking Firebase for token:', token);
+        console.log('📡 Checking Firebase for token:', token);
         const snap = await database.ref('therapist_tokens/' + token).once('value');
         const t = snap.val();
         
-        console.log('ðŸ“¦ Firebase returned:', t);
+        console.log('📦 Firebase returned:', t);
         
         if (t && t.active) {
           console.log('âœ… Token is valid and active');
-          console.log('ðŸ‘¤ Counsellor name:', t.name);
-          console.log('ðŸ†” Client ID:', t.clientId);
+          console.log('👤 Counsellor name:', t.name);
+          console.log('🆔 Client ID:', t.clientId);
           
           sessionStorage.setItem('accessToken', token);
           sessionStorage.setItem('counsellorName', t.name || '');
@@ -584,7 +584,7 @@ function restoreSessionState() {
           window.henleyClientId = t.henleyClientId || null;
           selectedCounsellor = t.name || '';
           
-          console.log('ðŸ’¾ Stored in sessionStorage:');
+          console.log('💾 Stored in sessionStorage:');
           console.log('  - accessToken:', sessionStorage.getItem('accessToken'));
           console.log('  - counsellorName:', sessionStorage.getItem('counsellorName'));
           console.log('  - selectedCounsellor global:', selectedCounsellor);
@@ -592,13 +592,13 @@ function restoreSessionState() {
           
           return true;
         } else {
-          console.log('Ã¢ÂÅ’ Token invalid or inactive');
+          console.log('⚠️ Token invalid or inactive');
           console.log('  - Token data exists?', !!t);
           console.log('  - Token active?', t?.active);
         }
         return false;
       } catch (e) {
-        console.error('ðŸš¨ Token validation error:', e);
+        console.error('🚨 Token validation error:', e);
         console.error('  - Error message:', e.message);
         console.error('  - Stack:', e.stack);
         return false;
@@ -612,7 +612,7 @@ function restoreSessionState() {
   <script>
     // FIXED: Process valid session function WITH DEBUGGING
     function processValidSession(params) {
-      console.log('ðŸŽ¯ processValidSession called with params:', Object.fromEntries(params));
+      console.log('🎯 processValidSession called with params:', Object.fromEntries(params));
       
       const view = params.get('view');
       const date = params.get('date');
@@ -621,7 +621,7 @@ function restoreSessionState() {
       const time = params.get('time');
       const modify = params.get('modify');
 
-      console.log('ðŸ“‹ Extracted params:');
+      console.log('📋 Extracted params:');
       console.log('  - view:', view);
       console.log('  - date:', date);
       console.log('  - modify:', modify);
@@ -653,7 +653,7 @@ function restoreSessionState() {
         console.log('  - Set booking to modify:', window.bookingToModify);
       }
 
-      console.log('ðŸš€ Calling initializeWithFullAccess...');
+      console.log('🚀 Calling initializeWithFullAccess...');
       // Initialize with full access when token is valid
       initializeWithFullAccess();
     }
@@ -1243,7 +1243,7 @@ function handlePaymentReturn() {
     
   } else if (paymentStatus === 'cancelled') {
     // Show cancelled toast
-    showPaymentToast('Ã¢ÂÅ’ Payment cancelled. No booking was created.', 'warning');
+    showPaymentToast('⚠️ Payment cancelled. No booking was created.', 'warning');
     
     // Clean up URL
     const token = params.get('token');
@@ -1262,7 +1262,7 @@ function showPaymentToast(message, type) {
   toast.className = `payment-toast ${type}`;
   toast.innerHTML = `
     <span>${message}</span>
-    <button onclick="this.parentElement.remove()" style="background:none;border:none;color:inherit;cursor:pointer;font-size:20px;margin-left:15px;line-height:1;">Ãƒâ€”</button>
+    <button onclick="this.parentElement.remove()" style="background:none;border:none;color:inherit;cursor:pointer;font-size:20px;margin-left:15px;line-height:1;">×</button>
   `;
   document.body.appendChild(toast);
   
@@ -1287,22 +1287,22 @@ function showPaymentToast(message, type) {
     async function loadCreditBalance() {
       const counsellorId = window.clientId;
       if (!counsellorId) {
-        console.log('ðŸ’³ No clientId, skipping credit load');
+        console.log('💳 No clientId, skipping credit load');
         return 0;
       }
       
       try {
-        console.log('ðŸ’³ Loading credit balance for counsellor:', counsellorId);
+        console.log('💳 Loading credit balance for counsellor:', counsellorId);
         const snapshot = await database.ref('credits/' + counsellorId + '/balance').once('value');
         const balance = snapshot.val() || 0;
         
         window.counsellorCreditBalance = balance;
-        console.log('ðŸ’³ Credit balance loaded:', balance, 'pence (Â£' + (balance/100).toFixed(2) + ')');
+        console.log('💳 Credit balance loaded:', balance, 'pence (£' + (balance/100).toFixed(2) + ')');
         
         updateCreditBalanceDisplay(balance);
         return balance;
       } catch (error) {
-        console.error('ðŸ’³ Error loading credit balance:', error);
+        console.error('💳 Error loading credit balance:', error);
         window.counsellorCreditBalance = 0;
         return 0;
       }
@@ -1323,7 +1323,7 @@ function showPaymentToast(message, type) {
       
       if (hasToken) {
         section.style.display = 'block';
-        amountEl.textContent = 'Â£' + (balanceInPence / 100).toFixed(2);
+        amountEl.textContent = '£' + (balanceInPence / 100).toFixed(2);
         
         // Show note if they have credit
         if (noteEl) {
@@ -1355,7 +1355,7 @@ function showPaymentToast(message, type) {
         const balance = snapshot.val() || 0;
         window.counsellorCreditBalance = balance;
         updateCreditBalanceDisplay(balance);
-        console.log('ðŸ’³ Credit balance updated (real-time):', balance);
+        console.log('💳 Credit balance updated (real-time):', balance);
       });
     }
   </script>
@@ -1399,18 +1399,18 @@ function showPaymentToast(message, type) {
       let summaryHtml = '';
       if (isBasket && paymentDetails.items) {
         summaryHtml = `
-          <div style="font-weight: 600; margin-bottom: 10px;">ðŸ“¦ Basket Summary (${itemCount} booking${itemCount > 1 ? 's' : ''})</div>
+          <div style="font-weight: 600; margin-bottom: 10px;">📦 Basket Summary (${itemCount} booking${itemCount > 1 ? 's' : ''})</div>
           <div style="max-height: 150px; overflow-y: auto; margin-bottom: 10px;">
             ${paymentDetails.items.map(item => `
               <div style="font-size: 13px; padding: 5px 0; border-bottom: 1px solid #eee;">
-                ${item.room} - ${item.formattedDate} at ${item.time} - Â£${(item.price / 100).toFixed(2)}
+                ${item.room} - ${item.formattedDate} at ${item.time} - £${(item.price / 100).toFixed(2)}
               </div>
             `).join('')}
           </div>
         `;
       } else {
         summaryHtml = `
-          <div style="font-weight: 600; margin-bottom: 10px;">ðŸ“… Booking Summary</div>
+          <div style="font-weight: 600; margin-bottom: 10px;">📅 Booking Summary</div>
           <div style="font-size: 14px;">
             <div>${paymentDetails.room}</div>
             <div>${paymentDetails.formattedDate} at ${paymentDetails.time}</div>
@@ -1422,12 +1422,12 @@ function showPaymentToast(message, type) {
         <div style="border-top: 2px solid #ddd; margin-top: 15px; padding-top: 15px;">
           <div style="display: flex; justify-content: space-between; font-size: 16px;">
             <span>Total:</span>
-            <span style="font-weight: bold;">Â£${(total / 100).toFixed(2)}</span>
+            <span style="font-weight: bold;">£${(total / 100).toFixed(2)}</span>
           </div>
           ${credit > 0 ? `
           <div style="display: flex; justify-content: space-between; font-size: 14px; color: #4caf50; margin-top: 5px;">
             <span>Your Credit:</span>
-            <span>Â£${(credit / 100).toFixed(2)}</span>
+            <span>£${(credit / 100).toFixed(2)}</span>
           </div>
           ` : ''}
         </div>
@@ -1449,8 +1449,8 @@ function showPaymentToast(message, type) {
         partialOption.style.display = 'block';
         
         const remainder = total - credit;
-        cardNote.textContent = 'Pay the full Â£' + (total / 100).toFixed(2) + ' by card';
-        partialNote.textContent = 'Use Â£' + (credit / 100).toFixed(2) + ' credit, pay Â£' + (remainder / 100).toFixed(2) + ' by card';
+        cardNote.textContent = 'Pay the full £' + (total / 100).toFixed(2) + ' by card';
+        partialNote.textContent = 'Use £' + (credit / 100).toFixed(2) + ' credit, pay £' + (remainder / 100).toFixed(2) + ' by card';
       } else {
         // No credit
         creditOption.style.display = 'none';
@@ -1561,7 +1561,7 @@ function showPaymentToast(message, type) {
         console.error('Credit payment error:', error);
         statusEl.style.background = '#f8d7da';
         statusEl.style.color = '#721c24';
-        statusEl.textContent = 'Ã¢ÂÅ’ Error: ' + error.message;
+        statusEl.textContent = '⚠️ Error: ' + error.message;
       }
     }
     
@@ -1591,7 +1591,7 @@ function showPaymentToast(message, type) {
         console.error('Card payment error:', error);
         statusEl.style.background = '#f8d7da';
         statusEl.style.color = '#721c24';
-        statusEl.textContent = 'Ã¢ÂÅ’ Error: ' + error.message;
+        statusEl.textContent = '⚠️ Error: ' + error.message;
       }
     }
     
@@ -1615,7 +1615,7 @@ function showPaymentToast(message, type) {
         console.error('Mixed payment error:', error);
         statusEl.style.background = '#f8d7da';
         statusEl.style.color = '#721c24';
-        statusEl.textContent = 'Ã¢ÂÅ’ Error: ' + error.message;
+        statusEl.textContent = '⚠️ Error: ' + error.message;
       }
     }
     
@@ -1662,7 +1662,7 @@ function showPaymentToast(message, type) {
             comments: item.comments || null
           };
           
-          console.log(`ðŸ’³ Credit payment ${i + 1}/${items.length}:`, payload);
+          console.log(`💳 Credit payment ${i + 1}/${items.length}:`, payload);
           
           const response = await fetch(webhookUrl, {
             method: 'POST',
@@ -1727,7 +1727,7 @@ function showPaymentToast(message, type) {
         created_at: new Date().toISOString()
       };
       
-      console.log('ðŸ“¦ Saving pending basket to Firebase:', pendingBasket);
+      console.log('📦 Saving pending basket to Firebase:', pendingBasket);
       
       const firebaseUrl = `https://cherry-tree-bookings-default-rtdb.europe-west1.firebasedatabase.app/pending_baskets/${basketRef}.json`;
       const saveResponse = await fetch(firebaseUrl, {
@@ -1748,7 +1748,7 @@ function showPaymentToast(message, type) {
         ? `${itemDescriptions} +${items.length - 3} more`
         : itemDescriptions;
       if (totalCreditUsed > 0) {
-        description += ` [Credit: Â£${(totalCreditUsed/100).toFixed(2)}]`;
+        description += ` [Credit: £${(totalCreditUsed/100).toFixed(2)}]`;
       }
       
       // Create Stripe checkout with basket reference only
@@ -1764,7 +1764,7 @@ function showPaymentToast(message, type) {
         cancel_url: STRIPE_CONFIG.cancelUrl
       };
       
-      console.log('ðŸ’³ Creating Stripe checkout:', checkoutPayload);
+      console.log('💳 Creating Stripe checkout:', checkoutPayload);
       
       const response = await fetch(STRIPE_CONFIG.createCheckoutWebhook, {
         method: 'POST',
@@ -1827,7 +1827,7 @@ function showPaymentToast(message, type) {
         }
       }
       
-      console.log('ðŸ“¦ Mixed payment split:', {
+      console.log('📦 Mixed payment split:', {
         creditItems: creditItems.length,
         stripeItems: stripeItems.length,
         originalCredit: window.counsellorCreditBalance
@@ -1866,7 +1866,7 @@ function showPaymentToast(message, type) {
               comments: item.comments || null
             };
             
-            console.log(`ðŸ’³ Credit payment ${i + 1}/${creditItems.length}:`, payload);
+            console.log(`💳 Credit payment ${i + 1}/${creditItems.length}:`, payload);
             
             const response = await fetch(creditWebhookUrl, {
               method: 'POST',
@@ -2336,7 +2336,7 @@ if (!requestedRoomId) {
         return { amount: 0, breakdown: 'Location not found', rate: null };
       }
       
-      // Normalize room name for matching (e.g., "Car Park" â†’ "Car_Park")
+      // Normalize room name for matching (e.g., "Car Park" → "Car_Park")
       const roomKey = room ? room.replace(' ', '_') : null;
       
       // Find matching rule - check rooms array if present
@@ -2449,12 +2449,12 @@ if (!requestedRoomId) {
       
       if (priceResult.amount > 0) {
         priceDisplay.classList.remove('no-rate');
-        priceAmount.textContent = `Â£${(priceResult.amount / 100).toFixed(2)}`;
+        priceAmount.textContent = `£${(priceResult.amount / 100).toFixed(2)}`;
         priceBreakdown.textContent = priceResult.breakdown;
         document.getElementById('confirmBookingBtn').disabled = false;
       } else {
         priceDisplay.classList.add('no-rate');
-        priceAmount.textContent = 'Â£0.00';
+        priceAmount.textContent = '£0.00';
         priceBreakdown.textContent = priceResult.breakdown;
         document.getElementById('confirmBookingBtn').disabled = true;
       }
@@ -2623,7 +2623,7 @@ if (!requestedRoomId) {
             comments: comments || null
           };
           
-          console.log('ðŸ’³ Opening payment choice modal:', paymentDetails);
+          console.log('💳 Opening payment choice modal:', paymentDetails);
           
           // Show the payment choice modal (handles credit vs card)
           showPaymentChoiceModal(paymentDetails, false);
@@ -2952,7 +2952,7 @@ if (!requestedRoomId) {
     // Create day view grid - DYNAMIC FROM ROOM CONFIG
     function createDayGrid(grid) {
       const rooms = window.enabledRooms || [];
-      console.log('ðŸ” createDayGrid called - rooms:', rooms.length, rooms.map(r => r.displayName));
+      console.log('🔍 createDayGrid called - rooms:', rooms.length, rooms.map(r => r.displayName));
       
       // Set grid columns based on enabled rooms
       const numRooms = rooms.length;
@@ -3117,7 +3117,7 @@ if (!requestedRoomId) {
       
       dayBookings.forEach(booking => {
         const {roomNumber, roomClass} = getRoomMapping(booking);
-        console.log('ðŸ” Booking:', booking.client, 'room:', booking.room, 'â†’ roomNumber:', roomNumber, 'â†’ cellId:', `cell-${roomNumber}-${booking.start}`);
+        console.log('🔍 Booking:', booking.client, 'room:', booking.room, '→ roomNumber:', roomNumber, '→ cellId:', `cell-${roomNumber}-${booking.start}`);
         if (!roomNumber) return;
         
         const startHour = parseInt(booking.start.split(':')[0]);
@@ -3219,10 +3219,10 @@ if (!requestedRoomId) {
       }
       
       // Debug logging
-      console.log('ðŸ—“Ã¯Â¸Â populateWeekView called - counsellor:', selectedCounsellor, 'bookings:', filteredBookings.length);
+      console.log('🆔 populateWeekView called - counsellor:', selectedCounsellor, 'bookings:', filteredBookings.length);
       
       if (!selectedCounsellor) {
-        console.warn('Ã¢Å¡Â Ã¯Â¸Â No counsellor selected - week view requires a logged-in user');
+        console.warn('⚠️ No counsellor selected - week view requires a logged-in user');
         return;
       }
       
@@ -3231,7 +3231,7 @@ if (!requestedRoomId) {
         booking.client && booking.client.toLowerCase().includes(selectedCounsellor.toLowerCase())
       );
       
-      console.log('ðŸ—“Ã¯Â¸Â Filtered to', counsellorBookings.length, 'bookings for', selectedCounsellor);
+      console.log('🆔 Filtered to', counsellorBookings.length, 'bookings for', selectedCounsellor);
       
       // Build a map of cellId -> array of bookings
       const cellBookings = {};
@@ -3282,13 +3282,13 @@ if (!requestedRoomId) {
         }
       });
       
-      console.log('ðŸ—“Ã¯Â¸Â Mapped bookings to', Object.keys(cellBookings).length, 'cells');
+      console.log('🆔 Mapped bookings to', Object.keys(cellBookings).length, 'cells');
       
       // Now populate cells
       Object.entries(cellBookings).forEach(([cellId, bookings]) => {
         const cell = document.getElementById(cellId);
         if (!cell) {
-          console.warn('Ã¢Å¡Â Ã¯Â¸Â Cell not found:', cellId);
+          console.warn('⚠️ Cell not found:', cellId);
           return;
         }
         
@@ -3620,7 +3620,7 @@ function initializeData() {
   </script>
   
   <script src="js/token-auth-update.js"></script>
-  <!-- Booking enhancements (Â£0 bookings, basket, etc) -->
+  <!-- Booking enhancements (£0 bookings, basket, etc) -->
   <script src="js/booking-enhancements.js"></script>
 </body>
 </html>
