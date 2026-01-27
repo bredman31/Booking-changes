@@ -9,17 +9,14 @@
  * 3. Changes button text based on price
  * 4. FIXED: Basket payment now works with Stripe and Credits
  * 5. FIXED: Comments/Car Registration now captured in basket
- * 6. NEW: Greys out slots that are in the basket (v2.3 - icon fix)
+ * 6. Highlights slots in basket (dark grey with yellow border)
  * 
- * Version: 2.3 - January 2026
- * 
- * Installation: Add this line AFTER your main scripts in index.html:
- * <script src="js/booking-enhancements.js"></script>
+ * Version: 2.5 - January 2026
  */
 
 (function() {
   'use strict';
-  console.log('🛒 booking-enhancements.js v2.3 loading...');
+  console.log('🛒 booking-enhancements.js v2.5 loading...');
 
   // ============================================
   // BASKET STATE
@@ -261,29 +258,14 @@
       .basket-toast.show { opacity: 1; transform: translateY(0); }
 
       /* ==========================================
-         BASKET SLOT HIGHLIGHTING - v2.3 FIXED
+         BASKET SLOT HIGHLIGHTING - v2.5 SIMPLE
+         Dark grey with yellow border
          ========================================== */
       .in-basket {
-        background: #9e9e9e !important;
+        background: #606060 !important;
         pointer-events: none !important;
         cursor: not-allowed !important;
-        position: relative !important;
-      }
-      
-      /* The icon overlay - injected as a real element */
-      .basket-slot-icon {
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 20px;
-        background: rgba(158, 158, 158, 0.9);
-        z-index: 10;
-        pointer-events: none;
+        box-shadow: inset 0 0 0 3px #ffc107 !important;
       }
     `;
     document.head.appendChild(styles);
@@ -345,13 +327,10 @@
     console.log('✅ Basket UI injected');
   }
 
- // ============================================
-  // BASKET SLOT HIGHLIGHTING - v2.5 SIMPLE
+  // ============================================
+  // BASKET SLOT HIGHLIGHTING
   // ============================================
   
-  /**
-   * Convert room name to cell ID format
-   */
   function getRoomIdForCell(roomName) {
     if (!roomName) return null;
     
@@ -364,13 +343,11 @@
       return 'online';
     }
     
-    // Extract number from "Room 1", "Room_1", "Room 6", etc.
     const match = normalized.match(/(\d+)/);
     if (match) {
       return match[1];
     }
     
-    // Fallback
     return normalized.toLowerCase().replace(/[\s_]/g, '-');
   }
   
@@ -380,20 +357,15 @@
       cell.classList.remove('in-basket');
     });
     
-    // Get current basket items
     const basket = window.bookingBasket || [];
     if (basket.length === 0) return;
     
-    // Get currently selected date
     const dateSelector = document.getElementById('dateSelector');
     const selectedDate = dateSelector ? dateSelector.value : null;
     
-    // Highlight each basket item's slot
     basket.forEach(item => {
-      // Only highlight if on the same date
       if (item.date !== selectedDate) return;
       
-      // Get room ID for cell lookup
       const roomName = item.room || item.roomName;
       const roomId = getRoomIdForCell(roomName);
       const time = item.time || item.startTime || item.start_time;
@@ -416,16 +388,12 @@
     panel.classList.toggle('open');
     overlay.classList.toggle('open');
     
-    // Update credit display when opening
     if (panel.classList.contains('open')) {
       updateBasketCreditDisplay();
     }
   };
 
   window.addToBasket = function(booking) {
-    console.log('🛒 addToBasket called with:', booking);
-    
-    // Check for duplicates
     const exists = window.bookingBasket.some(b => 
       b.room === booking.room && 
       b.date === booking.date && 
@@ -441,23 +409,16 @@
     updateBasketUI();
     showBasketToast('✅ Added to basket');
     
-    // Close modal if open
     const modal = document.getElementById('newBookingModal');
     if (modal) modal.classList.remove('active');
     
-    // Update slot highlighting AFTER modal closes (small delay)
-    setTimeout(function() {
-      console.log('🛒 Updating highlights after add');
-      updateBasketSlotHighlights();
-    }, 100);
+    setTimeout(updateBasketSlotHighlights, 100);
   };
 
   window.removeFromBasket = function(index) {
     window.bookingBasket.splice(index, 1);
     updateBasketUI();
     showBasketToast('🗑️ Removed from basket');
-    
-    // Update slot highlighting
     setTimeout(updateBasketSlotHighlights, 50);
   };
 
@@ -467,8 +428,6 @@
       window.bookingBasket = [];
       updateBasketUI();
       showBasketToast('🗑️ Basket cleared');
-      
-      // Update slot highlighting
       setTimeout(updateBasketSlotHighlights, 50);
     }
   };
@@ -482,7 +441,6 @@
     const credit = window.counsellorCreditBalance || 0;
     const total = window.bookingBasket.reduce((sum, b) => sum + (b.price || 0), 0);
     
-    // Only show credit info if there's credit and the basket has paid items
     if (credit > 0 && total > 0) {
       creditInfoEl.style.display = 'flex';
       creditAmountEl.textContent = '£' + (credit / 100).toFixed(2);
@@ -499,11 +457,9 @@
     const totalEl = document.getElementById('basketTotal');
     const checkoutBtn = document.getElementById('basketCheckout');
 
-    // Update count
     if (countEl) countEl.textContent = count;
     if (btnEl) btnEl.classList.toggle('hidden', count === 0);
 
-    // Update items list
     if (itemsEl) {
       if (count === 0) {
         itemsEl.innerHTML = `
@@ -527,11 +483,9 @@
       }
     }
 
-    // Update total
     const total = window.bookingBasket.reduce((sum, b) => sum + (b.price || 0), 0);
     if (totalEl) totalEl.textContent = total > 0 ? `£${(total / 100).toFixed(2)}` : 'FREE';
 
-    // Update checkout button text
     if (checkoutBtn) {
       if (total > 0) {
         checkoutBtn.textContent = `Pay & Confirm (£${(total / 100).toFixed(2)})`;
@@ -540,7 +494,6 @@
       }
     }
     
-    // Update credit display
     updateBasketCreditDisplay();
   }
 
@@ -554,7 +507,7 @@
   }
 
   // ============================================
-  // CHECKOUT - FIXED VERSION WITH COMMENTS
+  // CHECKOUT
   // ============================================
   window.checkoutBasket = async function() {
     if (window.bookingBasket.length === 0) return;
@@ -563,9 +516,6 @@
     const checkoutBtn = document.getElementById('basketCheckout');
     
     if (total === 0) {
-      // ========================================
-      // FREE BOOKINGS - Process directly
-      // ========================================
       checkoutBtn.disabled = true;
       checkoutBtn.textContent = 'Processing...';
 
@@ -616,10 +566,9 @@
         }
       }
 
-      // Clear basket and show result
       window.bookingBasket = [];
       updateBasketUI();
-      updateBasketSlotHighlights(); // Clear highlights
+      updateBasketSlotHighlights();
       toggleBasketPanel();
 
       if (failCount === 0) {
@@ -628,7 +577,6 @@
         showBasketToast(`⚠️ ${successCount} confirmed, ${failCount} failed`);
       }
 
-      // Refresh calendar
       setTimeout(() => {
         if (typeof refreshData === 'function') refreshData();
       }, 2000);
@@ -636,9 +584,6 @@
       checkoutBtn.disabled = false;
       
     } else {
-      // ========================================
-      // PAID BOOKINGS - Use payment choice modal
-      // ========================================
       const paymentDetails = {
         totalAmount: total,
         items: window.bookingBasket.map(b => ({
@@ -650,18 +595,14 @@
           price: b.price,
           roomId: b.roomId,
           locationId: b.locationId,
-          comments: b.comments || null  // ✅ FIXED: Include comments
+          comments: b.comments || null
         }))
       };
       
-      // Check if payment choice modal exists
       if (typeof showPaymentChoiceModal === 'function') {
-        // Close basket panel first
         toggleBasketPanel();
-        // Show payment options
         showPaymentChoiceModal(paymentDetails, true);
       } else {
-        // Fallback: Direct to Stripe without credit option
         console.log('💳 Payment modal not available, using direct Stripe');
         checkoutBtn.disabled = true;
         checkoutBtn.textContent = 'Preparing payment...';
@@ -678,21 +619,16 @@
     }
   };
 
-  /**
-   * Direct Stripe checkout (fallback if payment modal not available)
-   */
   async function directStripeCheckout(paymentDetails) {
     const counsellorName = window.selectedCounsellor || sessionStorage.getItem('counsellorName');
     const total = paymentDetails.totalAmount;
     
-    // Build description from items
     const itemDescriptions = paymentDetails.items.map(item => 
       `${item.room} ${item.formattedDate} ${item.time}`
     ).join(', ');
     
     const description = `Room bookings: ${itemDescriptions}`;
     
-    // Store basket for after payment
     sessionStorage.setItem('pendingBasket', JSON.stringify(paymentDetails.items));
     
     const checkoutPayload = {
@@ -714,8 +650,6 @@
       cancel_url: window.STRIPE_CONFIG?.cancelUrl || (window.location.href + '?payment=cancelled')
     };
     
-    console.log('💳 Creating Stripe checkout:', checkoutPayload);
-    
     const webhookUrl = window.STRIPE_CONFIG?.createCheckoutWebhook || 
                        'https://hook.eu2.make.com/cpg4px3j3jcbj5k7ea7kniu3vfy3c7gq';
     
@@ -732,11 +666,9 @@
     const result = await response.json();
     
     if (result.checkout_url) {
-      // Clear basket before redirect
       window.bookingBasket = [];
       updateBasketUI();
-      updateBasketSlotHighlights(); // Clear highlights
-      
+      updateBasketSlotHighlights();
       window.location.href = result.checkout_url;
     } else {
       throw new Error('No checkout URL returned');
@@ -744,35 +676,29 @@
   }
 
   // ============================================
-  // FIX: OVERRIDE MODAL TO ADD BASKET OPTION
+  // ENHANCE BOOKING MODAL
   // ============================================
   function enhanceBookingModal() {
-    // Store reference to original function
     const originalOpenModal = window.openNewBookingModal;
 
     window.openNewBookingModal = function(room, date, time) {
-      // Call original to populate modal
       if (originalOpenModal) {
         originalOpenModal.call(this, room, date, time);
       }
 
-      // Now enhance it
       setTimeout(() => {
         const confirmBtn = document.getElementById('confirmBookingBtn');
         const priceValue = parseInt(document.getElementById('newBookingPrice')?.value) || 0;
         
         if (confirmBtn) {
-          // CRITICAL FIX: Always enable the button
           confirmBtn.disabled = false;
           
-          // Update button text based on price
           if (priceValue > 0) {
             confirmBtn.textContent = 'Proceed to Payment';
           } else {
             confirmBtn.textContent = 'Confirm Booking';
           }
 
-          // Add "Add to Basket" button if not already present
           let basketBtn = document.getElementById('addToBasketBtn');
           if (!basketBtn) {
             basketBtn = document.createElement('button');
@@ -784,7 +710,6 @@
           
           basketBtn.textContent = '🛒 Add to Basket';
           basketBtn.onclick = function() {
-            // ✅ FIXED: Check if Car Park and validate registration
             const isCarPark = (room === 'Car Park' || room === 'Car_Park');
             const commentsInput = document.getElementById('newBookingComments');
             const comments = commentsInput ? commentsInput.value.trim() : '';
@@ -815,7 +740,7 @@
               price: priceValue,
               roomId: document.getElementById('newBookingRoomId')?.value || '',
               locationId: document.getElementById('newBookingLocationId')?.value || '',
-              comments: comments || null  // ✅ FIXED: Include comments/registration
+              comments: comments || null
             });
           };
         }
@@ -824,18 +749,15 @@
   }
 
   // ============================================
-  // FIX: MAKE ALL EMPTY SLOTS CLICKABLE
+  // FIX EMPTY SLOTS
   // ============================================
   function fixEmptySlots() {
-    // Override populateDayView to allow all empty slots
     const originalPopulateDayView = window.populateDayView;
     
     if (originalPopulateDayView) {
       window.populateDayView = function(filteredBookings) {
-        // Call original
         originalPopulateDayView.call(this, filteredBookings);
         
-        // Then fix: make sure all empty cells are clickable
         const hasValidToken = !!sessionStorage.getItem('accessToken');
         if (!hasValidToken) return;
         
@@ -859,11 +781,9 @@
             
             if (!cell || cell.classList.contains('booked')) return;
             
-            // Check if slot is in the past
             const slotDateTime = new Date(`${selectedDate}T${time}:00`);
             if (slotDateTime < now) return;
             
-            // Make clickable if not already
             if (!cell.classList.contains('available-slot')) {
               cell.classList.add('available-slot');
               cell.title = `Book ${roomName} at ${time}`;
@@ -875,28 +795,22 @@
           });
         });
         
-        // Update basket highlights after populating calendar
-        console.log('🛒 populateDayView complete, updating highlights');
         setTimeout(updateBasketSlotHighlights, 50);
       };
     }
   }
 
   // ============================================
-  // HOOK INTO CALENDAR DATE CHANGES
+  // HOOK DATE CHANGES
   // ============================================
   function hookDateChanges() {
-    // Watch for date selector changes
     const dateSelector = document.getElementById('dateSelector');
     if (dateSelector) {
       dateSelector.addEventListener('change', function() {
-        console.log('🛒 Date changed to:', this.value);
-        // Delay to allow calendar to re-render
         setTimeout(updateBasketSlotHighlights, 200);
       });
     }
     
-    // Also watch for navigation button clicks
     document.addEventListener('click', function(e) {
       const btn = e.target.closest('button');
       if (!btn) return;
@@ -904,11 +818,8 @@
       const text = btn.textContent || '';
       const id = btn.id || '';
       
-      // Check if it's a navigation button
       if (text.includes('Previous') || text.includes('Next') || text.includes('Today') ||
           id.includes('prev') || id.includes('next') || id.includes('today')) {
-        console.log('🛒 Navigation button clicked');
-        // Delay to allow calendar to re-render
         setTimeout(updateBasketSlotHighlights, 300);
       }
     });
@@ -921,14 +832,10 @@
     injectBasketUI();
     enhanceBookingModal();
     fixEmptySlots();
-    
-    // Hook into date changes after a short delay to ensure DOM is ready
     setTimeout(hookDateChanges, 500);
-    
-    console.log('✅ booking-enhancements.js v2.3 loaded - £0 fix + basket + comments + slot highlighting (fixed)!');
+    console.log('✅ booking-enhancements.js v2.5 loaded');
   }
 
-  // Run when DOM is ready
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', init);
   } else {
@@ -936,5 +843,3 @@
   }
 
 })();
-
-
