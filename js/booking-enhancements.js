@@ -345,16 +345,12 @@
     console.log('✅ Basket UI injected');
   }
 
-  // ============================================
-  // BASKET SLOT HIGHLIGHTING - v2.3 FIXED
+ // ============================================
+  // BASKET SLOT HIGHLIGHTING - v2.5 SIMPLE
   // ============================================
   
   /**
    * Convert room name to cell ID format
-   * "Room 1" → "1"
-   * "Room_1" → "1" 
-   * "Car Park" or "Car_Park" → "car-park"
-   * "Online" → "online"
    */
   function getRoomIdForCell(roomName) {
     if (!roomName) return null;
@@ -379,43 +375,23 @@
   }
   
   window.updateBasketSlotHighlights = function() {
-    console.log('🛒 updateBasketSlotHighlights called');
-    
-    // Remove existing highlights and restore content
+    // Remove existing highlights
     document.querySelectorAll('.in-basket').forEach(cell => {
       cell.classList.remove('in-basket');
-      if (cell.dataset.originalContent !== undefined) {
-        cell.innerHTML = cell.dataset.originalContent;
-        delete cell.dataset.inBasket;
-        delete cell.dataset.originalContent;
-      }
     });
     
     // Get current basket items
     const basket = window.bookingBasket || [];
-    console.log('🛒 Basket contents:', basket.length, 'items', basket);
-    
-    if (basket.length === 0) {
-      console.log('🛒 Basket empty, no highlights needed');
-      return;
-    }
+    if (basket.length === 0) return;
     
     // Get currently selected date
     const dateSelector = document.getElementById('dateSelector');
     const selectedDate = dateSelector ? dateSelector.value : null;
-    console.log('🛒 Selected date:', selectedDate);
     
     // Highlight each basket item's slot
-    let highlightedCount = 0;
-    
-    basket.forEach((item, index) => {
-      console.log(`🛒 Item ${index}:`, item.room, item.date, item.time);
-      
+    basket.forEach(item => {
       // Only highlight if on the same date
-      if (item.date !== selectedDate) {
-        console.log(`🛒 Item ${index}: date mismatch (${item.date} vs ${selectedDate})`);
-        return;
-      }
+      if (item.date !== selectedDate) return;
       
       // Get room ID for cell lookup
       const roomName = item.room || item.roomName;
@@ -423,33 +399,12 @@
       const time = item.time || item.startTime || item.start_time;
       
       const cellId = `cell-${roomId}-${time}`;
-      console.log(`🛒 Looking for cell: ${cellId}`);
-      
       const cell = document.getElementById(cellId);
       
-if (cell) {
-        console.log(`🛒 ✅ Found cell ${cellId}, adding highlight`);
+      if (cell) {
         cell.classList.add('in-basket');
-        
-        // Add icon - simpler approach using data attribute
-        if (!cell.dataset.inBasket) {
-          cell.dataset.inBasket = '🛒';
-          cell.dataset.originalContent = cell.innerHTML;
-          cell.innerHTML = '<span style="font-size:18px;">🛒</span>';
-        }
-        
-        highlightedCount++;
-      } else {
-        console.log(`🛒 ❌ Cell ${cellId} NOT FOUND`);
-        
-        // Debug: try to find what cells exist
-        const allCells = document.querySelectorAll('[id^="cell-"]');
-        const sampleCells = Array.from(allCells).slice(0, 5).map(c => c.id);
-        console.log('🛒 Sample existing cells:', sampleCells);
       }
     });
-    
-    console.log(`🛒 Highlighted ${highlightedCount} cells`);
   };
 
   // ============================================
@@ -981,3 +936,5 @@ if (cell) {
   }
 
 })();
+
+
