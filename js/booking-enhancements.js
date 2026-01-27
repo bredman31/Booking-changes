@@ -8,8 +8,9 @@
  * 2. Adds multi-booking basket functionality
  * 3. Changes button text based on price
  * 4. FIXED: Basket payment now works with Stripe and Credits
+ * 5. FIXED: Comments/Car Registration now captured in basket
  * 
- * Version: 2.0 - January 2026
+ * Version: 2.1 - January 2026
  * 
  * Installation: Add this line AFTER your main scripts in index.html:
  * <script src="js/booking-enhancements.js"></script>
@@ -17,7 +18,7 @@
 
 (function() {
   'use strict';
-  console.log('🛒 booking-enhancements.js v2.0 loading...');
+  console.log('🛒 booking-enhancements.js v2.1 loading...');
 
   // ============================================
   // BASKET STATE
@@ -129,6 +130,12 @@
         color: #4caf50; 
         font-size: 15px;
         margin-top: 8px;
+      }
+      .basket-item-comments {
+        color: #667eea;
+        font-size: 12px;
+        margin-top: 5px;
+        font-style: italic;
       }
       .basket-item-remove {
         position: absolute;
@@ -411,6 +418,7 @@
             <div class="basket-item-date">📅 ${b.formattedDate}</div>
             <div class="basket-item-time">🕐 ${b.time} - ${b.endTime}</div>
             <div class="basket-item-price">${b.price > 0 ? '£' + (b.price / 100).toFixed(2) : 'FREE'}</div>
+            ${b.comments ? `<div class="basket-item-comments">🚗 ${b.comments}</div>` : ''}
           </div>
         `).join('');
       }
@@ -443,7 +451,7 @@
   }
 
   // ============================================
-  // CHECKOUT - FIXED VERSION
+  // CHECKOUT - FIXED VERSION WITH COMMENTS
   // ============================================
   window.checkoutBasket = async function() {
     if (window.bookingBasket.length === 0) return;
@@ -477,7 +485,7 @@
             start_datetime: `${booking.date}T${booking.time}:00`,
             end_datetime: `${booking.date}T${booking.endTime}:00`,
             additional_fields: {
-              comments: `Basket booking by ${counsellorName}`
+              comments: booking.comments || `Basket booking by ${counsellorName}`
             },
             payment: {
               paymentId: null,
@@ -537,7 +545,8 @@
           formattedDate: b.formattedDate,
           price: b.price,
           roomId: b.roomId,
-          locationId: b.locationId
+          locationId: b.locationId,
+          comments: b.comments || null  // ✅ FIXED: Include comments
         }))
       };
       
@@ -670,6 +679,17 @@
           
           basketBtn.textContent = '🛒 Add to Basket';
           basketBtn.onclick = function() {
+            // ✅ FIXED: Check if Car Park and validate registration
+            const isCarPark = (room === 'Car Park' || room === 'Car_Park');
+            const commentsInput = document.getElementById('newBookingComments');
+            const comments = commentsInput ? commentsInput.value.trim() : '';
+            
+            if (isCarPark && !comments) {
+              alert('Please enter a car registration number for Car Park bookings');
+              if (commentsInput) commentsInput.focus();
+              return;
+            }
+            
             const dateObj = new Date(date + 'T12:00:00');
             const formattedDate = dateObj.toLocaleDateString('en-GB', { 
               weekday: 'short', 
@@ -689,7 +709,8 @@
               formattedDate: formattedDate,
               price: priceValue,
               roomId: document.getElementById('newBookingRoomId')?.value || '',
-              locationId: document.getElementById('newBookingLocationId')?.value || ''
+              locationId: document.getElementById('newBookingLocationId')?.value || '',
+              comments: comments || null  // ✅ FIXED: Include comments/registration
             });
           };
         }
@@ -759,7 +780,7 @@
     injectBasketUI();
     enhanceBookingModal();
     fixEmptySlots();
-    console.log('✅ booking-enhancements.js v2.0 loaded - £0 fix + basket + payments ready!');
+    console.log('✅ booking-enhancements.js v2.1 loaded - £0 fix + basket + comments support!');
   }
 
   // Run when DOM is ready
