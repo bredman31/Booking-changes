@@ -269,7 +269,8 @@
           </div>
         </div>
         
-        <!-- Comments/Registration Field -->
+        
+		<!-- Comments/Registration Field -->
         <div class="comments-field" id="commentsFieldContainer" style="margin: 15px 0; padding: 12px; background: #f8f9fa; border-radius: 6px;">
           <label for="newBookingComments" id="commentsLabel" style="font-weight: 600; color: #333; display: block; margin-bottom: 5px;">
             <span id="commentsLabelText">Comments</span>
@@ -281,7 +282,7 @@
             Add any notes for this booking
           </small>
         </div>
-        
+		
         <div class="price-display" id="priceDisplay">
           <div class="price-label">Room Hire Cost</div>
           <div class="price-amount" id="priceAmount">£0.00</div>
@@ -2455,6 +2456,8 @@ if (!requestedRoomId) {
       // Reset status
       document.getElementById('bookingStatus').style.display = 'none';
       
+
+      }
       // Configure comments field based on room type
       const isCarPark = (room === 'Car Park' || room === 'Car_Park');
       const commentsInput = document.getElementById('newBookingComments');
@@ -2479,7 +2482,6 @@ if (!requestedRoomId) {
         commentsHint.textContent = 'Add any notes for this booking';
         commentsHint.style.color = '#666';
       }
-      
       // Show modal
       document.getElementById('newBookingModal').classList.add('active');
     }
@@ -2504,12 +2506,11 @@ if (!requestedRoomId) {
       const locationId = document.getElementById('newBookingLocationId').value;
       const price = parseInt(document.getElementById('newBookingPrice').value) || 0;
       const serviceId = document.getElementById('newBookingServiceId').value || '1';
-      const comments = document.getElementById('newBookingComments').value.trim();
+	  const comments = document.getElementById('newBookingComments').value.trim();
       
-      // Validate car registration for Car Park
       const isCarPark = (room === 'Car Park' || room === 'Car_Park');
       if (isCarPark && !comments) {
-        alert('Please enter the car registration number for Car Park bookings.');
+        alert('Please enter a car registration number for Car Park bookings');
         document.getElementById('newBookingComments').focus();
         return;
       }
