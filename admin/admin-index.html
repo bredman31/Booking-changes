@@ -161,7 +161,7 @@
     
     .admin-content {
       flex: 1;
-      padding: 30px 40px;
+      padding: 40px;
     }
     
     .dashboard-grid {
@@ -204,8 +204,7 @@
     .card-icon.reports { background: #e8f5e9; }
     .card-icon.rooms { background: #fff3e0; }
     .card-icon.clashes { background: #ffebee; }
-    .card-icon.pricing { background: #e0f7fa; }
-    .card-icon.clients { background: #fce4ec; }
+    .card-icon.pricing { background: #e8f5e9; }
     
     .dashboard-card h2 {
       color: #1a1a2e;
@@ -226,45 +225,42 @@
       font-weight: 600;
     }
     
-    /* Quick Stats - Compact */
+    /* Quick Stats */
     .quick-stats {
       max-width: 1200px;
-      margin: 0 auto 25px auto;
+      margin: 0 auto 40px auto;
     }
     
     .quick-stats h3 {
       color: white;
-      margin-bottom: 12px;
+      margin-bottom: 20px;
       font-weight: 500;
-      font-size: 14px;
     }
     
     .stats-row {
-      display: flex;
-      gap: 15px;
-      flex-wrap: wrap;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 20px;
     }
     
     .stat-box {
       background: rgba(255, 255, 255, 0.1);
-      border-radius: 8px;
-      padding: 12px 20px;
+      border-radius: 10px;
+      padding: 20px;
       text-align: center;
       backdrop-filter: blur(10px);
-      flex: 1;
-      min-width: 120px;
     }
     
     .stat-box .number {
-      font-size: 24px;
+      font-size: 36px;
       font-weight: bold;
       color: white;
     }
     
     .stat-box .label {
       color: rgba(255, 255, 255, 0.7);
-      font-size: 11px;
-      margin-top: 2px;
+      font-size: 14px;
+      margin-top: 5px;
     }
     
     /* Footer link back to main calendar */
@@ -323,29 +319,29 @@
       }
       
       .quick-stats {
-        margin-bottom: 20px;
+        margin-bottom: 25px;
       }
       
       .quick-stats h3 {
-        font-size: 13px;
+        font-size: 16px;
         text-align: center;
       }
       
       .stats-row {
-        gap: 8px;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
       }
       
       .stat-box {
-        padding: 10px 12px;
-        min-width: calc(50% - 8px);
+        padding: 15px 10px;
       }
       
       .stat-box .number {
-        font-size: 20px;
+        font-size: 28px;
       }
       
       .stat-box .label {
-        font-size: 10px;
+        font-size: 11px;
       }
       
       .dashboard-grid {
@@ -398,19 +394,16 @@
       }
       
       .stats-row {
-        gap: 6px;
-      }
-      
-      .stat-box {
-        padding: 8px 10px;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
       }
       
       .stat-box .number {
-        font-size: 18px;
+        font-size: 24px;
       }
       
       .stat-box .label {
-        font-size: 9px;
+        font-size: 10px;
       }
     }
   </style>
@@ -424,13 +417,13 @@
     </header>
     
     <main class="admin-content">
-      <!-- Quick Stats - Compact -->
+      <!-- Quick Stats -->
       <div class="quick-stats">
         <h3>Today's Overview</h3>
         <div class="stats-row">
           <div class="stat-box">
             <div class="number" id="todayBookings">-</div>
-            <div class="label">Today</div>
+            <div class="label">Bookings Today</div>
           </div>
           <div class="stat-box">
             <div class="number" id="weekBookings">-</div>
@@ -442,7 +435,7 @@
           </div>
           <div class="stat-box">
             <div class="number" id="holdingCount">-</div>
-            <div class="label">Holding Room</div>
+            <div class="label">In Holding Room</div>
           </div>
         </div>
       </div>
@@ -477,13 +470,6 @@
           <div class="card-arrow">Configure Rooms →</div>
         </a>
         
-        <a href="admin-clients.html" class="dashboard-card">
-          <div class="card-icon clients">👥</div>
-          <h2>Client Management</h2>
-          <p>Manage therapists and clients, generate access tokens, configure locations and contact details.</p>
-          <div class="card-arrow">Manage Clients →</div>
-        </a>
-        
         <a href="admin-clashes.html" class="dashboard-card">
           <div class="card-icon clashes">⚠️</div>
           <h2>Clash Detection</h2>
@@ -491,10 +477,10 @@
           <div class="card-arrow">Check Clashes →</div>
         </a>
         
-        <a href="pricing-config.html" class="dashboard-card">
+        <a href="admin-pricing.html" class="dashboard-card">
           <div class="card-icon pricing">💷</div>
           <h2>Pricing Configuration</h2>
-          <p>Manage room rates, duration options, location rules, and discount tiers. Test prices with the built-in calculator.</p>
+          <p>Set room rates by location, day, time, and specific rooms. Configure pricing rules for bookings.</p>
           <div class="card-arrow">Configure Pricing →</div>
         </a>
       </div>
@@ -519,6 +505,8 @@
     
     firebase.initializeApp(firebaseConfig);
     const database = firebase.database();
+    
+    // PIN input handling - DISABLED FOR TESTING
     
     // Check if already authenticated - DISABLED FOR TESTING
     document.addEventListener('DOMContentLoaded', () => {
