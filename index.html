@@ -1982,7 +1982,8 @@ function showPaymentToast(message, type) {
         const payload = {
           timestamp: new Date().toISOString(),
           action: 'cancel',
-          counsellor_id: counsellorId,
+          client_id: window.clientId,
+          counsellor_id: window.henleyClientId,
           booking_code: bookingId,
           original_datetime: `${date}T${time}:00`,
           original_room: roomForWebhook,
@@ -2125,7 +2126,8 @@ if (!requestedRoomId) {
         const webhookPayload = {
           timestamp: new Date().toISOString(),
           action: 'modify',
-          counsellor_id: counsellorId,
+          client_id: window.clientId,
+          counsellor_id: window.henleyClientId,
           original_booking_code: booking ? booking.bookingId : changeData.originalBookingCode,  // FIXED: Use bookingId from booking object
           original_room: originalRoomUnderscore,
           original_room_id: originalRoomId,
