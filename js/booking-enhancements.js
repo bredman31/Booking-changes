@@ -381,12 +381,14 @@
   window.updateBasketSlotHighlights = function() {
     console.log('🛒 updateBasketSlotHighlights called');
     
-    // Remove existing highlights and icons
+    // Remove existing highlights and restore content
     document.querySelectorAll('.in-basket').forEach(cell => {
       cell.classList.remove('in-basket');
-    });
-    document.querySelectorAll('.basket-slot-icon').forEach(icon => {
-      icon.remove();
+      if (cell.dataset.originalContent !== undefined) {
+        cell.innerHTML = cell.dataset.originalContent;
+        delete cell.dataset.inBasket;
+        delete cell.dataset.originalContent;
+      }
     });
     
     // Get current basket items
@@ -425,17 +427,15 @@
       
       const cell = document.getElementById(cellId);
       
-      if (cell) {
+if (cell) {
         console.log(`🛒 ✅ Found cell ${cellId}, adding highlight`);
         cell.classList.add('in-basket');
         
-        // Add icon overlay as a real element
-        if (!cell.querySelector('.basket-slot-icon')) {
-          const icon = document.createElement('div');
-          icon.className = 'basket-slot-icon';
-          icon.textContent = '🛒';
-          cell.style.position = 'relative'; // Ensure relative positioning
-          cell.appendChild(icon);
+        // Add icon - simpler approach using data attribute
+        if (!cell.dataset.inBasket) {
+          cell.dataset.inBasket = '🛒';
+          cell.dataset.originalContent = cell.innerHTML;
+          cell.innerHTML = '<span style="font-size:18px;">🛒</span>';
         }
         
         highlightedCount++;
