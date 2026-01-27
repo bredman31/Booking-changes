@@ -2333,8 +2333,8 @@ if (!requestedRoomId) {
       }
     }
     
-    // Calculate price for a booking
-    function calculateBookingPrice(locationId, date, hour) {
+  // Calculate price for a booking
+    function calculateBookingPrice(locationId, date, hour, room) {
       if (!pricingConfig) {
         console.warn('calculateBookingPrice: pricingConfig is null');
         return { amount: 0, breakdown: 'Pricing not loaded', rate: null };
@@ -2349,17 +2349,36 @@ if (!requestedRoomId) {
         return { amount: 0, breakdown: 'Location not found', rate: null };
       }
       
-      // Find matching rule
+      // Normalize room name for matching (e.g., "Car Park" → "Car_Park")
+      const roomKey = room ? room.replace(' ', '_') : null;
+      
+      // Find matching rule - check rooms array if present
       let matchedRule = null;
       for (const rule of location.rules) {
-        if (rule.days.includes(dayOfWeek) && hour >= rule.startHour && hour < rule.endHour) {
-          matchedRule = rule;
-          break;
+        // Check day and hour
+        if (!rule.days.includes(dayOfWeek) || hour < rule.startHour || hour >= rule.endHour) {
+          continue;
+        }
+        
+        // Check room if rule has rooms array
+        if (rule.rooms && rule.rooms.length > 0) {
+          // Rule is room-specific - only match if room is in the list
+          if (roomKey && rule.rooms.includes(roomKey)) {
+            matchedRule = rule;
+            break;
+          }
+          // Room not in this rule's list, continue checking other rules
+        } else {
+          // Rule has no rooms array - applies to all rooms (but lower priority than room-specific rules)
+          if (!matchedRule) {
+            matchedRule = rule;
+          }
+          // Don't break - keep looking for a more specific room rule
         }
       }
       
       if (!matchedRule) {
-        console.warn(`calculateBookingPrice: No rule matches day ${dayOfWeek}, hour ${hour} for location ${locationId}`);
+        console.warn(`calculateBookingPrice: No rule matches day ${dayOfWeek}, hour ${hour}, room ${room} for location ${locationId}`);
         return { amount: 0, breakdown: 'No pricing rule for this time', rate: null };
       }
       
@@ -2414,7 +2433,7 @@ if (!requestedRoomId) {
       const formattedDate = `${dayName}, ${dateObj.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}`;
       
       // Calculate price
-      const priceResult = calculateBookingPrice(locationId, date, hour);
+      const priceResult = calculateBookingPrice(locationId, date, hour, room);
       
       // Populate modal
       document.getElementById('modalRoom').textContent = room;
