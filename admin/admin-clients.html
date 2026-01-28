@@ -1104,6 +1104,19 @@
     let clientBookingStats = {};  // Cache for booking stats per client
     
     // ================================
+    // HELPER FUNCTION - Ensure locations is always an array
+    // ================================
+    function getClientLocations(client) {
+      if (!client) return ['henley'];
+      if (Array.isArray(client.locations)) return client.locations;
+      if (typeof client.locations === 'string') return [client.locations];
+      if (client.locations && typeof client.locations === 'object') {
+        return Object.values(client.locations);
+      }
+      return ['henley'];
+    }
+    
+    // ================================
     // INITIALIZATION
     // ================================
     document.addEventListener('DOMContentLoaded', () => {
@@ -1286,8 +1299,8 @@
           client.email?.toLowerCase().includes(searchTerm) ||
           id.toLowerCase().includes(searchTerm);
         
-        // Location filter
-        const clientLocations = client.locations || ['henley'];
+        // Location filter - use helper function
+        const clientLocations = getClientLocations(client);
         const matchesLocation = locationFilter === 'all' || clientLocations.includes(locationFilter);
         
         // Get booking stats
@@ -1366,7 +1379,8 @@
       
       tbody.innerHTML = filteredClients.map(([id, client]) => {
         const stats = clientBookingStats[id] || {};
-        const clientLocations = client.locations || ['henley'];
+        // Use helper function for locations
+        const clientLocations = getClientLocations(client);
         
         // Format last booking
         let lastBookingHtml = '<span class="last-booking">Never</span>';
@@ -1379,7 +1393,7 @@
           lastBookingHtml = `<span class="last-booking ${colorClass}" title="${daysSince} days ago">${dateStr}</span>`;
         }
         
-        // Format locations
+        // Format locations - use the helper result
         const locationBadges = clientLocations.map(loc => {
           const locName = locationConfig[loc]?.name || loc;
           return `<span class="location-badge ${loc}">${locName}</span>`;
@@ -1645,7 +1659,8 @@
         document.getElementById('clientLastBooking').value = 'Never';
       }
       
-      populateLocationCheckboxes(client.locations || []);
+      // Use helper function for locations
+      populateLocationCheckboxes(getClientLocations(client));
       
       // Show token section if exists
       if (client.token) {
@@ -1664,8 +1679,11 @@
       const container = document.getElementById('locationCheckboxes');
       container.innerHTML = '';
       
+      // Ensure selectedLocations is an array
+      const locArray = Array.isArray(selectedLocations) ? selectedLocations : [];
+      
       Object.entries(locationConfig).forEach(([key, loc]) => {
-        const checked = selectedLocations.includes(key) ? 'checked' : '';
+        const checked = locArray.includes(key) ? 'checked' : '';
         container.innerHTML += `
           <label class="checkbox-item">
             <input type="checkbox" value="${key}" ${checked}>
