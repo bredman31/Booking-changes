@@ -1967,7 +1967,7 @@ function showPaymentToast(message, type) {
         let counsellorId = window.clientId;
         
         if (!counsellorId) {
-          counsellorId = await lookupCounsellorId(counsellorName);
+          counsellorId = await lookupCounsellorId(counsellorName, booking?.counsellorId || booking?.clientId);
           if (!counsellorId) {
             throw new Error(`Counsellor "${counsellorName}" not found. Please contact support.`);
           }
@@ -2085,7 +2085,7 @@ function showPaymentToast(message, type) {
         let counsellorId = window.clientId;
         
         if (!counsellorId) {
-          counsellorId = await lookupCounsellorId(changeData.counsellorName);
+          counsellorId = await lookupCounsellorId(changeData.counsellorName, booking?.counsellorId || booking?.clientId);
           if (!counsellorId) {
             throw new Error(`Counsellor "${changeData.counsellorName}" not found. Please contact support.`);
           }
@@ -2191,26 +2191,26 @@ if (!requestedRoomId) {
 <!-- SECTION 5.4: COUNSELLOR & LOGGING FUNCTIONS -->
 <!-- ================================ -->
   <script>
-    // Fallback counsellor ID lookup
-    async function lookupCounsellorId(counsellorName) {
-      try {
-        const booking = bookingData.find(b => b.client === counsellorName && b.clientId);
-        if (booking && booking.clientId) {
-          console.log(`Found counsellor ID ${booking.clientId} for ${counsellorName} in booking data`);
-          return booking.clientId;
-        }
-        
-        const COUNSELLOR_MAPPING = {
-          'Barry Redman': '6',
-        };
-        
-        return COUNSELLOR_MAPPING[counsellorName] || null;
-        
-      } catch (error) {
-        console.error('Counsellor lookup error:', error);
-        return null;
-      }
+// Fallback counsellor ID lookup
+async function lookupCounsellorId(counsellorName) {
+  try {
+    const booking = bookingData.find(b => b.client === counsellorName && b.clientId);
+    if (booking && booking.clientId) {
+      console.log(`Found counsellor ID ${booking.clientId} for ${counsellorName} in booking data`);
+      return booking.clientId;
     }
+    
+    const COUNSELLOR_MAPPING = {
+      'Barry Redman': '6',
+    };
+    
+    return COUNSELLOR_MAPPING[counsellorName] || null;
+    
+  } catch (error) {
+    console.error('Counsellor lookup error:', error);
+    return null;
+  }
+}
     
     // Log change to Google Sheets
     async function logChangeToGoogleSheets(changeData, webhookPayload) {
