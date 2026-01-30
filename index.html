@@ -315,7 +315,6 @@
   </label>
 </div>
 
-<div class="modal-actions">
 	   
         <div class="modal-actions">
           <button class="cancel-btn" onclick="closeNewBookingModal()">Cancel</button>
@@ -1299,12 +1298,14 @@ function showPaymentToast(message, type) {
     if (toast.parentElement) toast.remove();
   }, 8000);
 }
+ 
   </script>
   
-  // ================================
-// SECTION 5.1.1: ACCOUNT & WALLET SYSTEM
-// ================================
+<!-- ================================ -->
+<!-- SECTION 5.1.1: ACCOUNT & WALLET SYSTEM -->
+<!-- ================================ -->
 <script>
+
 // Global state
 window.counsellorAccount = {
   currentWeek: { balance: 0, bookings: {}, start: null, end: null },
