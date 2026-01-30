@@ -702,6 +702,86 @@ body {
   }
 }
 
+
+/* Previous Week Warning */
+.previous-week-warning {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  background: #fff3cd;
+  border-radius: 8px;
+  margin: 15px 0;
+}
+
+.previous-week-warning .warning-icon {
+  font-size: 24px;
+}
+
+.previous-week-warning .warning-title {
+  font-weight: 600;
+  color: #856404;
+}
+
+.previous-week-warning .warning-text {
+  font-size: 13px;
+  color: #856404;
+}
+
+/* Payment Options */
+.payment-options-section {
+  margin: 15px 0;
+  padding: 15px;
+  background: #f8f9fa;
+  border-radius: 8px;
+}
+
+.payment-options-title {
+  font-weight: 600;
+  margin-bottom: 12px;
+  color: #333;
+}
+
+.payment-option {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  padding: 12px 14px;
+  margin: 8px 0;
+  border: 2px solid #e9ecef;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.payment-option:hover {
+  border-color: #5c5c8a;
+  background: #f8f9ff;
+}
+
+.payment-option.selected,
+.payment-option:has(input:checked) {
+  border-color: #5c5c8a;
+  background: #f0f0ff;
+}
+
+.payment-option input[type="radio"] {
+  margin-right: 10px;
+}
+
+.payment-option-title {
+  font-weight: 600;
+  color: #333;
+}
+
+.payment-option-desc {
+  width: 100%;
+  font-size: 12px;
+  color: #6c757d;
+  margin-left: 24px;
+  margin-top: 4px;
+}
+
 /* Car Park capacity display */
 .car-park-partial {
   background: #fff3e0 !important;
