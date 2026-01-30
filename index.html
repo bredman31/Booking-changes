@@ -1305,7 +1305,6 @@ function showPaymentToast(message, type) {
 <!-- SECTION 5.1.1: ACCOUNT & WALLET SYSTEM -->
 <!-- ================================ -->
 <script>
-
 // Global state
 window.counsellorAccount = {
   currentWeek: { balance: 0, bookings: {}, start: null, end: null },
@@ -1474,8 +1473,97 @@ function hasPreviousWeekUnpaid() {
   return window.counsellorAccount.previousWeek && 
          window.counsellorAccount.previousWeek.balance > 0;
 }
-</script>
 
+/**
+ * Update payment options in booking modal based on account/wallet state
+ */
+function updatePaymentOptionsInModal() {
+  const walletBalance = window.counsellorWallet || 0;
+  const previousWeek = window.counsellorAccount.previousWeek;
+  const bookingPrice = parseInt(document.getElementById('newBookingPrice')?.value) || 0;
+  
+  // Show/hide wallet option
+  const walletOption = document.getElementById('optionWallet');
+  const walletAmountSpan = document.getElementById('walletAmountOption');
+  
+  if (walletBalance > 0 && walletOption) {
+    walletOption.style.display = 'block';
+    walletAmountSpan.textContent = '£' + (walletBalance / 100).toFixed(2);
+  } else if (walletOption) {
+    walletOption.style.display = 'none';
+  }
+  
+  // Show/hide previous week warning
+  const previousWarning = document.getElementById('previousWeekWarning');
+  const previousAmountSpan = document.getElementById('previousWeekAmount');
+  const accountOption = document.getElementById('optionAccount');
+  
+  if (previousWeek && previousWeek.balance > 0) {
+    // Show warning
+    if (previousWarning) {
+      previousWarning.style.display = 'flex';
+      previousAmountSpan.textContent = '£' + (previousWeek.balance / 100).toFixed(2);
+    }
+    
+    // Disable "Book on Account" - must pay previous first
+    if (accountOption) {
+      accountOption.style.display = 'none';
+    }
+    
+    // Select "Pay Now" by default instead
+    const cardRadio = document.querySelector('input[name="bookingPaymentMethod"][value="card"]');
+    if (cardRadio) cardRadio.checked = true;
+    
+  } else {
+    // No previous week unpaid
+    if (previousWarning) {
+      previousWarning.style.display = 'none';
+    }
+    if (accountOption) {
+      accountOption.style.display = 'block';
+    }
+    
+    // Ensure "Book on Account" is selected by default
+    const accountRadio = document.querySelector('input[name="bookingPaymentMethod"][value="account"]');
+    if (accountRadio) accountRadio.checked = true;
+  }
+  
+  // Update confirm button text based on selection
+  updateConfirmButtonText();
+}
+
+/**
+ * Update confirm button text based on selected payment method
+ */
+function updateConfirmButtonText() {
+  const selectedMethod = document.querySelector('input[name="bookingPaymentMethod"]:checked')?.value;
+  const confirmBtn = document.getElementById('confirmBookingBtn');
+  
+  if (!confirmBtn) return;
+  
+  switch (selectedMethod) {
+    case 'account':
+      confirmBtn.textContent = 'Book on Account';
+      break;
+    case 'card':
+      confirmBtn.textContent = 'Proceed to Payment';
+      break;
+    case 'wallet':
+      confirmBtn.textContent = 'Pay with Wallet';
+      break;
+    default:
+      confirmBtn.textContent = 'Confirm Booking';
+  }
+}
+
+// Add event listeners for radio button changes
+document.addEventListener('DOMContentLoaded', function() {
+  const radioButtons = document.querySelectorAll('input[name="bookingPaymentMethod"]');
+  radioButtons.forEach(radio => {
+    radio.addEventListener('change', updateConfirmButtonText);
+  });
+});
+</script>
 <!-- ================================ -->
 <!-- SECTION 5.1.2: PAYMENT CHOICE MODAL -->
 <!-- ================================ -->
@@ -2605,8 +2693,13 @@ async function lookupCounsellorId(counsellorName) {
         commentsHint.textContent = 'Add any notes for this booking';
         commentsHint.style.color = '#666';
       }
-      // Show modal
-      document.getElementById('newBookingModal').classList.add('active');
+      // Update payment options based on account state
+         if (typeof updatePaymentOptionsInModal === 'function') {
+         updatePaymentOptionsInModal();
+     }
+
+// Show modal
+document.getElementById('newBookingModal').classList.add('active');
     }
     
     // Close new booking modal
