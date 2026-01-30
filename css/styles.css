@@ -466,6 +466,116 @@ body {
 .config-error h3 {
   margin-top: 0;
 }
+
+/* ================================
+   BASKET & WALLET STYLES
+   ================================ */
+
+/* Basket Section */
+.basket-section {
+  margin: 10px 0 15px 0;
+  background: #f8f9fa;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.basket-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+}
+
+.basket-row + .basket-row {
+  border-top: 1px solid #e9ecef;
+}
+
+.basket-icon {
+  font-size: 18px;
+}
+
+.basket-label {
+  color: #495057;
+  font-weight: 500;
+}
+
+.basket-amount {
+  font-weight: 700;
+  font-size: 18px;
+  color: #333;
+  margin-left: auto;
+}
+
+.basket-prompt {
+  color: #856404;
+  font-size: 13px;
+  font-style: italic;
+}
+
+.basket-previous {
+  background: #fff3cd;
+}
+
+.basket-previous .basket-amount {
+  color: #856404;
+}
+
+.pay-basket-btn {
+  display: block;
+  width: calc(100% - 32px);
+  margin: 0 16px 12px 16px;
+  padding: 10px 16px;
+  border: none;
+  border-radius: 6px;
+  background: #5c5c8a;
+  color: white;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.pay-basket-btn:hover {
+  background: #4a4a7a;
+}
+
+/* Wallet Section */
+.wallet-section {
+  margin: 0 0 15px 0;
+}
+
+.wallet-display {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+  background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+  border-radius: 8px;
+  border-left: 4px solid #28a745;
+}
+
+.wallet-icon {
+  font-size: 20px;
+}
+
+.wallet-label {
+  color: #155724;
+  font-weight: 500;
+}
+
+.wallet-amount {
+  color: #155724;
+  font-weight: 700;
+  font-size: 18px;
+}
+
+.wallet-note {
+  color: #6c757d;
+  font-size: 12px;
+  margin-left: auto;
+}
+
+
 /* ================================ */
 /* ADD THESE TO END OF styles.css */
 /* ================================ */
