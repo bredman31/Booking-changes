@@ -1474,10 +1474,17 @@ function hasPreviousWeekUnpaid() {
          window.counsellorAccount.previousWeek.balance > 0;
 }
 
+
 /**
  * Update payment options in booking modal based on account/wallet state
  */
 function updatePaymentOptionsInModal() {
+  // Hide old "Add to Basket" button - we use payment options now
+  const oldBasketBtn = document.getElementById('addToBasketBtn');
+  if (oldBasketBtn) {
+    oldBasketBtn.style.display = 'none';
+  }
+  
   const walletBalance = window.counsellorWallet || 0;
   const previousWeek = window.counsellorAccount.previousWeek;
   const bookingPrice = parseInt(document.getElementById('newBookingPrice')?.value) || 0;
@@ -1530,7 +1537,14 @@ function updatePaymentOptionsInModal() {
   
   // Update confirm button text based on selection
   updateConfirmButtonText();
+  
+  // Attach event listeners for radio buttons
+  const radioButtons = document.querySelectorAll('input[name="bookingPaymentMethod"]');
+  radioButtons.forEach(radio => {
+    radio.onchange = updateConfirmButtonText;
+  });
 }
+
 
 /**
  * Update confirm button text based on selected payment method
