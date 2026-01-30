@@ -2706,13 +2706,15 @@ async function lookupCounsellorId(counsellorName) {
         commentsHint.style.color = '#666';
       }
       
-      // Update payment options based on account state
-      if (typeof updatePaymentOptionsInModal === 'function') {
-        updatePaymentOptionsInModal();
-      }
-      
-      // Show modal
+     // Show modal
       document.getElementById('newBookingModal').classList.add('active');
+      
+      // Update payment options after booking-enhancements.js has run (it uses 50ms delay)
+      setTimeout(() => {
+        if (typeof updatePaymentOptionsInModal === 'function') {
+          updatePaymentOptionsInModal();
+        }
+      }, 100);
     }
     
     // Close new booking modal
