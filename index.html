@@ -2607,7 +2607,6 @@ async function lookupCounsellorId(counsellorName) {
 	
   </script>
   
-
 <!-- ================================ -->
 <!-- SECTION 6.1: NEW BOOKING MODAL FUNCTIONS -->
 <!-- ================================ -->
@@ -2668,7 +2667,6 @@ async function lookupCounsellorId(counsellorName) {
       // Reset status
       document.getElementById('bookingStatus').style.display = 'none';
       
-
       // Configure comments field based on room type
       const isCarPark = (room === 'Car Park' || room === 'Car_Park');
       const commentsInput = document.getElementById('newBookingComments');
@@ -2693,18 +2691,385 @@ async function lookupCounsellorId(counsellorName) {
         commentsHint.textContent = 'Add any notes for this booking';
         commentsHint.style.color = '#666';
       }
+      
       // Update payment options based on account state
-         if (typeof updatePaymentOptionsInModal === 'function') {
-         updatePaymentOptionsInModal();
-     }
-
-// Show modal
-document.getElementById('newBookingModal').classList.add('active');
+      if (typeof updatePaymentOptionsInModal === 'function') {
+        updatePaymentOptionsInModal();
+      }
+      
+      // Show modal
+      document.getElementById('newBookingModal').classList.add('active');
     }
     
     // Close new booking modal
     function closeNewBookingModal() {
       document.getElementById('newBookingModal').classList.remove('active');
+    }
+    
+    // Confirm new booking - handles different payment methods
+    async function confirmNewBooking() {
+      const room = document.getElementById('newBookingRoom').value;
+      const roomId = document.getElementById('newBookingRoomId').value;
+      const date = document.getElementById('newBookingDate').value;
+      const time = document.getElementById('newBookingTime').value;
+      const endTime = document.getElementById('newBookingEndTime').value;
+      const locationId = document.getElementById('newBookingLocationId').value;
+      const price = parseInt(document.getElementById('newBookingPrice').value) || 0;
+      const serviceId = document.getElementById('newBookingServiceId').value || '1';
+      const comments = document.getElementById('newBookingComments').value.trim();
+      
+      // Validate car park registration
+      const isCarPark = (room === 'Car Park' || room === 'Car_Park');
+      if (isCarPark && !comments) {
+        alert('Please enter a car registration number for Car Park bookings');
+        document.getElementById('newBookingComments').focus();
+        return;
+      }
+      
+      const statusDiv = document.getElementById('bookingStatus');
+      const confirmBtn = document.getElementById('confirmBookingBtn');
+      const counsellorName = selectedCounsellor || sessionStorage.getItem('counsellorName');
+      
+      // Get selected payment method
+      const selectedMethod = document.querySelector('input[name="bookingPaymentMethod"]:checked')?.value || 'card';
+      
+      // Webhook URLs
+      const FREE_BOOKING_WEBHOOK_URL = 'https://hook.eu2.make.com/eq57vfwrpkw2rtozjeiy71j88e5sw1kr';
+      const ACCOUNT_BOOKING_WEBHOOK_URL = 'https://hook.eu2.make.com/eq57vfwrpkw2rtozjeiy71j88e5sw1kr'; // Same webhook, different payment info
+      
+      try {
+        // Handle FREE bookings (price = 0)
+        if (price === 0) {
+          statusDiv.className = 'booking-status processing';
+          statusDiv.textContent = 'Creating booking...';
+          statusDiv.style.display = 'block';
+          confirmBtn.disabled = true;
+          
+          const bookingPayload = {
+            action: 'create',
+            timestamp: new Date().toISOString(),
+            client_id: window.clientId,
+            counsellor_name: counsellorName,
+            service_id: serviceId,
+            provider_id: roomId,
+            location_id: locationId,
+            room_name: room,
+            start_datetime: `${date}T${time}:00`,
+            end_datetime: `${date}T${endTime}:00`,
+            additional_fields: {
+              comments: comments || `Booked via counsellor calendar by ${counsellorName}`
+            },
+            payment: {
+              paymentId: null,
+              paymentAmount: 0,
+              paymentStatus: 'free',
+              paymentMethod: 'none'
+            }
+          };
+          
+          console.log('Free booking payload:', bookingPayload);
+          
+          const response = await fetch(FREE_BOOKING_WEBHOOK_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(bookingPayload)
+          });
+          
+          if (!response.ok) {
+            const errorText = await response.text();
+            throw new Error(`Webhook failed: ${response.status} - ${errorText}`);
+          }
+          
+          statusDiv.className = 'booking-status success';
+          statusDiv.innerHTML = `
+            <strong>✓ Booking Created!</strong><br>
+            <small>${room} on ${date} at ${time}<br>
+            The calendar will refresh shortly.</small>
+          `;
+          
+          setTimeout(() => {
+            closeNewBookingModal();
+            currentDate = date;
+            const dateSelector = document.getElementById('dateSelector');
+            if (dateSelector) dateSelector.value = date;
+            currentWeekStart = getWeekStartDate(new Date(date + 'T12:00:00'));
+            refreshData();
+          }, 3000);
+          
+          return;
+        }
+        
+        // Handle PAID bookings based on selected method
+        switch (selectedMethod) {
+          
+          case 'account':
+            // BOOK ON ACCOUNT - Add to weekly basket
+            await processBookOnAccount({
+              room, roomId, date, time, endTime, locationId, serviceId, price, comments, counsellorName
+            });
+            break;
+            
+          case 'wallet':
+            // PAY WITH WALLET
+            await processWalletPayment({
+              room, roomId, date, time, endTime, locationId, serviceId, price, comments, counsellorName
+            });
+            break;
+            
+          case 'card':
+          default:
+            // PAY NOW (CARD) - Existing Stripe flow
+            closeNewBookingModal();
+            
+            const dateObj = new Date(date + 'T00:00:00');
+            const formattedDate = dateObj.toLocaleDateString('en-GB', { 
+              weekday: 'short', 
+              day: 'numeric', 
+              month: 'short',
+              year: 'numeric'
+            });
+            
+            const paymentDetails = {
+              room: room,
+              roomId: roomId,
+              date: date,
+              time: time,
+              endTime: endTime,
+              formattedDate: formattedDate,
+              locationId: locationId,
+              serviceId: serviceId,
+              totalAmount: price,
+              comments: comments || null
+            };
+            
+            console.log('💳 Opening payment choice modal:', paymentDetails);
+            showPaymentChoiceModal(paymentDetails, false);
+            break;
+        }
+        
+      } catch (error) {
+        console.error('Booking error:', error);
+        statusDiv.className = 'booking-status error';
+        statusDiv.innerHTML = `<strong>Error</strong><br><small>${error.message}</small>`;
+        statusDiv.style.display = 'block';
+        confirmBtn.disabled = false;
+      }
+    }
+    
+    /**
+     * Process "Book on Account" - adds booking to weekly basket
+     */
+    async function processBookOnAccount(details) {
+      const { room, roomId, date, time, endTime, locationId, serviceId, price, comments, counsellorName } = details;
+      
+      const statusDiv = document.getElementById('bookingStatus');
+      const confirmBtn = document.getElementById('confirmBookingBtn');
+      
+      statusDiv.className = 'booking-status processing';
+      statusDiv.textContent = 'Adding to account...';
+      statusDiv.style.display = 'block';
+      confirmBtn.disabled = true;
+      
+      try {
+        const counsellorId = window.clientId;
+        const bookingId = `booking_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+        
+        // Create booking via webhook (with account payment status)
+        const bookingPayload = {
+          action: 'create',
+          timestamp: new Date().toISOString(),
+          client_id: counsellorId,
+          counsellor_name: counsellorName,
+          service_id: serviceId,
+          provider_id: roomId,
+          location_id: locationId,
+          room_name: room,
+          start_datetime: `${date}T${time}:00`,
+          end_datetime: `${date}T${endTime}:00`,
+          additional_fields: {
+            comments: comments || `Booked via counsellor calendar by ${counsellorName}`
+          },
+          payment: {
+            paymentId: bookingId,
+            paymentAmount: price,
+            paymentStatus: 'account',
+            paymentMethod: 'account'
+          }
+        };
+        
+        console.log('📦 Book on Account payload:', bookingPayload);
+        
+        // Send to webhook
+        const ACCOUNT_BOOKING_WEBHOOK_URL = 'https://hook.eu2.make.com/eq57vfwrpkw2rtozjeiy71j88e5sw1kr';
+        const response = await fetch(ACCOUNT_BOOKING_WEBHOOK_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(bookingPayload)
+        });
+        
+        if (!response.ok) {
+          const errorText = await response.text();
+          throw new Error(`Webhook failed: ${response.status} - ${errorText}`);
+        }
+        
+        // Add to Firebase account basket
+        const accountRef = firebase.database().ref(`accounts/${counsellorId}/currentWeek`);
+        const snapshot = await accountRef.once('value');
+        const currentWeek = snapshot.val() || { balance: 0, bookings: {} };
+        
+        // Add booking to basket
+        currentWeek.bookings[bookingId] = {
+          bookingId: bookingId,
+          amount: price,
+          date: date,
+          time: time,
+          room: room,
+          addedAt: new Date().toISOString()
+        };
+        
+        // Update balance
+        currentWeek.balance = (currentWeek.balance || 0) + price;
+        
+        // Save to Firebase
+        await accountRef.set(currentWeek);
+        await firebase.database().ref(`accounts/${counsellorId}/lastUpdated`).set(new Date().toISOString());
+        
+        console.log('📦 Added to account basket:', bookingId, '- New balance:', currentWeek.balance);
+        
+        // Success!
+        statusDiv.className = 'booking-status success';
+        statusDiv.innerHTML = `
+          <strong>✓ Booked on Account!</strong><br>
+          <small>${room} on ${date} at ${time}<br>
+          Added £${(price / 100).toFixed(2)} to this week's basket</small>
+        `;
+        
+        setTimeout(() => {
+          closeNewBookingModal();
+          currentDate = date;
+          const dateSelector = document.getElementById('dateSelector');
+          if (dateSelector) dateSelector.value = date;
+          currentWeekStart = getWeekStartDate(new Date(date + 'T12:00:00'));
+          refreshData();
+        }, 3000);
+        
+      } catch (error) {
+        console.error('Book on Account error:', error);
+        statusDiv.className = 'booking-status error';
+        statusDiv.innerHTML = `<strong>Error</strong><br><small>${error.message}</small>`;
+        confirmBtn.disabled = false;
+      }
+    }
+    
+    /**
+     * Process wallet payment - deducts from wallet and creates booking
+     */
+    async function processWalletPayment(details) {
+      const { room, roomId, date, time, endTime, locationId, serviceId, price, comments, counsellorName } = details;
+      
+      const statusDiv = document.getElementById('bookingStatus');
+      const confirmBtn = document.getElementById('confirmBookingBtn');
+      
+      const walletBalance = window.counsellorWallet || 0;
+      
+      // Check wallet has enough
+      if (walletBalance < price) {
+        statusDiv.className = 'booking-status error';
+        statusDiv.innerHTML = `<strong>Insufficient Wallet Balance</strong><br>
+          <small>Wallet: £${(walletBalance / 100).toFixed(2)} | Required: £${(price / 100).toFixed(2)}</small>`;
+        statusDiv.style.display = 'block';
+        return;
+      }
+      
+      statusDiv.className = 'booking-status processing';
+      statusDiv.textContent = 'Processing wallet payment...';
+      statusDiv.style.display = 'block';
+      confirmBtn.disabled = true;
+      
+      try {
+        const counsellorId = window.clientId;
+        const paymentId = `wallet_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+        
+        // Create booking via webhook
+        const bookingPayload = {
+          action: 'create',
+          timestamp: new Date().toISOString(),
+          client_id: counsellorId,
+          counsellor_name: counsellorName,
+          service_id: serviceId,
+          provider_id: roomId,
+          location_id: locationId,
+          room_name: room,
+          start_datetime: `${date}T${time}:00`,
+          end_datetime: `${date}T${endTime}:00`,
+          additional_fields: {
+            comments: comments || `Booked via counsellor calendar by ${counsellorName}`
+          },
+          payment: {
+            paymentId: paymentId,
+            paymentAmount: price,
+            paymentStatus: 'paid',
+            paymentMethod: 'wallet'
+          }
+        };
+        
+        console.log('💰 Wallet payment payload:', bookingPayload);
+        
+        // Send to webhook
+        const WALLET_BOOKING_WEBHOOK_URL = 'https://hook.eu2.make.com/eq57vfwrpkw2rtozjeiy71j88e5sw1kr';
+        const response = await fetch(WALLET_BOOKING_WEBHOOK_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(bookingPayload)
+        });
+        
+        if (!response.ok) {
+          const errorText = await response.text();
+          throw new Error(`Webhook failed: ${response.status} - ${errorText}`);
+        }
+        
+        // Deduct from wallet in Firebase
+        const newBalance = walletBalance - price;
+        await firebase.database().ref(`wallet/${counsellorId}/balance`).set(newBalance);
+        
+        // Add transaction record
+        const transactionRef = firebase.database().ref(`wallet/${counsellorId}/transactions`).push();
+        await transactionRef.set({
+          type: 'debit',
+          amount: price,
+          reason: `Booking payment - ${room}, ${date} ${time}`,
+          bookingId: paymentId,
+          createdAt: new Date().toISOString(),
+          source: 'booking_payment'
+        });
+        
+        await firebase.database().ref(`wallet/${counsellorId}/lastUpdated`).set(new Date().toISOString());
+        
+        console.log('💰 Wallet payment complete. New balance:', newBalance);
+        
+        // Success!
+        statusDiv.className = 'booking-status success';
+        statusDiv.innerHTML = `
+          <strong>✓ Paid with Wallet!</strong><br>
+          <small>${room} on ${date} at ${time}<br>
+          £${(price / 100).toFixed(2)} deducted from wallet</small>
+        `;
+        
+        setTimeout(() => {
+          closeNewBookingModal();
+          currentDate = date;
+          const dateSelector = document.getElementById('dateSelector');
+          if (dateSelector) dateSelector.value = date;
+          currentWeekStart = getWeekStartDate(new Date(date + 'T12:00:00'));
+          refreshData();
+        }, 3000);
+        
+      } catch (error) {
+        console.error('Wallet payment error:', error);
+        statusDiv.className = 'booking-status error';
+        statusDiv.innerHTML = `<strong>Error</strong><br><small>${error.message}</small>`;
+        confirmBtn.disabled = false;
+      }
     }
   </script>
   
