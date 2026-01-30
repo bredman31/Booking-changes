@@ -282,7 +282,47 @@
           <div class="price-amount" id="priceAmount">£0.00</div>
           <div class="price-breakdown" id="priceBreakdown">Calculating...</div>
         </div>
-        
+       
+<div class="price-display" id="priceDisplay">
+  <div class="price-label">Room Hire Cost</div>
+  <div class="price-amount" id="priceAmount">£0.00</div>
+  <div class="price-breakdown" id="priceBreakdown">Calculating...</div>
+</div>
+
+<!-- Previous Week Warning (shown if unpaid) -->
+<div id="previousWeekWarning" class="previous-week-warning" style="display: none;">
+  <div class="warning-icon">📦</div>
+  <div class="warning-content">
+    <div class="warning-title">Previous week: <span id="previousWeekAmount">£0.00</span></div>
+    <div class="warning-text">Please pay now</div>
+  </div>
+</div>
+
+<!-- Payment Options -->
+<div id="paymentOptionsSection" class="payment-options-section">
+  <div class="payment-options-title">How would you like to pay?</div>
+  
+  <label class="payment-option selected" id="optionAccount">
+    <input type="radio" name="bookingPaymentMethod" value="account" checked>
+    <span class="payment-option-title">Book on Account</span>
+    <span class="payment-option-desc">Add to weekly basket - pay by Friday 6pm</span>
+  </label>
+  
+  <label class="payment-option" id="optionCard">
+    <input type="radio" name="bookingPaymentMethod" value="card">
+    <span class="payment-option-title">Pay Now (Card)</span>
+    <span class="payment-option-desc">Secure payment via Stripe</span>
+  </label>
+  
+  <label class="payment-option" id="optionWallet" style="display: none;">
+    <input type="radio" name="bookingPaymentMethod" value="wallet">
+    <span class="payment-option-title">Use Wallet (<span id="walletAmountOption">£0.00</span>)</span>
+    <span class="payment-option-desc">Pay from cancelled booking funds</span>
+  </label>
+</div>
+
+<div class="modal-actions">
+	   
         <div class="modal-actions">
           <button class="cancel-btn" onclick="closeNewBookingModal()">Cancel</button>
           <button class="confirm-btn" id="confirmBookingBtn" onclick="confirmNewBooking()">
