@@ -1270,7 +1270,7 @@ function showPaymentToast(message, type) {
   // ================================
 // SECTION 5.1.1: ACCOUNT & WALLET SYSTEM
 // ================================
-
+<script>
 // Global state
 window.counsellorAccount = {
   currentWeek: { balance: 0, bookings: {}, start: null, end: null },
@@ -1439,6 +1439,7 @@ function hasPreviousWeekUnpaid() {
   return window.counsellorAccount.previousWeek && 
          window.counsellorAccount.previousWeek.balance > 0;
 }
+</script>
 
 <!-- ================================ -->
 <!-- SECTION 5.1.2: PAYMENT CHOICE MODAL -->
