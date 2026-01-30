@@ -1267,92 +1267,178 @@ function showPaymentToast(message, type) {
 }
   </script>
   
+  // ================================
+// SECTION 5.1.1: ACCOUNT & WALLET SYSTEM
+// ================================
+
+// Global state
+window.counsellorAccount = {
+  currentWeek: { balance: 0, bookings: {}, start: null, end: null },
+  previousWeek: null
+};
+window.counsellorWallet = 0;
+
+/**
+ * Load account and wallet data from Firebase
+ */
+async function loadAccountData() {
+  const counsellorId = window.clientId;
+  if (!counsellorId) {
+    console.log('📦 No clientId, skipping account load');
+    return;
+  }
   
- <!-- ================================ -->
-<!-- SECTION 5.1.1: CREDIT BALANCE SYSTEM -->
-<!-- ================================ -->
-  <script>
-    // Global credit state
-    window.counsellorCreditBalance = 0;
+  try {
+    console.log('📦 Loading account data for:', counsellorId);
     
-    /**
-     * Load credit balance from Firebase
-     */
-    async function loadCreditBalance() {
-      const counsellorId = window.clientId;
-      if (!counsellorId) {
-        console.log('💳 No clientId, skipping credit load');
-        return 0;
-      }
-      
-      try {
-        console.log('💳 Loading credit balance for counsellor:', counsellorId);
-        const snapshot = await database.ref('credits/' + counsellorId + '/balance').once('value');
-        const balance = snapshot.val() || 0;
-        
-        window.counsellorCreditBalance = balance;
-        console.log('💳 Credit balance loaded:', balance, 'pence (£' + (balance/100).toFixed(2) + ')');
-        
-        updateCreditBalanceDisplay(balance);
-        return balance;
-      } catch (error) {
-        console.error('💳 Error loading credit balance:', error);
-        window.counsellorCreditBalance = 0;
-        return 0;
-      }
+    // Load account
+    const accountSnap = await firebase.database().ref('accounts/' + counsellorId).once('value');
+    const accountData = accountSnap.val();
+    
+    if (accountData) {
+      window.counsellorAccount = {
+        currentWeek: accountData.currentWeek || { balance: 0, bookings: {} },
+        previousWeek: accountData.previousWeek || null
+      };
+      console.log('📦 Account loaded:', window.counsellorAccount);
     }
     
-    /**
-     * Update the credit balance display in the UI
-     */
-    function updateCreditBalanceDisplay(balanceInPence) {
-      const section = document.getElementById('creditBalanceSection');
-      const amountEl = document.getElementById('creditBalanceAmount');
-      const noteEl = document.getElementById('creditBalanceNote');
-      
-      if (!section || !amountEl) return;
-      
-      // Only show if counsellor is logged in with token
-      const hasToken = !!sessionStorage.getItem('accessToken');
-      
-      if (hasToken) {
-        section.style.display = 'block';
-        amountEl.textContent = '£' + (balanceInPence / 100).toFixed(2);
-        
-        // Show note if they have credit
-        if (noteEl) {
-          noteEl.style.display = balanceInPence > 0 ? 'block' : 'none';
-        }
-      } else {
-        section.style.display = 'none';
-      }
-    }
+    // Load wallet
+    const walletSnap = await firebase.database().ref('wallet/' + counsellorId + '/balance').once('value');
+    window.counsellorWallet = walletSnap.val() || 0;
+    console.log('💰 Wallet loaded:', window.counsellorWallet);
     
-    /**
-     * Update page title with counsellor name
-     */
-    function updatePageTitleWithCounsellor() {
-      const pageTitle = document.getElementById('pageTitle');
-      const counsellorName = selectedCounsellor || sessionStorage.getItem('counsellorName');
-      
-      if (pageTitle && counsellorName) {
-        pageTitle.textContent = 'Cherry Tree Centre - Room Booking Calendar - ' + counsellorName;
-      }
-    }
+    // Update displays
+    updateBasketDisplay();
+    updateWalletDisplay();
     
-    // Set up real-time listener for credit balance changes
-    function setupCreditBalanceListener() {
-      const counsellorId = window.clientId;
-      if (!counsellorId) return;
-      
-      database.ref('credits/' + counsellorId + '/balance').on('value', (snapshot) => {
-        const balance = snapshot.val() || 0;
-        window.counsellorCreditBalance = balance;
-        updateCreditBalanceDisplay(balance);
-        console.log('💳 Credit balance updated (real-time):', balance);
-      });
-    }
-  </script>
+  } catch (error) {
+    console.error('📦 Error loading account:', error);
+  }
+}
+
+/**
+ * Update basket display in UI
+ */
+function updateBasketDisplay() {
+  const section = document.getElementById('basketSection');
+  if (!section) return;
+  
+  const hasToken = sessionStorage.getItem('accessToken');
+  if (!hasToken) {
+    section.style.display = 'none';
+    return;
+  }
+  
+  const thisWeek = window.counsellorAccount.currentWeek?.balance || 0;
+  const previousWeek = window.counsellorAccount.previousWeek;
+  
+  let html = '';
+  
+  if (previousWeek && previousWeek.balance > 0) {
+    // Show both previous and current week
+    html = `
+      <div class="basket-row basket-previous">
+        <span class="basket-icon">📦</span>
+        <span class="basket-label">Previous week:</span>
+        <span class="basket-amount">£${(previousWeek.balance / 100).toFixed(2)}</span>
+        <span class="basket-prompt">Please pay now</span>
+      </div>
+      <div class="basket-row">
+        <span class="basket-icon">📦</span>
+        <span class="basket-label">This week:</span>
+        <span class="basket-amount">£${(thisWeek / 100).toFixed(2)}</span>
+      </div>
+      <button class="pay-basket-btn" onclick="openPayBasketModal()">Pay Now</button>
+    `;
+  } else if (thisWeek > 0) {
+    // Show only current week with balance
+    html = `
+      <div class="basket-row">
+        <span class="basket-icon">📦</span>
+        <span class="basket-label">This week:</span>
+        <span class="basket-amount">£${(thisWeek / 100).toFixed(2)}</span>
+      </div>
+      <button class="pay-basket-btn" onclick="openPayBasketModal()">Pay Now</button>
+    `;
+  } else {
+    // Empty basket
+    html = `
+      <div class="basket-row">
+        <span class="basket-icon">📦</span>
+        <span class="basket-label">This week:</span>
+        <span class="basket-amount">£0.00</span>
+      </div>
+    `;
+  }
+  
+  section.innerHTML = html;
+  section.style.display = 'block';
+}
+
+/**
+ * Update wallet display (only shows if balance > 0)
+ */
+function updateWalletDisplay() {
+  const section = document.getElementById('walletSection');
+  if (!section) return;
+  
+  const hasToken = sessionStorage.getItem('accessToken');
+  const balance = window.counsellorWallet || 0;
+  
+  if (hasToken && balance > 0) {
+    section.innerHTML = `
+      <div class="wallet-display">
+        <span class="wallet-icon">💰</span>
+        <span class="wallet-label">Wallet:</span>
+        <span class="wallet-amount">£${(balance / 100).toFixed(2)}</span>
+        <span class="wallet-note">From cancelled bookings</span>
+      </div>
+    `;
+    section.style.display = 'block';
+  } else {
+    section.style.display = 'none';
+  }
+}
+
+/**
+ * Set up real-time listeners for account changes
+ */
+function setupAccountListeners() {
+  const counsellorId = window.clientId;
+  if (!counsellorId) return;
+  
+  firebase.database().ref('accounts/' + counsellorId).on('value', (snapshot) => {
+    const data = snapshot.val() || {};
+    window.counsellorAccount = {
+      currentWeek: data.currentWeek || { balance: 0, bookings: {} },
+      previousWeek: data.previousWeek || null
+    };
+    updateBasketDisplay();
+    console.log('📦 Account updated (real-time)');
+  });
+  
+  firebase.database().ref('wallet/' + counsellorId + '/balance').on('value', (snapshot) => {
+    window.counsellorWallet = snapshot.val() || 0;
+    updateWalletDisplay();
+    console.log('💰 Wallet updated (real-time)');
+  });
+}
+
+/**
+ * Placeholder for pay basket modal (we'll build this later)
+ */
+function openPayBasketModal() {
+  alert('Pay basket modal - coming soon!');
+}
+
+/**
+ * Check if previous week is unpaid
+ */
+function hasPreviousWeekUnpaid() {
+  return window.counsellorAccount.previousWeek && 
+         window.counsellorAccount.previousWeek.balance > 0;
+}
 
 <!-- ================================ -->
 <!-- SECTION 5.1.2: PAYMENT CHOICE MODAL -->
@@ -3551,17 +3637,17 @@ const activeUpdatedBookings = updatedArray.filter(booking =>
 function initializeData() {
   const priorityCounsellor = selectedCounsellor || sessionStorage.getItem('counsellorName') || null;
   
-  // Load room config first, then pricing, then bookings, then credits
+  // Load room config first, then pricing, then bookings, then account/wallet
   if (typeof loadRoomConfig === 'function') {
     loadRoomConfig()
       .then(() => loadPricingConfig())
       .then(() => loadBookingDataWithPriority(priorityCounsellor))
       .then(() => populateCalendar())
       .then(() => {
-        // Load credits and update title after everything else
-        if (typeof loadCreditBalance === 'function') loadCreditBalance();
+        // Load account/wallet and update title after everything else
+        if (typeof loadAccountData === 'function') loadAccountData();
         if (typeof updatePageTitleWithCounsellor === 'function') updatePageTitleWithCounsellor();
-        if (typeof setupCreditBalanceListener === 'function') setupCreditBalanceListener();
+        if (typeof setupAccountListeners === 'function') setupAccountListeners();
       });
   } else {
     // Fallback if room-config.js not loaded
@@ -3569,13 +3655,12 @@ function initializeData() {
       .then(() => loadBookingDataWithPriority(priorityCounsellor))
       .then(() => populateCalendar())
       .then(() => {
-        if (typeof loadCreditBalance === 'function') loadCreditBalance();
+        if (typeof loadAccountData === 'function') loadAccountData();
         if (typeof updatePageTitleWithCounsellor === 'function') updatePageTitleWithCounsellor();
-        if (typeof setupCreditBalanceListener === 'function') setupCreditBalanceListener();
+        if (typeof setupAccountListeners === 'function') setupAccountListeners();
       });
   }
-} 
-    
+}
     // Initialize when DOM is ready - CORRECTED VERSION
     document.addEventListener('DOMContentLoaded', function() {
       console.log('DOM loaded, starting initialization...');
