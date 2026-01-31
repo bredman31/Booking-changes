@@ -3133,6 +3133,9 @@ async function lookupCounsellorId(counsellorName) {
         const accountRef = firebase.database().ref(`accounts/${counsellorId}/currentWeek`);
         const snapshot = await accountRef.once('value');
         const currentWeek = snapshot.val() || { balance: 0, bookings: {} };
+         if (!currentWeek.bookings) {
+           currentWeek.bookings = {};
+           }
         
         // Add booking to basket
         currentWeek.bookings[bookingId] = {
