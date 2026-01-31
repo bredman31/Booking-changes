@@ -702,12 +702,6 @@ body {
   }
 }
 
-
-/* Hide old Add to Basket button - replaced by payment options */
-#addToBasketBtn {
-  display: none !important;
-}
-
 /* Previous Week Warning */
 .previous-week-warning {
   display: flex;
