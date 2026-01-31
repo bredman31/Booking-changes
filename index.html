@@ -1582,6 +1582,57 @@ document.addEventListener('DOMContentLoaded', function() {
     radio.addEventListener('change', updateConfirmButtonText);
   });
 });
+
+/**
+ * Add "Book on Account" button to basket panel
+ */
+function addAccountButtonToBasket() {
+  const basketActions = document.querySelector('.basket-actions');
+  if (!basketActions) return;
+  
+  // Check if button already exists
+  if (document.getElementById('basketAccountBtn')) return;
+  
+  // Create the button
+  const accountBtn = document.createElement('button');
+  accountBtn.id = 'basketAccountBtn';
+  accountBtn.className = 'basket-checkout';
+  accountBtn.style.cssText = 'background: linear-gradient(135deg, #5c5c8a 0%, #4a4a7a 100%); margin-top: 10px; width: 100%;';
+  accountBtn.innerHTML = '📦 Book on Account';
+  accountBtn.onclick = function() {
+    if (window.bookingBasket.length === 0) return;
+    if (hasPreviousWeekUnpaid()) {
+      alert('Please pay your previous week balance before booking on account.');
+      return;
+    }
+    toggleBasketPanel(); // Close basket panel
+    processBasketOnAccount();
+  };
+  
+  // Add after basket-actions div
+  basketActions.parentNode.insertBefore(accountBtn, basketActions.nextSibling);
+}
+
+// Observe basket panel for when it opens
+const basketObserver = new MutationObserver(function(mutations) {
+  mutations.forEach(function(mutation) {
+    if (mutation.target.classList && mutation.target.classList.contains('open')) {
+      setTimeout(addAccountButtonToBasket, 50);
+    }
+  });
+});
+
+// Start observing when DOM is ready
+document.addEventListener('DOMContentLoaded', function() {
+  const basketPanel = document.querySelector('.basket-panel');
+  if (basketPanel) {
+    basketObserver.observe(basketPanel, { attributes: true, attributeFilter: ['class'] });
+  }
+});
+
+// Also try to add on page load
+setTimeout(addAccountButtonToBasket, 2000);
+
 </script>
 <!-- ================================ -->
 <!-- SECTION 5.1.2: PAYMENT CHOICE MODAL -->
