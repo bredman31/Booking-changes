@@ -1618,6 +1618,11 @@ async function processBasketOnAccount() {
     const snapshot = await accountRef.once('value');
     const currentWeek = snapshot.val() || { balance: 0, bookings: {} };
     
+    // Ensure bookings object exists
+    if (!currentWeek.bookings) {
+      currentWeek.bookings = {};
+    }
+    
     for (const booking of basket) {
       try {
         const bookingId = `booking_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
