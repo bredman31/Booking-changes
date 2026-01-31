@@ -1588,12 +1588,13 @@ document.addEventListener('DOMContentLoaded', function() {
     /**
      * Show payment choice modal
      */
-    function showPaymentChoiceModal(paymentDetails, isBasket = false) {
+function showPaymentChoiceModal(paymentDetails, isBasket = false) {
       const modal = document.getElementById('paymentChoiceModal');
       const summaryEl = document.getElementById('paymentChoiceSummary');
       const creditOption = document.getElementById('paymentOptionCredit');
       const cardOption = document.getElementById('paymentOptionCard');
       const partialOption = document.getElementById('paymentOptionPartial');
+      const accountOption = document.getElementById('paymentOptionAccount');
       const cardNote = document.getElementById('paymentOptionCardNote');
       const partialNote = document.getElementById('paymentOptionPartialNote');
       const statusEl = document.getElementById('paymentChoiceStatus');
@@ -1675,6 +1676,16 @@ document.addEventListener('DOMContentLoaded', function() {
         cardOption.style.display = 'block';
         partialOption.style.display = 'none';
         cardNote.textContent = 'Secure payment via Stripe';
+      }
+      
+      // Show/hide Account option (only for basket, and only if no previous week unpaid)
+      if (accountOption) {
+        const hasPreviousUnpaid = typeof hasPreviousWeekUnpaid === 'function' && hasPreviousWeekUnpaid();
+        if (isBasket && !hasPreviousUnpaid) {
+          accountOption.style.display = 'block';
+        } else {
+          accountOption.style.display = 'none';
+        }
       }
       
       // Show modal
