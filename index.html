@@ -1479,11 +1479,6 @@ function hasPreviousWeekUnpaid() {
  * Update payment options in booking modal based on account/wallet state
  */
 function updatePaymentOptionsInModal() {
-  // Hide old "Add to Basket" button - we use payment options now
-  const oldBasketBtn = document.getElementById('addToBasketBtn');
-  if (oldBasketBtn) {
-    oldBasketBtn.style.display = 'none';
-  }
   
   const walletBalance = window.counsellorWallet || 0;
   const previousWeek = window.counsellorAccount.previousWeek;
