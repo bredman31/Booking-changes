@@ -1584,6 +1584,140 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 /**
+ * Process basket items as "Book on Account"
+ */
+async function processBasketOnAccount() {
+  const basket = window.bookingBasket || [];
+  if (basket.length === 0) {
+    alert('Basket is empty');
+    return;
+  }
+  
+  // Check if previous week is unpaid
+  if (hasPreviousWeekUnpaid()) {
+    alert('Please pay your previous week balance before booking on account.');
+    return;
+  }
+  
+  const counsellorId = window.clientId;
+  const counsellorName = window.selectedCounsellor || sessionStorage.getItem('counsellorName');
+  const webhookUrl = 'https://hook.eu2.make.com/eq57vfwrpkw2rtozjeiy71j88e5sw1kr';
+  
+  let successCount = 0;
+  let failCount = 0;
+  let totalAdded = 0;
+  
+  // Show processing toast
+  if (typeof showBasketToast === 'function') {
+    showBasketToast('Processing bookings...');
+  }
+  
+  try {
+    // Get current account data
+    const accountRef = firebase.database().ref(`accounts/${counsellorId}/currentWeek`);
+    const snapshot = await accountRef.once('value');
+    const currentWeek = snapshot.val() || { balance: 0, bookings: {} };
+    
+    for (const booking of basket) {
+      try {
+        const bookingId = `booking_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+        
+        // Send to webhook
+        const payload = {
+          action: 'create',
+          timestamp: new Date().toISOString(),
+          client_id: counsellorId,
+          counsellor_name: counsellorName,
+          service_id: (booking.room === 'Car Park' || booking.room === 'Car_Park') ? '9' : '1',
+          provider_id: booking.roomId,
+          location_id: booking.locationId,
+          room_name: booking.room,
+          start_datetime: `${booking.date}T${booking.time}:00`,
+          end_datetime: `${booking.date}T${booking.endTime}:00`,
+          additional_fields: {
+            comments: booking.comments || `Basket booking by ${counsellorName}`
+          },
+          payment: {
+            paymentId: bookingId,
+            paymentAmount: booking.price || 0,
+            paymentStatus: 'account',
+            paymentMethod: 'account'
+          }
+        };
+        
+        console.log('📦 Book on Account payload:', payload);
+        
+        const response = await fetch(webhookUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        
+        if (response.ok) {
+          successCount++;
+          
+          // Add to Firebase account basket
+          if (booking.price > 0) {
+            currentWeek.bookings[bookingId] = {
+              bookingId: bookingId,
+              amount: booking.price,
+              date: booking.date,
+              time: booking.time,
+              room: booking.room,
+              addedAt: new Date().toISOString()
+            };
+            totalAdded += booking.price;
+          }
+        } else {
+          failCount++;
+          console.error('Booking failed:', booking, await response.text());
+        }
+      } catch (error) {
+        failCount++;
+        console.error('Booking error:', booking, error);
+      }
+    }
+    
+    // Update Firebase account balance
+    if (totalAdded > 0) {
+      currentWeek.balance = (currentWeek.balance || 0) + totalAdded;
+      await accountRef.set(currentWeek);
+      await firebase.database().ref(`accounts/${counsellorId}/lastUpdated`).set(new Date().toISOString());
+    }
+    
+    // Clear basket
+    window.bookingBasket = [];
+    if (typeof updateBasketUI === 'function') updateBasketUI();
+    if (typeof updateBasketSlotHighlights === 'function') updateBasketSlotHighlights();
+    
+    // Show success
+    if (failCount === 0) {
+      if (typeof showBasketToast === 'function') {
+        showBasketToast(`✅ ${successCount} booking(s) added to account!`);
+      }
+      if (typeof showPaymentToast === 'function') {
+        showPaymentToast(`✅ ${successCount} booking(s) added to account! £${(totalAdded / 100).toFixed(2)} added to this week's basket.`, 'success');
+      }
+    } else {
+      if (typeof showBasketToast === 'function') {
+        showBasketToast(`⚠️ ${successCount} added, ${failCount} failed`);
+      }
+    }
+    
+    // Refresh data
+    setTimeout(() => {
+      if (typeof refreshData === 'function') refreshData();
+    }, 2000);
+    
+  } catch (error) {
+    console.error('Book on Account error:', error);
+    if (typeof showBasketToast === 'function') {
+      showBasketToast('❌ Error: ' + error.message);
+    }
+  }
+}
+
+/**
  * Add "Book on Account" button to basket panel
  */
 function addAccountButtonToBasket() {
