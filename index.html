@@ -1583,9 +1583,6 @@ document.addEventListener('DOMContentLoaded', function() {
   });
 });
 
-/**
- * Process basket items as "Book on Account"
- */
 async function processBasketOnAccount() {
   const basket = window.bookingBasket || [];
   if (basket.length === 0) {
@@ -1601,7 +1598,9 @@ async function processBasketOnAccount() {
   
   const counsellorId = window.clientId;
   const counsellorName = window.selectedCounsellor || sessionStorage.getItem('counsellorName');
-  const webhookUrl = 'https://hook.eu2.make.com/eq57vfwrpkw2rtozjeiy71j88e5sw1kr';
+  // Use the CORRECT webhook (same as processCreditPayments)
+  const webhookUrl = 'https://hook.eu2.make.com/a6ua2a1yl13y7h7k9aphi9iow53dvwpv';
+  const paymentGroupId = 'ACCT_' + Date.now();
   
   let successCount = 0;
   let failCount = 0;
@@ -1623,31 +1622,37 @@ async function processBasketOnAccount() {
       currentWeek.bookings = {};
     }
     
-    for (const booking of basket) {
+    for (let i = 0; i < basket.length; i++) {
+      const booking = basket[i];
       try {
         const bookingId = `booking_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
         
-        // Send to webhook
+        // Determine service_id based on room
+        const isCarPark = (booking.room === 'Car Park' || booking.room === 'Car_Park');
+        const serviceId = isCarPark ? '9' : '1';
+        
+        // Build payload matching processCreditPayments format
         const payload = {
-          action: 'create',
-          timestamp: new Date().toISOString(),
           client_id: counsellorId,
+          counsellor_id: window.henleyClientId || counsellorId,
           counsellor_name: counsellorName,
-          service_id: (booking.room === 'Car Park' || booking.room === 'Car_Park') ? '9' : '1',
-          provider_id: booking.roomId,
-          location_id: booking.locationId,
+          room_id: booking.roomId,
           room_name: booking.room,
-          start_datetime: `${booking.date}T${booking.time}:00`,
-          end_datetime: `${booking.date}T${booking.endTime}:00`,
-          additional_fields: {
-            comments: booking.comments || `Basket booking by ${counsellorName}`
-          },
-          payment: {
-            paymentId: bookingId,
-            paymentAmount: booking.price || 0,
-            paymentStatus: 'account',
-            paymentMethod: 'account'
-          }
+          service_id: serviceId,
+          location_id: booking.locationId,
+          location_name: booking.locationId === '2' ? 'Henley' : 'Buckhurst Hill',
+          date: booking.date,
+          start_time: booking.time,
+          end_time: booking.endTime,
+          amount: booking.price || 0,
+          deduct_credit: false,
+          payment_method: 'account',
+          payment_group_id: paymentGroupId,
+          item_index: i + 1,
+          item_count: basket.length,
+          source: 'counsellor_calendar',
+          timestamp: new Date().toISOString(),
+          comments: booking.comments || `Basket booking by ${counsellorName}`
         };
         
         console.log('📦 Book on Account payload:', payload);
