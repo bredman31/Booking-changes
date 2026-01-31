@@ -3083,7 +3083,7 @@ async function lookupCounsellorId(counsellorName) {
       }
     }
     
-    /**
+/**
      * Process "Book on Account" - adds booking to weekly basket
      */
     async function processBookOnAccount(details) {
@@ -3101,33 +3101,31 @@ async function lookupCounsellorId(counsellorName) {
         const counsellorId = window.clientId;
         const bookingId = `booking_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
         
-        // Create booking via webhook (with account payment status)
+        // Create booking via webhook - use CORRECT webhook and payload format
         const bookingPayload = {
-          action: 'create',
-          timestamp: new Date().toISOString(),
           client_id: counsellorId,
+          counsellor_id: window.henleyClientId || counsellorId,
           counsellor_name: counsellorName,
-          service_id: serviceId,
-          provider_id: roomId,
-          location_id: locationId,
+          room_id: roomId,
           room_name: room,
-          start_datetime: `${date}T${time}:00`,
-          end_datetime: `${date}T${endTime}:00`,
-          additional_fields: {
-            comments: comments || `Booked via counsellor calendar by ${counsellorName}`
-          },
-          payment: {
-            paymentId: bookingId,
-            paymentAmount: price,
-            paymentStatus: 'account',
-            paymentMethod: 'account'
-          }
+          service_id: serviceId,
+          location_id: locationId,
+          location_name: locationId === '2' ? 'Henley' : 'Buckhurst Hill',
+          date: date,
+          start_time: time,
+          end_time: endTime,
+          amount: price,
+          deduct_credit: false,
+          payment_method: 'account',
+          source: 'counsellor_calendar',
+          timestamp: new Date().toISOString(),
+          comments: comments || `Booked via counsellor calendar by ${counsellorName}`
         };
         
         console.log('📦 Book on Account payload:', bookingPayload);
         
-        // Send to webhook
-        const ACCOUNT_BOOKING_WEBHOOK_URL = 'https://hook.eu2.make.com/eq57vfwrpkw2rtozjeiy71j88e5sw1kr';
+        // Send to CORRECT webhook (same as processCreditPayments)
+        const ACCOUNT_BOOKING_WEBHOOK_URL = 'https://hook.eu2.make.com/a6ua2a1yl13y7h7k9aphi9iow53dvwpv';
         const response = await fetch(ACCOUNT_BOOKING_WEBHOOK_URL, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -3143,9 +3141,9 @@ async function lookupCounsellorId(counsellorName) {
         const accountRef = firebase.database().ref(`accounts/${counsellorId}/currentWeek`);
         const snapshot = await accountRef.once('value');
         const currentWeek = snapshot.val() || { balance: 0, bookings: {} };
-         if (!currentWeek.bookings) {
-           currentWeek.bookings = {};
-           }
+        if (!currentWeek.bookings) {
+          currentWeek.bookings = {};
+        }
         
         // Add booking to basket
         currentWeek.bookings[bookingId] = {
@@ -3164,16 +3162,22 @@ async function lookupCounsellorId(counsellorName) {
         await accountRef.set(currentWeek);
         await firebase.database().ref(`accounts/${counsellorId}/lastUpdated`).set(new Date().toISOString());
         
-        console.log('📦 Added to account basket:', bookingId, '- New balance:', currentWeek.balance);
+        console.log('📦 Added to account basket:', bookingId, price);
         
         // Success!
         statusDiv.className = 'booking-status success';
         statusDiv.innerHTML = `
-          <strong>✓ Booked on Account!</strong><br>
+          <strong>✓ Added to Account!</strong><br>
           <small>${room} on ${date} at ${time}<br>
-          Added £${(price / 100).toFixed(2)} to this week's basket</small>
+          £${(price / 100).toFixed(2)} added to this week's basket</small>
         `;
         
+        // Show toast if available
+        if (typeof showPaymentToast === 'function') {
+          showPaymentToast(`✅ Booking added to account! £${(price / 100).toFixed(2)} added to weekly basket.`, 'success');
+        }
+        
+        // Close modal and refresh
         setTimeout(() => {
           closeNewBookingModal();
           currentDate = date;
@@ -3181,12 +3185,13 @@ async function lookupCounsellorId(counsellorName) {
           if (dateSelector) dateSelector.value = date;
           currentWeekStart = getWeekStartDate(new Date(date + 'T12:00:00'));
           refreshData();
-        }, 3000);
+        }, 2500);
         
       } catch (error) {
         console.error('Book on Account error:', error);
         statusDiv.className = 'booking-status error';
         statusDiv.innerHTML = `<strong>Error</strong><br><small>${error.message}</small>`;
+        statusDiv.style.display = 'block';
         confirmBtn.disabled = false;
       }
     }
