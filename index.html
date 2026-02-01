@@ -1322,37 +1322,43 @@ window.counsellorAccount = null;
 window.counsellorWallet = 0;
 
 /**
+ /**
  * Get billing week number in format YYYYWNN
- * Billing week runs Friday 00:00 to Thursday 23:59
+ * Billing week runs Saturday 00:00 to Friday 23:59
  */
 function getBillingWeek(date) {
   const d = new Date(date);
-  const day = d.getDay();
-  const daysSinceFriday = (day + 2) % 7;
+  const day = d.getDay(); // 0=Sun, 1=Mon, ..., 5=Fri, 6=Sat
   
-  const friday = new Date(d);
-  friday.setDate(d.getDate() - daysSinceFriday);
-  friday.setHours(0, 0, 0, 0);
+  // Days since last Saturday (0 if today is Saturday)
+  const daysSinceSaturday = (day + 1) % 7;
   
-  const yearStart = new Date(friday.getFullYear(), 0, 1);
+  // Get the Saturday that starts this billing week
+  const saturday = new Date(d);
+  saturday.setDate(d.getDate() - daysSinceSaturday);
+  saturday.setHours(0, 0, 0, 0);
+  
+  // Find first Saturday of the year
+  const yearStart = new Date(saturday.getFullYear(), 0, 1);
   const startDay = yearStart.getDay();
-  const daysToFirstFriday = (5 - startDay + 7) % 7;
-  const firstFriday = new Date(yearStart);
-  firstFriday.setDate(yearStart.getDate() + daysToFirstFriday);
+  const daysToFirstSaturday = (6 - startDay + 7) % 7;
+  const firstSaturday = new Date(yearStart);
+  firstSaturday.setDate(yearStart.getDate() + daysToFirstSaturday);
   
-  if (friday < firstFriday) {
-    const prevYearStart = new Date(friday.getFullYear() - 1, 0, 1);
+  // If our Saturday is before the first Saturday of the year, use previous year
+  if (saturday < firstSaturday) {
+    const prevYearStart = new Date(saturday.getFullYear() - 1, 0, 1);
     const prevStartDay = prevYearStart.getDay();
-    const prevDaysToFirstFriday = (5 - prevStartDay + 7) % 7;
-    const prevFirstFriday = new Date(prevYearStart);
-    prevFirstFriday.setDate(prevYearStart.getDate() + prevDaysToFirstFriday);
+    const prevDaysToFirstSaturday = (6 - prevStartDay + 7) % 7;
+    const prevFirstSaturday = new Date(prevYearStart);
+    prevFirstSaturday.setDate(prevYearStart.getDate() + prevDaysToFirstSaturday);
     
-    const weeksDiff = Math.floor((friday - prevFirstFriday) / (7 * 24 * 60 * 60 * 1000));
-    return `${friday.getFullYear() - 1}W${(weeksDiff + 1).toString().padStart(2, '0')}`;
+    const weeksDiff = Math.floor((saturday - prevFirstSaturday) / (7 * 24 * 60 * 60 * 1000));
+    return `${saturday.getFullYear() - 1}W${(weeksDiff + 1).toString().padStart(2, '0')}`;
   }
   
-  const weeksDiff = Math.floor((friday - firstFriday) / (7 * 24 * 60 * 60 * 1000));
-  return `${friday.getFullYear()}W${(weeksDiff + 1).toString().padStart(2, '0')}`;
+  const weeksDiff = Math.floor((saturday - firstSaturday) / (7 * 24 * 60 * 60 * 1000));
+  return `${saturday.getFullYear()}W${(weeksDiff + 1).toString().padStart(2, '0')}`;
 }
 
 /**
