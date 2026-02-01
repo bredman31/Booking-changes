@@ -3251,6 +3251,10 @@ async function lookupCounsellorId(counsellorName) {
 /**
      * Process "Book on Account" - adds booking to weekly basket
      */
+/**
+     * Process "Book on Account" - sends to 07B webhook
+     * Make.com handles all Firebase writes
+     */
     async function processBookOnAccount(details) {
       const { room, roomId, date, time, endTime, locationId, serviceId, price, comments, counsellorName } = details;
       
@@ -3264,9 +3268,9 @@ async function lookupCounsellorId(counsellorName) {
       
       try {
         const counsellorId = window.clientId;
-        const bookingId = `booking_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+        const bookingWeek = getBillingWeek(new Date(date));
         
-        // Create booking via webhook - use CORRECT webhook and payload format
+        // Create booking via webhook
         const bookingPayload = {
           client_id: counsellorId,
           counsellor_id: window.henleyClientId || counsellorId,
@@ -3282,14 +3286,14 @@ async function lookupCounsellorId(counsellorName) {
           amount: price,
           deduct_credit: false,
           payment_method: 'account',
+          account_week: bookingWeek,
           source: 'counsellor_calendar',
           timestamp: new Date().toISOString(),
-          comments: comments || `Booked via counsellor calendar by ${counsellorName}`
+          comments: comments || 'Booked via counsellor calendar by ' + counsellorName
         };
         
-        console.log('📦 Book on Account payload:', bookingPayload);
+        console.log('Book on Account payload:', bookingPayload);
         
-        // Send to CORRECT webhook (same as processCreditPayments)
         const ACCOUNT_BOOKING_WEBHOOK_URL = 'https://hook.eu2.make.com/a6ua2a1yl13y7h7k9aphi9iow53dvwpv';
         const response = await fetch(ACCOUNT_BOOKING_WEBHOOK_URL, {
           method: 'POST',
@@ -3299,47 +3303,20 @@ async function lookupCounsellorId(counsellorName) {
         
         if (!response.ok) {
           const errorText = await response.text();
-          throw new Error(`Webhook failed: ${response.status} - ${errorText}`);
+          throw new Error('Webhook failed: ' + response.status + ' - ' + errorText);
         }
         
-        // Add to Firebase account basket
-        const accountRef = firebase.database().ref(`accounts/${counsellorId}/currentWeek`);
-        const snapshot = await accountRef.once('value');
-        const currentWeek = snapshot.val() || { balance: 0, bookings: {} };
-        if (!currentWeek.bookings) {
-          currentWeek.bookings = {};
-        }
-        
-        // Add booking to basket
-        currentWeek.bookings[bookingId] = {
-          bookingId: bookingId,
-          amount: price,
-          date: date,
-          time: time,
-          room: room,
-          addedAt: new Date().toISOString()
-        };
-        
-        // Update balance
-        currentWeek.balance = (currentWeek.balance || 0) + price;
-        
-        // Save to Firebase
-        await accountRef.set(currentWeek);
-        await firebase.database().ref(`accounts/${counsellorId}/lastUpdated`).set(new Date().toISOString());
-        
-        console.log('📦 Added to account basket:', bookingId, price);
+        console.log('Added to account, week:', bookingWeek);
         
         // Success!
         statusDiv.className = 'booking-status success';
-        statusDiv.innerHTML = `
-          <strong>✓ Added to Account!</strong><br>
-          <small>${room} on ${date} at ${time}<br>
-          £${(price / 100).toFixed(2)} added to this week's basket</small>
-        `;
+        statusDiv.innerHTML = '<strong>Added to Account!</strong><br>' +
+          '<small>' + room + ' on ' + date + ' at ' + time + '<br>' +
+          'Week ' + bookingWeek + ' - the calendar will refresh shortly.</small>';
         
         // Show toast if available
         if (typeof showPaymentToast === 'function') {
-          showPaymentToast(`✅ Booking added to account! £${(price / 100).toFixed(2)} added to weekly basket.`, 'success');
+          showPaymentToast('Booking added to account! Week ' + bookingWeek, 'success');
         }
         
         // Close modal and refresh
@@ -3349,13 +3326,14 @@ async function lookupCounsellorId(counsellorName) {
           const dateSelector = document.getElementById('dateSelector');
           if (dateSelector) dateSelector.value = date;
           currentWeekStart = getWeekStartDate(new Date(date + 'T12:00:00'));
+          loadAccountData();
           refreshData();
         }, 2500);
         
       } catch (error) {
         console.error('Book on Account error:', error);
         statusDiv.className = 'booking-status error';
-        statusDiv.innerHTML = `<strong>Error</strong><br><small>${error.message}</small>`;
+        statusDiv.innerHTML = '<strong>Error</strong><br><small>' + error.message + '</small>';
         statusDiv.style.display = 'block';
         confirmBtn.disabled = false;
       }
