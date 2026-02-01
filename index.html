@@ -1316,53 +1316,108 @@ function showPaymentToast(message, type) {
 <!-- ================================ -->
 <script>
 // Global state
-window.counsellorAccount = {
-  currentWeek: { balance: 0, bookings: {}, start: null, end: null },
-  previousWeek: null
-};
+
+// Account/Basket system - weekly billing (Friday-to-Friday)
+window.counsellorAccount = null;
 window.counsellorWallet = 0;
 
 /**
+ * Get billing week number in format YYYYWNN
+ * Billing week runs Friday 00:00 to Thursday 23:59
+ */
+function getBillingWeek(date) {
+  const d = new Date(date);
+  const day = d.getDay();
+  const daysSinceFriday = (day + 2) % 7;
+  
+  const friday = new Date(d);
+  friday.setDate(d.getDate() - daysSinceFriday);
+  friday.setHours(0, 0, 0, 0);
+  
+  const yearStart = new Date(friday.getFullYear(), 0, 1);
+  const startDay = yearStart.getDay();
+  const daysToFirstFriday = (5 - startDay + 7) % 7;
+  const firstFriday = new Date(yearStart);
+  firstFriday.setDate(yearStart.getDate() + daysToFirstFriday);
+  
+  if (friday < firstFriday) {
+    const prevYearStart = new Date(friday.getFullYear() - 1, 0, 1);
+    const prevStartDay = prevYearStart.getDay();
+    const prevDaysToFirstFriday = (5 - prevStartDay + 7) % 7;
+    const prevFirstFriday = new Date(prevYearStart);
+    prevFirstFriday.setDate(prevYearStart.getDate() + prevDaysToFirstFriday);
+    
+    const weeksDiff = Math.floor((friday - prevFirstFriday) / (7 * 24 * 60 * 60 * 1000));
+    return `${friday.getFullYear() - 1}W${(weeksDiff + 1).toString().padStart(2, '0')}`;
+  }
+  
+  const weeksDiff = Math.floor((friday - firstFriday) / (7 * 24 * 60 * 60 * 1000));
+  return `${friday.getFullYear()}W${(weeksDiff + 1).toString().padStart(2, '0')}`;
+}
+
+/**
  * Load account and wallet data from Firebase
+ * Uses billing week structure: /accounts/{clientId}/{YYYYWNN}/
  */
 async function loadAccountData() {
   const counsellorId = window.clientId;
   if (!counsellorId) {
-    console.log('📦 No clientId, skipping account load');
+    console.log('No clientId, skipping account load');
     return;
   }
   
+  const currentWeek = getBillingWeek(new Date());
+  
   try {
-    console.log('📦 Loading account data for:', counsellorId);
+    console.log('Loading account data for:', counsellorId, 'Week:', currentWeek);
     
-    // Load account
+    // Load all account weeks
     const accountSnap = await firebase.database().ref('accounts/' + counsellorId).once('value');
-    const accountData = accountSnap.val();
+    const allData = accountSnap.val() || {};
     
-    if (accountData) {
-      window.counsellorAccount = {
-        currentWeek: accountData.currentWeek || { balance: 0, bookings: {} },
-        previousWeek: accountData.previousWeek || null
-      };
-      console.log('📦 Account loaded:', window.counsellorAccount);
-    }
+    // Get current week data
+    const currentWeekData = allData[currentWeek] || { balance: 0, bookings: {} };
+    
+    // Aggregate all previous weeks with unpaid balances
+    let previousTotal = 0;
+    const previousWeeks = [];
+    
+    Object.entries(allData).forEach(([week, data]) => {
+      if (!week.match(/^\d{4}W\d{2}$/)) return; // Skip non-week keys
+      if (week < currentWeek && data.balance > 0) {
+        previousTotal += data.balance;
+        previousWeeks.push({ week, balance: data.balance });
+      }
+    });
+    
+    window.counsellorAccount = {
+      currentWeek: currentWeek,
+      currentBalance: currentWeekData.balance || 0,
+      currentBookings: currentWeekData.bookings || {},
+      previousTotal: previousTotal,
+      previousWeeks: previousWeeks,
+      rawData: allData
+    };
+    
+    console.log('Account loaded:', window.counsellorAccount);
     
     // Load wallet
     const walletSnap = await firebase.database().ref('wallet/' + counsellorId + '/balance').once('value');
     window.counsellorWallet = walletSnap.val() || 0;
-    console.log('💰 Wallet loaded:', window.counsellorWallet);
+    console.log('Wallet loaded:', window.counsellorWallet);
     
     // Update displays
     updateBasketDisplay();
     updateWalletDisplay();
     
   } catch (error) {
-    console.error('📦 Error loading account:', error);
+    console.error('Error loading account:', error);
   }
 }
 
 /**
  * Update basket display in UI
+ * Shows current week and aggregated previous weeks
  */
 function updateBasketDisplay() {
   const section = document.getElementById('basketSection');
@@ -1374,46 +1429,56 @@ function updateBasketDisplay() {
     return;
   }
   
-  const thisWeek = window.counsellorAccount.currentWeek?.balance || 0;
-  const previousWeek = window.counsellorAccount.previousWeek;
+  const account = window.counsellorAccount;
+  if (!account) {
+    section.style.display = 'none';
+    return;
+  }
   
-  let html = '';
+  const currentBalance = account.currentBalance || 0;
+  const previousTotal = account.previousTotal || 0;
   
-  if (previousWeek && previousWeek.balance > 0) {
-    // Show both previous and current week
-    html = `
-      <div class="basket-row basket-previous">
-        <span class="basket-icon">📦</span>
-        <span class="basket-label">Previous week:</span>
-        <span class="basket-amount">£${(previousWeek.balance / 100).toFixed(2)}</span>
-        <span class="basket-prompt">Please pay now</span>
-      </div>
+  // Don't show if nothing to display
+  if (currentBalance === 0 && previousTotal === 0) {
+    section.innerHTML = `
       <div class="basket-row">
-        <span class="basket-icon">📦</span>
-        <span class="basket-label">This week:</span>
-        <span class="basket-amount">£${(thisWeek / 100).toFixed(2)}</span>
-      </div>
-      <button class="pay-basket-btn" onclick="openPayBasketModal()">Pay Now</button>
-    `;
-  } else if (thisWeek > 0) {
-    // Show only current week with balance
-    html = `
-      <div class="basket-row">
-        <span class="basket-icon">📦</span>
-        <span class="basket-label">This week:</span>
-        <span class="basket-amount">£${(thisWeek / 100).toFixed(2)}</span>
-      </div>
-      <button class="pay-basket-btn" onclick="openPayBasketModal()">Pay Now</button>
-    `;
-  } else {
-    // Empty basket
-    html = `
-      <div class="basket-row">
-        <span class="basket-icon">📦</span>
+        <span class="basket-icon">&#128230;</span>
         <span class="basket-label">This week:</span>
         <span class="basket-amount">£0.00</span>
       </div>
     `;
+    section.style.display = 'block';
+    return;
+  }
+  
+  let html = '';
+  
+  // Previous weeks (aggregated) - show first if exists
+  if (previousTotal > 0) {
+    const weekLabel = account.previousWeeks.length > 1 ? 'Previous weeks' : 'Previous week';
+    html += `
+      <div class="basket-row basket-previous">
+        <span class="basket-icon">&#128230;</span>
+        <span class="basket-label">${weekLabel}:</span>
+        <span class="basket-amount">£${(previousTotal / 100).toFixed(2)}</span>
+        <span class="basket-prompt">Please pay now</span>
+      </div>
+    `;
+  }
+  
+  // Current week
+  html += `
+    <div class="basket-row">
+      <span class="basket-icon">&#128230;</span>
+      <span class="basket-label">This week (${account.currentWeek}):</span>
+      <span class="basket-amount">£${(currentBalance / 100).toFixed(2)}</span>
+    </div>
+  `;
+  
+  // Pay button if there's anything to pay
+  const totalToPay = previousTotal + currentBalance;
+  if (totalToPay > 0) {
+    html += `<button class="pay-basket-btn" onclick="payAccountBalance()">Pay £${(totalToPay / 100).toFixed(2)}</button>`;
   }
   
   section.innerHTML = html;
@@ -1433,7 +1498,7 @@ function updateWalletDisplay() {
   if (hasToken && balance > 0) {
     section.innerHTML = `
       <div class="wallet-display">
-        <span class="wallet-icon">💰</span>
+        <span class="wallet-icon">&#128176;</span>
         <span class="wallet-label">Wallet:</span>
         <span class="wallet-amount">£${(balance / 100).toFixed(2)}</span>
         <span class="wallet-note">From cancelled bookings</span>
@@ -1452,36 +1517,150 @@ function setupAccountListeners() {
   const counsellorId = window.clientId;
   if (!counsellorId) return;
   
+  // Listen for account changes
   firebase.database().ref('accounts/' + counsellorId).on('value', (snapshot) => {
-    const data = snapshot.val() || {};
-    window.counsellorAccount = {
-      currentWeek: data.currentWeek || { balance: 0, bookings: {} },
-      previousWeek: data.previousWeek || null
-    };
-    updateBasketDisplay();
-    console.log('📦 Account updated (real-time)');
+    console.log('Account data changed, reloading...');
+    loadAccountData();
   });
   
+  // Listen for wallet changes
   firebase.database().ref('wallet/' + counsellorId + '/balance').on('value', (snapshot) => {
     window.counsellorWallet = snapshot.val() || 0;
     updateWalletDisplay();
-    console.log('💰 Wallet updated (real-time)');
   });
 }
 
 /**
- * Placeholder for pay basket modal (we'll build this later)
+ * Pay account balance via Stripe
  */
-function openPayBasketModal() {
-  alert('Pay basket modal - coming soon!');
+async function payAccountBalance() {
+  const counsellorId = window.clientId;
+  const counsellorName = window.selectedCounsellor || sessionStorage.getItem('counsellorName');
+  
+  // Load fresh account data
+  await loadAccountData();
+  const account = window.counsellorAccount;
+  
+  if (!account) {
+    alert('Could not load account data');
+    return;
+  }
+  
+  const totalToPay = (account.previousTotal || 0) + (account.currentBalance || 0);
+  
+  if (totalToPay <= 0) {
+    alert('No balance to pay');
+    return;
+  }
+  
+  console.log('Preparing account payment for £' + (totalToPay / 100).toFixed(2));
+  
+  // Build account_items array from all unpaid weeks
+  const account_items = [];
+  const weeksIncluded = [];
+  
+  // Add previous weeks
+  if (account.previousWeeks) {
+    account.previousWeeks.forEach(pw => {
+      const weekData = account.rawData[pw.week];
+      if (weekData && weekData.bookings) {
+        Object.entries(weekData.bookings).forEach(([code, data]) => {
+          account_items.push({ booking_code: code, amount: data.amount, week: pw.week });
+        });
+        weeksIncluded.push(pw.week);
+      }
+    });
+  }
+  
+  // Add current week
+  if (account.currentBalance > 0 && account.currentBookings) {
+    Object.entries(account.currentBookings).forEach(([code, data]) => {
+      account_items.push({ booking_code: code, amount: data.amount, week: account.currentWeek });
+    });
+    weeksIncluded.push(account.currentWeek);
+  }
+  
+  if (account_items.length === 0) {
+    alert('No bookings found to pay for');
+    return;
+  }
+  
+  const basketRef = 'PB_' + Date.now();
+  
+  const pendingBasket = {
+    id: basketRef,
+    client_id: counsellorId,
+    counsellor_id: window.henleyClientId || counsellorId,
+    counsellor_name: counsellorName,
+    items: [],
+    account_items: account_items,
+    account_week: weeksIncluded.join(','),
+    account_total: totalToPay,
+    existing_account_balance: totalToPay,
+    total_amount: totalToPay,
+    total_credit_used: 0,
+    total_stripe: totalToPay,
+    status: 'pending',
+    created_at: new Date().toISOString()
+  };
+  
+  console.log('Saving pending basket:', pendingBasket);
+  
+  try {
+    // Save basket to Firebase
+    const firebaseUrl = `https://cherry-tree-bookings-default-rtdb.europe-west1.firebasedatabase.app/pending_baskets/${basketRef}.json`;
+    const saveResponse = await fetch(firebaseUrl, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(pendingBasket)
+    });
+    
+    if (!saveResponse.ok) throw new Error('Could not save basket to Firebase');
+    
+    // Create Stripe checkout
+    const stripeWebhook = 'https://hook.eu2.make.com/2rm92qpgfji6cxtv3eiggv30dhn1j83q';
+    
+    const checkoutPayload = {
+      counsellor_name: counsellorName,
+      counsellor_id: window.henleyClientId || counsellorId,
+      client_id: counsellorId,
+      amount: totalToPay,
+      credit_used: 0,
+      description: `Account payment: ${account_items.length} booking(s) - ${weeksIncluded.join(', ')}`,
+      basket_ref: basketRef,
+      success_url: window.location.origin + window.location.pathname + '?payment=success&basket=' + basketRef,
+      cancel_url: window.location.origin + window.location.pathname + '?payment=cancelled'
+    };
+    
+    console.log('Creating Stripe checkout:', checkoutPayload);
+    
+    const response = await fetch(stripeWebhook, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(checkoutPayload)
+    });
+    
+    if (!response.ok) throw new Error('Could not create checkout session');
+    
+    const result = await response.json();
+    
+    if (result.checkout_url) {
+      window.location.href = result.checkout_url;
+    } else {
+      throw new Error('No checkout URL returned');
+    }
+    
+  } catch (error) {
+    console.error('Payment error:', error);
+    alert('Payment error: ' + error.message);
+  }
 }
 
 /**
- * Check if previous week is unpaid
+ * Check if previous weeks are unpaid
  */
 function hasPreviousWeekUnpaid() {
-  return window.counsellorAccount.previousWeek && 
-         window.counsellorAccount.previousWeek.balance > 0;
+  return window.counsellorAccount && window.counsellorAccount.previousTotal > 0;
 }
 
 
@@ -1491,7 +1670,7 @@ function hasPreviousWeekUnpaid() {
 function updatePaymentOptionsInModal() {
   
   const walletBalance = window.counsellorWallet || 0;
-  const previousWeek = window.counsellorAccount.previousWeek;
+  const previousTotal = window.counsellorAccount?.previousTotal || 0;
   const bookingPrice = parseInt(document.getElementById('newBookingPrice')?.value) || 0;
   
   // Show/hide wallet option
@@ -1510,11 +1689,11 @@ function updatePaymentOptionsInModal() {
   const previousAmountSpan = document.getElementById('previousWeekAmount');
   const accountOption = document.getElementById('optionAccount');
   
-  if (previousWeek && previousWeek.balance > 0) {
+  if (previousTotal > 0) {
     // Show warning
     if (previousWarning) {
       previousWarning.style.display = 'flex';
-      previousAmountSpan.textContent = '£' + (previousWeek.balance / 100).toFixed(2);
+      previousAmountSpan.textContent = '£' + (previousTotal / 100).toFixed(2);
     }
     
     // Disable "Book on Account" - must pay previous first
@@ -1583,28 +1762,38 @@ document.addEventListener('DOMContentLoaded', function() {
   });
 });
 
+/**
+ * Process basket items as "book on account"
+ * Sends each booking to 07B webhook - Make.com handles Firebase writes
+ */
 async function processBasketOnAccount() {
   const basket = window.bookingBasket || [];
+  
   if (basket.length === 0) {
     alert('Basket is empty');
     return;
   }
   
-  // Check if previous week is unpaid
-  if (hasPreviousWeekUnpaid()) {
-    alert('Please pay your previous week balance before booking on account.');
+  // Load fresh account data
+  await loadAccountData();
+  const account = window.counsellorAccount;
+  
+  // Check for unpaid previous weeks
+  if (account && account.previousTotal > 0) {
+    const prevAmount = (account.previousTotal / 100).toFixed(2);
+    alert('Please pay your previous balance of £' + prevAmount + ' before booking on account.');
     return;
   }
   
   const counsellorId = window.clientId;
   const counsellorName = window.selectedCounsellor || sessionStorage.getItem('counsellorName');
-  // Use the CORRECT webhook (same as processCreditPayments)
   const webhookUrl = 'https://hook.eu2.make.com/a6ua2a1yl13y7h7k9aphi9iow53dvwpv';
   const paymentGroupId = 'ACCT_' + Date.now();
   
   let successCount = 0;
   let failCount = 0;
-  let totalAdded = 0;
+  
+  console.log('Processing', basket.length, 'bookings on account...');
   
   // Show processing toast
   if (typeof showBasketToast === 'function') {
@@ -1612,117 +1801,87 @@ async function processBasketOnAccount() {
   }
   
   try {
-    // Get current account data
-    const accountRef = firebase.database().ref(`accounts/${counsellorId}/currentWeek`);
-    const snapshot = await accountRef.once('value');
-    const currentWeek = snapshot.val() || { balance: 0, bookings: {} };
-    
-    // Ensure bookings object exists
-    if (!currentWeek.bookings) {
-      currentWeek.bookings = {};
-    }
-    
     for (let i = 0; i < basket.length; i++) {
       const booking = basket[i];
-      try {
-        const bookingId = `booking_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-        
-        // Determine service_id based on room
-        const isCarPark = (booking.room === 'Car Park' || booking.room === 'Car_Park');
-        const serviceId = isCarPark ? '9' : '1';
-        
-        // Build payload matching processCreditPayments format
-        const payload = {
-          client_id: counsellorId,
-          counsellor_id: window.henleyClientId || counsellorId,
-          counsellor_name: counsellorName,
-          room_id: booking.roomId,
-          room_name: booking.room,
-          service_id: serviceId,
-          location_id: booking.locationId,
-          location_name: booking.locationId === '2' ? 'Henley' : 'Buckhurst Hill',
-          date: booking.date,
-          start_time: booking.time,
-          end_time: booking.endTime,
-          amount: booking.price || 0,
-          deduct_credit: false,
-          payment_method: 'account',
-          payment_group_id: paymentGroupId,
-          item_index: i + 1,
-          item_count: basket.length,
-          source: 'counsellor_calendar',
-          timestamp: new Date().toISOString(),
-          comments: booking.comments || `Basket booking by ${counsellorName}`
-        };
-        
-        console.log('📦 Book on Account payload:', payload);
-        
-        const response = await fetch(webhookUrl, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload)
-        });
-        
-        if (response.ok) {
-          successCount++;
-          
-          // Add to Firebase account basket
-          if (booking.price > 0) {
-            currentWeek.bookings[bookingId] = {
-              bookingId: bookingId,
-              amount: booking.price,
-              date: booking.date,
-              time: booking.time,
-              room: booking.room,
-              addedAt: new Date().toISOString()
-            };
-            totalAdded += booking.price;
-          }
-        } else {
-          failCount++;
-          console.error('Booking failed:', booking, await response.text());
-        }
-      } catch (error) {
+      const isCarPark = (booking.room === 'Car Park' || booking.room === 'Car_Park');
+      const serviceId = isCarPark ? '9' : '1';
+      const bookingWeek = getBillingWeek(new Date(booking.date));
+      
+      const payload = {
+        client_id: counsellorId,
+        counsellor_id: window.henleyClientId || counsellorId,
+        counsellor_name: counsellorName,
+        room_id: booking.roomId,
+        room_name: booking.room,
+        service_id: serviceId,
+        location_id: booking.locationId,
+        location_name: booking.locationId === '2' ? 'Henley' : 'Buckhurst Hill',
+        date: booking.date,
+        start_time: booking.time,
+        end_time: booking.endTime,
+        amount: booking.price || 0,
+        deduct_credit: false,
+        payment_method: 'account',
+        account_week: bookingWeek,
+        payment_group_id: paymentGroupId,
+        item_index: i + 1,
+        item_count: basket.length,
+        source: 'counsellor_calendar',
+        timestamp: new Date().toISOString(),
+        comments: booking.comments || ''
+      };
+      
+      console.log('Sending booking ' + (i + 1) + '/' + basket.length + ':', payload);
+      
+      const response = await fetch(webhookUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      
+      if (response.ok) {
+        const result = await response.json();
+        console.log('Booking created:', result);
+        successCount++;
+      } else {
         failCount++;
-        console.error('Booking error:', booking, error);
+        console.error('Booking failed:', await response.text());
       }
     }
     
-    // Update Firebase account balance
-    if (totalAdded > 0) {
-      currentWeek.balance = (currentWeek.balance || 0) + totalAdded;
-      await accountRef.set(currentWeek);
-      await firebase.database().ref(`accounts/${counsellorId}/lastUpdated`).set(new Date().toISOString());
+    // Clear basket on success
+    if (successCount > 0) {
+      window.bookingBasket = [];
+      if (typeof updateBasketUI === 'function') updateBasketUI();
+      if (typeof updateBasketSlotHighlights === 'function') updateBasketSlotHighlights();
     }
     
-    // Clear basket
-    window.bookingBasket = [];
-    if (typeof updateBasketUI === 'function') updateBasketUI();
-    if (typeof updateBasketSlotHighlights === 'function') updateBasketSlotHighlights();
-    
-    // Show success
+    // Show result
     if (failCount === 0) {
       if (typeof showBasketToast === 'function') {
-        showBasketToast(`✅ ${successCount} booking(s) added to account!`);
+        showBasketToast(successCount + ' booking(s) added to account!');
       }
       if (typeof showPaymentToast === 'function') {
-        showPaymentToast(`✅ ${successCount} booking(s) added to account! £${(totalAdded / 100).toFixed(2)} added to this week's basket.`, 'success');
+        showPaymentToast(successCount + ' booking(s) added to account!', 'success');
       }
     } else {
       if (typeof showBasketToast === 'function') {
-        showBasketToast(`⚠️ ${successCount} added, ${failCount} failed`);
+        showBasketToast(successCount + ' added, ' + failCount + ' failed');
       }
     }
     
-    // Refresh data
-    setTimeout(() => {
-      if (typeof refreshData === 'function') refreshData();
-    }, 2000);
+    // Refresh account display
+    await loadAccountData();
+    
+    // Refresh calendar
+    if (typeof refreshData === 'function') {
+      setTimeout(() => refreshData(), 1500);
+    }
     
   } catch (error) {
     console.error('Book on Account error:', error);
     if (typeof showBasketToast === 'function') {
-      showBasketToast('❌ Error: ' + error.message);
+      showBasketToast('Error: ' + error.message);
     }
   }
 }
