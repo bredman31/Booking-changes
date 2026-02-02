@@ -3373,8 +3373,8 @@ async function lookupCounsellorId(counsellorName) {
       }
     }
     
-    /**
-     * Process wallet payment - deducts from wallet and creates booking
+/**
+     * Process wallet payment - sends to 07B which handles credit deduction
      */
     async function processWalletPayment(details) {
       const { room, roomId, date, time, endTime, locationId, serviceId, price, comments, counsellorName } = details;
@@ -3387,8 +3387,8 @@ async function lookupCounsellorId(counsellorName) {
       // Check wallet has enough
       if (walletBalance < price) {
         statusDiv.className = 'booking-status error';
-        statusDiv.innerHTML = `<strong>Insufficient Wallet Balance</strong><br>
-          <small>Wallet: £${(walletBalance / 100).toFixed(2)} | Required: £${(price / 100).toFixed(2)}</small>`;
+        statusDiv.innerHTML = '<strong>Insufficient Wallet Balance</strong><br>' +
+          '<small>Wallet: £' + (walletBalance / 100).toFixed(2) + ' | Required: £' + (price / 100).toFixed(2) + '</small>';
         statusDiv.style.display = 'block';
         return;
       }
@@ -3400,9 +3400,8 @@ async function lookupCounsellorId(counsellorName) {
       
       try {
         const counsellorId = window.clientId;
-        const paymentId = `wallet_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
         
-// Create booking via webhook
+        // Create booking via webhook - 07B handles credit deduction
         const bookingPayload = {
           client_id: counsellorId,
           counsellor_id: window.henleyClientId || counsellorId,
@@ -3423,7 +3422,7 @@ async function lookupCounsellorId(counsellorName) {
           comments: comments || 'Booked via counsellor calendar by ' + counsellorName
         };
         
-        console.log('💰 Wallet payment payload:', bookingPayload);
+        console.log('Wallet payment payload:', bookingPayload);
         
         // Send to webhook
         const WALLET_BOOKING_WEBHOOK_URL = 'https://hook.eu2.make.com/a6ua2a1yl13y7h7k9aphi9iow53dvwpv';
@@ -3435,35 +3434,19 @@ async function lookupCounsellorId(counsellorName) {
         
         if (!response.ok) {
           const errorText = await response.text();
-          throw new Error(`Webhook failed: ${response.status} - ${errorText}`);
+          throw new Error('Webhook failed: ' + response.status + ' - ' + errorText);
         }
         
-        // Deduct from wallet in Firebase
-        const newBalance = walletBalance - price;
-        await firebase.database().ref(`credits/${counsellorId}/balance`).set(newBalance);
+        console.log('Wallet payment complete via 07B');
         
-        // Add transaction record
-        const transactionRef = firebase.database().ref(`credits/${counsellorId}/transactions`).push();
-        await transactionRef.set({
-          type: 'debit',
-          amount: price,
-          reason: `Booking payment - ${room}, ${date} ${time}`,
-          bookingId: paymentId,
-          createdAt: new Date().toISOString(),
-          source: 'booking_payment'
-        });
-        
-        await firebase.database().ref(`credits/${counsellorId}/lastUpdated`).set(new Date().toISOString());
-        
-        console.log('💰 Wallet payment complete. New balance:', newBalance);
+        // Refresh account data to update wallet display
+        await loadAccountData();
         
         // Success!
         statusDiv.className = 'booking-status success';
-        statusDiv.innerHTML = `
-          <strong>✓ Paid with Wallet!</strong><br>
-          <small>${room} on ${date} at ${time}<br>
-          £${(price / 100).toFixed(2)} deducted from wallet</small>
-        `;
+        statusDiv.innerHTML = '<strong>Paid with Wallet!</strong><br>' +
+          '<small>' + room + ' on ' + date + ' at ' + time + '<br>' +
+          '£' + (price / 100).toFixed(2) + ' deducted from wallet</small>';
         
         setTimeout(() => {
           closeNewBookingModal();
@@ -3477,7 +3460,7 @@ async function lookupCounsellorId(counsellorName) {
       } catch (error) {
         console.error('Wallet payment error:', error);
         statusDiv.className = 'booking-status error';
-        statusDiv.innerHTML = `<strong>Error</strong><br><small>${error.message}</small>`;
+        statusDiv.innerHTML = '<strong>Error</strong><br><small>' + error.message + '</small>';
         confirmBtn.disabled = false;
       }
     }
