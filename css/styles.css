@@ -224,10 +224,7 @@ body {
 
 /* === 24-HOUR RESTRICTION === */
 .grid-cell.past-booking {
-  opacity: 0.5;
   cursor: not-allowed;
-  background-color: #f5f5f5 !important;
-  color: #999;
 }
 
 .past-booking-notice {
@@ -811,5 +808,21 @@ body {
 
 /* Past booking styling for segments */
 .booking-segment.past-booking {
-  opacity: 0.5;
+  cursor: not-allowed;
+}
+/* Paid/Unpaid indicators for own bookings */
+.booking-segment.paid-booking {
+  border-left: 4px solid #0d6efd;
+}
+
+.booking-segment.unpaid-booking {
+  border-left: 4px solid #ffc107;
+}
+
+.grid-cell.paid-booking {
+  border-left: 4px solid #0d6efd;
+}
+
+.grid-cell.unpaid-booking {
+  border-left: 4px solid #ffc107;
 }
