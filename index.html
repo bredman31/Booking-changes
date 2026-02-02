@@ -1704,7 +1704,332 @@ async function payAccountBalance() {
   const account = window.counsellorAccount;
   
   if (!account) {
-    alert('Could not load account data'
+    alert('Could not load account data');
+    return;
+  }
+  
+  const totalToPay = (account.previousTotal || 0) + (account.currentBalance || 0);
+  
+  if (totalToPay <= 0) {
+    alert('No balance to pay');
+    return;
+  }
+  
+  // Build account_items array from all unpaid weeks
+  const account_items = [];
+  const weeksIncluded = [];
+  
+  // Add previous weeks
+  if (account.previousWeeks) {
+    account.previousWeeks.forEach(function(pw) {
+      const weekData = account.rawData[pw.week];
+      if (weekData && weekData.bookings) {
+        Object.entries(weekData.bookings).forEach(function([code, data]) {
+          account_items.push({ booking_code: code, amount: data.amount, week: pw.week });
+        });
+        weeksIncluded.push(pw.week);
+      }
+    });
+  }
+  
+  // Add current week
+  if (account.currentBalance > 0 && account.currentBookings) {
+    Object.entries(account.currentBookings).forEach(function([code, data]) {
+      account_items.push({ booking_code: code, amount: data.amount, week: account.currentWeek });
+    });
+    weeksIncluded.push(account.currentWeek);
+  }
+  
+  if (account_items.length === 0) {
+    alert('No bookings found to pay for');
+    return;
+  }
+  
+  await createAccountPaymentCheckout(totalToPay, account_items, weeksIncluded, 'Account payment');
+}
+
+/**
+ * Check if previous weeks are unpaid
+ */
+function hasPreviousWeekUnpaid() {
+  return window.counsellorAccount && window.counsellorAccount.previousTotal > 0;
+}
+
+/**
+ * Update payment options in booking modal based on account/wallet state
+ */
+function updatePaymentOptionsInModal() {
+  
+  const walletBalance = window.counsellorWallet || 0;
+  const previousTotal = window.counsellorAccount?.previousTotal || 0;
+  const bookingPrice = parseInt(document.getElementById('newBookingPrice')?.value) || 0;
+  
+  // Show/hide wallet option
+  const walletOption = document.getElementById('optionWallet');
+  const walletAmountSpan = document.getElementById('walletAmountOption');
+  
+  if (walletBalance > 0 && walletOption) {
+    walletOption.style.display = 'block';
+    walletAmountSpan.textContent = '£' + (walletBalance / 100).toFixed(2);
+  } else if (walletOption) {
+    walletOption.style.display = 'none';
+  }
+  
+  // Show/hide previous week warning
+  const previousWarning = document.getElementById('previousWeekWarning');
+  const previousAmountSpan = document.getElementById('previousWeekAmount');
+  const accountOption = document.getElementById('optionAccount');
+  
+  if (previousTotal > 0) {
+    // Show warning
+    if (previousWarning) {
+      previousWarning.style.display = 'flex';
+      previousAmountSpan.textContent = '£' + (previousTotal / 100).toFixed(2);
+    }
+    
+    // Disable "Book on Account" - must pay previous first
+    if (accountOption) {
+      accountOption.style.display = 'none';
+    }
+    
+    // Select "Pay Now" by default instead
+    const cardRadio = document.querySelector('input[name="bookingPaymentMethod"][value="card"]');
+    if (cardRadio) cardRadio.checked = true;
+    
+  } else {
+    // No previous week unpaid
+    if (previousWarning) {
+      previousWarning.style.display = 'none';
+    }
+    if (accountOption) {
+      accountOption.style.display = 'block';
+    }
+    
+    // Ensure "Book on Account" is selected by default
+    const accountRadio = document.querySelector('input[name="bookingPaymentMethod"][value="account"]');
+    if (accountRadio) accountRadio.checked = true;
+  }
+  
+  // Update confirm button text based on selection
+  updateConfirmButtonText();
+  
+  // Attach event listeners for radio buttons
+  const radioButtons = document.querySelectorAll('input[name="bookingPaymentMethod"]');
+  radioButtons.forEach(function(radio) {
+    radio.onchange = updateConfirmButtonText;
+  });
+}
+
+/**
+ * Update confirm button text based on selected payment method
+ */
+function updateConfirmButtonText() {
+  const selectedMethod = document.querySelector('input[name="bookingPaymentMethod"]:checked')?.value;
+  const confirmBtn = document.getElementById('confirmBookingBtn');
+  
+  if (!confirmBtn) return;
+  
+  switch (selectedMethod) {
+    case 'account':
+      confirmBtn.textContent = 'Book on Account';
+      break;
+    case 'card':
+      confirmBtn.textContent = 'Proceed to Payment';
+      break;
+    case 'wallet':
+      confirmBtn.textContent = 'Pay with Wallet';
+      break;
+    default:
+      confirmBtn.textContent = 'Confirm Booking';
+  }
+}
+
+// Add event listeners for radio button changes
+document.addEventListener('DOMContentLoaded', function() {
+  const radioButtons = document.querySelectorAll('input[name="bookingPaymentMethod"]');
+  radioButtons.forEach(function(radio) {
+    radio.addEventListener('change', updateConfirmButtonText);
+  });
+});
+
+/**
+ * Process basket items as "book on account"
+ * Sends each booking to 07B webhook - Make.com handles Firebase writes
+ */
+async function processBasketOnAccount() {
+  const basket = window.bookingBasket || [];
+  
+  if (basket.length === 0) {
+    alert('Basket is empty');
+    return;
+  }
+  
+  // Load fresh account data
+  await loadAccountData();
+  const account = window.counsellorAccount;
+  
+  // Check for unpaid previous weeks
+  if (account && account.previousTotal > 0) {
+    const prevAmount = (account.previousTotal / 100).toFixed(2);
+    alert('Please pay your previous balance of £' + prevAmount + ' before booking on account.');
+    return;
+  }
+  
+  const counsellorId = window.clientId;
+  const counsellorName = window.selectedCounsellor || sessionStorage.getItem('counsellorName');
+  const webhookUrl = 'https://hook.eu2.make.com/a6ua2a1yl13y7h7k9aphi9iow53dvwpv';
+  const paymentGroupId = 'ACCT_' + Date.now();
+  
+  var successCount = 0;
+  var failCount = 0;
+  
+  console.log('Processing', basket.length, 'bookings on account...');
+  
+  // Show processing toast
+  if (typeof showBasketToast === 'function') {
+    showBasketToast('Processing bookings...');
+  }
+  
+  try {
+    for (var i = 0; i < basket.length; i++) {
+      var booking = basket[i];
+      var isCarPark = (booking.room === 'Car Park' || booking.room === 'Car_Park');
+      var serviceId = isCarPark ? '9' : '1';
+      var bookingWeek = getBillingWeek(new Date(booking.date));
+      
+      var payload = {
+        client_id: counsellorId,
+        counsellor_id: window.henleyClientId || counsellorId,
+        counsellor_name: counsellorName,
+        room_id: booking.roomId,
+        room_name: booking.room,
+        service_id: serviceId,
+        location_id: booking.locationId,
+        location_name: booking.locationId === '2' ? 'Henley' : 'Buckhurst Hill',
+        date: booking.date,
+        start_time: booking.time,
+        end_time: booking.endTime,
+        amount: booking.price || 0,
+        deduct_credit: false,
+        payment_method: 'account',
+        account_week: bookingWeek,
+        payment_group_id: paymentGroupId,
+        item_index: i + 1,
+        item_count: basket.length,
+        source: 'counsellor_calendar',
+        timestamp: new Date().toISOString(),
+        comments: booking.comments || ''
+      };
+      
+      console.log('Sending booking ' + (i + 1) + '/' + basket.length + ':', payload);
+      
+      var response = await fetch(webhookUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      
+      if (response.ok) {
+        var result = await response.json();
+        console.log('Booking created:', result);
+        successCount++;
+      } else {
+        failCount++;
+        console.error('Booking failed:', await response.text());
+      }
+    }
+    
+    // Clear basket on success
+    if (successCount > 0) {
+      window.bookingBasket = [];
+      if (typeof window.updateBasketUI === 'function') window.updateBasketUI();
+      if (typeof updateBasketSlotHighlights === 'function') updateBasketSlotHighlights();
+    }
+    
+    // Show result
+    if (failCount === 0) {
+      if (typeof showBasketToast === 'function') {
+        showBasketToast(successCount + ' booking(s) added to account!');
+      }
+      if (typeof showPaymentToast === 'function') {
+        showPaymentToast(successCount + ' booking(s) added to account!', 'success');
+      }
+    } else {
+      if (typeof showBasketToast === 'function') {
+        showBasketToast(successCount + ' added, ' + failCount + ' failed');
+      }
+    }
+    
+    // Refresh account display
+    await loadAccountData();
+    
+    // Refresh calendar
+    if (typeof refreshData === 'function') {
+      setTimeout(function() { refreshData(); }, 1500);
+    }
+    
+  } catch (error) {
+    console.error('Book on Account error:', error);
+    if (typeof showBasketToast === 'function') {
+      showBasketToast('Error: ' + error.message);
+    }
+  }
+}
+
+/**
+ * Add "Book on Account" button to basket panel
+ */
+function addAccountButtonToBasket() {
+  var basketActions = document.querySelector('.basket-actions');
+  if (!basketActions) return;
+  
+  // Check if button already exists
+  if (document.getElementById('basketAccountBtn')) return;
+  
+  // Create the button
+  var accountBtn = document.createElement('button');
+  accountBtn.id = 'basketAccountBtn';
+  accountBtn.className = 'basket-checkout';
+  accountBtn.style.cssText = 'background: linear-gradient(135deg, #5c5c8a 0%, #4a4a7a 100%); margin-top: 10px; width: 100%;';
+  accountBtn.innerHTML = '&#128230; Book on Account';
+  accountBtn.onclick = function() {
+    if (window.bookingBasket.length === 0) return;
+    if (hasPreviousWeekUnpaid()) {
+      alert('Please pay your previous week balance before booking on account.');
+      return;
+    }
+    toggleBasketPanel(); // Close basket panel
+    processBasketOnAccount();
+  };
+  
+  // Add after basket-actions div
+  basketActions.parentNode.insertBefore(accountBtn, basketActions.nextSibling);
+}
+
+// Observe basket panel for when it opens
+var basketObserver = new MutationObserver(function(mutations) {
+  mutations.forEach(function(mutation) {
+    if (mutation.target.classList && mutation.target.classList.contains('open')) {
+      setTimeout(addAccountButtonToBasket, 50);
+    }
+  });
+});
+
+// Start observing when DOM is ready
+document.addEventListener('DOMContentLoaded', function() {
+  var basketPanel = document.querySelector('.basket-panel');
+  if (basketPanel) {
+    basketObserver.observe(basketPanel, { attributes: true, attributeFilter: ['class'] });
+  }
+});
+
+// Also try to add on page load
+setTimeout(addAccountButtonToBasket, 2000);
+
+</script>
+
+
+
 
 <!-- ================================ -->
 <!-- SECTION 5.1.2: PAYMENT CHOICE MODAL -->
