@@ -214,8 +214,10 @@
           <div id="weekControls" class="hidden">
             <div class="week-navigation">
               <button onclick="changeWeek(-1)" title="Previous Week">&#8592;</button>
+              <input type="date" id="weekDateSelector" title="Jump to week" />
               <span id="weekDisplay"></span>
               <button onclick="changeWeek(1)" title="Next Week">&#8594;</button>
+              <button onclick="goToThisWeek()" style="margin-left: 10px;">This Week</button>
             </div>
           </div>
           
@@ -790,6 +792,14 @@ function restoreSessionState() {
       updateViewButtons();
       updateControlsVisibility();
       
+	  // Set up week date selector
+      const weekDateSelector = document.getElementById('weekDateSelector');
+      if (weekDateSelector) {
+        weekDateSelector.addEventListener('change', function() {
+          jumpToWeek(this.value);
+        });
+      }
+	  
       // Load room config FIRST, then create grid and load data
       loadRoomConfig().then(() => {
         const grid = document.getElementById('calendarGrid');
@@ -3699,6 +3709,25 @@ async function lookupCounsellorId(counsellorName) {
       updateURL();
     }
     
+	// Jump to week containing selected date
+    function jumpToWeek(dateString) {
+      const selectedDate = new Date(dateString + 'T12:00:00');
+      currentWeekStart = getWeekStartDate(selectedDate);
+      updateWeekDisplay();
+      createCalendarGrid();
+      populateCalendar();
+      updateURL();
+    }
+    
+    // Go to current week
+    function goToThisWeek() {
+      currentWeekStart = getWeekStartDate(new Date());
+      updateWeekDisplay();
+      createCalendarGrid();
+      populateCalendar();
+      updateURL();
+    }
+	
  // Change day navigation
     function changeDay(direction) {
       restoreSessionState();
