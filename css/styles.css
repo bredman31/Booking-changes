@@ -536,6 +536,10 @@ body {
   background: #4a4a7a;
 }
 
+.basket-toast {
+  pointer-events: none;
+
+
 /* Wallet Section */
 .wallet-section {
   margin: 0 0 15px 0;
