@@ -1407,10 +1407,10 @@ async function loadAccountData() {
     
     console.log('Account loaded:', window.counsellorAccount);
     
-    // Load wallet
-    const walletSnap = await firebase.database().ref('wallet/' + counsellorId + '/balance').once('value');
-    window.counsellorWallet = walletSnap.val() || 0;
-    console.log('Wallet loaded:', window.counsellorWallet);
+// Load credits
+const creditsSnap = await firebase.database().ref('credits/' + counsellorId + '/balance').once('value');
+window.counsellorWallet = creditsSnap.val() || 0;
+console.log('Credits loaded:', window.counsellorWallet);
     
     // Update displays
     updateBasketDisplay();
@@ -1530,7 +1530,8 @@ function setupAccountListeners() {
   });
   
   // Listen for wallet changes
-  firebase.database().ref('wallet/' + counsellorId + '/balance').on('value', (snapshot) => {
+  // Listen for credits changes
+    firebase.database().ref('credits/' + counsellorId + '/balance').on('value', (snapshot) => {
     window.counsellorWallet = snapshot.val() || 0;
     updateWalletDisplay();
   });
