@@ -852,3 +852,23 @@ body {
   font-size: 1.1em;
   margin: 0 10px;
 }
+
+/* Week view date picker - calendar icon only */
+#weekDateSelector {
+  width: 30px;
+  padding: 5px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  cursor: pointer;
+  background: white;
+}
+
+#weekDateSelector::-webkit-datetime-edit {
+  display: none;
+}
+
+#weekDateSelector::-webkit-calendar-picker-indicator {
+  margin: 0;
+  padding: 0;
+  cursor: pointer;
+}
