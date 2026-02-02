@@ -819,12 +819,13 @@ function restoreSessionState() {
       
 	  
 	  
-        document.getElementById('dateSelector').addEventListener('change', function() {
+document.getElementById('dateSelector').addEventListener('change', async function() {
         currentDate = this.value;
+        await ensureDateInRange(currentDate);
         updateDayDisplayText();
         createCalendarGrid();
         populateCalendar();
-        updateURL(); // This will preserve the token
+        updateURL();
       });
       
       // Handle auto-fill from URL
@@ -864,9 +865,11 @@ loadRoomConfig().then(() => {
   initializeData();
 });
       
-      // Set up date selector (still allow navigation)
-      document.getElementById('dateSelector').addEventListener('change', function() {
+        document.getElementById('dateSelector').addEventListener('change', async function() {
         currentDate = this.value;
+        await ensureDateInRange(currentDate);
+        updateDayDisplayText();
+        createCalendarGrid();
         populateCalendar();
         updateURL();
       });
@@ -3700,7 +3703,7 @@ async function lookupCounsellorId(counsellorName) {
     }
     
     // UPDATED: Change week navigation
-    function changeWeek(direction) {
+    async function changeWeek(direction) {
         restoreSessionState(); 
       currentWeekStart.setDate(currentWeekStart.getDate() + (direction * 7));
       updateWeekDisplay();
@@ -3710,15 +3713,16 @@ async function lookupCounsellorId(counsellorName) {
     }
     
 	// Jump to week containing selected date
-    function jumpToWeek(dateString) {
+    async function jumpToWeek(dateString) {
       const selectedDate = new Date(dateString + 'T12:00:00');
       currentWeekStart = getWeekStartDate(selectedDate);
+      await ensureDateInRange(dateString);
       updateWeekDisplay();
       createCalendarGrid();
       populateCalendar();
       updateURL();
     }
-    
+	
     // Go to current week
     function goToThisWeek() {
       currentWeekStart = getWeekStartDate(new Date());
@@ -3729,7 +3733,7 @@ async function lookupCounsellorId(counsellorName) {
     }
 	
  // Change day navigation
-    function changeDay(direction) {
+    async function changeDay(direction) {
       restoreSessionState();
       const dateSelector = document.getElementById('dateSelector');
       if (!dateSelector) return;
@@ -3747,6 +3751,7 @@ async function lookupCounsellorId(counsellorName) {
       currentDate = newDate;
       
       updateDayDisplayText();
+	  await ensureDateInRange(newDate);
       createCalendarGrid();
       populateCalendar();
       updateURL();
@@ -4260,84 +4265,125 @@ async function lookupCounsellorId(counsellorName) {
 <!-- ================================ -->
 <!-- SECTION 8: DATA LOADING FUNCTIONS -->
 <!-- ================================ -->
+<!-- ================================ -->
+<!-- SECTION 8: DATA LOADING FUNCTIONS -->
+<!-- ================================ -->
   <script>
-    // Load booking data with priority for specific counsellor
+    // Track loaded date range
+    window.loadedDateRange = { start: null, end: null };
+    window.bookingsListener = null;
+    
+    // Load booking data with date range filter
     async function loadBookingDataWithPriority(priorityCounsellor = null) {
       const statusElement = document.getElementById('dataStatus');
-      const startTime = Date.now();
       
       try {
         if (statusElement) statusElement.textContent = 'Loading booking data...';
         
-        // Get data from Firebase
-        const snapshot = await database.ref('bookings').once('value');
-        const jsonData = snapshot.val() || [];
+        // Calculate date range: 2 weeks past to 4 weeks future
+        const today = new Date();
+        const pastDate = new Date(today);
+        pastDate.setDate(pastDate.getDate() - 14);
+        const futureDate = new Date(today);
+        futureDate.setDate(futureDate.getDate() + 28);
         
-        // Convert to array if needed
-        const bookingArray = Array.isArray(jsonData) ? jsonData : Object.values(jsonData);
+        const startDateStr = pastDate.toISOString().split('T')[0];
+        const endDateStr = futureDate.toISOString().split('T')[0];
         
-// Filter out cancelled bookings first
-const cancelledCount = bookingArray.filter(b => b.status === 'cancelled' || b.status === 'cancel').length;
-const activeBookings = bookingArray.filter(booking => 
-  booking.status !== 'cancelled' && booking.status !== 'cancel'
-);
-        
-        if (cancelledCount > 0) {
-          console.log(`Filtered out ${cancelledCount} cancelled bookings`);
-        }
-        
-        // Filter out holding room bookings (legacy cleanup)
-        bookingData = activeBookings.filter(booking => 
-          booking.room !== 'Henley_Holding_Room' && 
-          booking.room !== '18' &&
-          booking.date !== '2030-01-01'
-        );
-        
-        console.log(`Firebase: Loaded ${bookingData.length} bookings in ${Date.now() - startTime}ms`);
-        
-if (statusElement) {
-          let statusText = `Loaded ${bookingData.length} bookings`;
-          if (priorityCounsellor) {
-            const priorityCount = bookingData.filter(b => b.client === priorityCounsellor).length;
-            statusText += ` - ${priorityCount} for ${priorityCounsellor}`;
-          }
-          statusElement.textContent = statusText;
-          statusElement.style.color = '#28a745';
-          
-          setTimeout(() => {
-            statusElement.textContent = '';
-          }, 3000);
-        }
-        
-        // Set up real-time listener for updates
-        database.ref('bookings').on('value', (snapshot) => {
-          const updatedData = snapshot.val() || [];
-          const updatedArray = Array.isArray(updatedData) ? updatedData : Object.values(updatedData);
-          
-// Filter out cancelled bookings first
-const activeUpdatedBookings = updatedArray.filter(booking => 
-  booking.status !== 'cancelled' && booking.status !== 'cancel'
-);
-          
-          // Update local data (excluding cancelled and legacy holding room)
-          bookingData = activeUpdatedBookings.filter(booking => 
-            booking.room !== 'Henley_Holding_Room' && 
-            booking.room !== '18' &&
-            booking.date !== '2030-01-01'
-          );
-          populateCalendar();
-          console.log('Data updated in real-time!');
-        });
+        await loadBookingsForRange(startDateStr, endDateStr, priorityCounsellor);
         
         return Promise.resolve();
         
       } catch (error) {
         console.error('Firebase error:', error);
         bookingData = [];
-        holdingRoomBookings = [];
-        updateHoldingRoomCount();
         return Promise.resolve();
       }
+    }
+    
+    // Load bookings for a specific date range with realtime listener
+    async function loadBookingsForRange(startDateStr, endDateStr, priorityCounsellor = null) {
+      const statusElement = document.getElementById('dataStatus');
+      
+      // Remove existing listener if any
+      if (window.bookingsListener) {
+        database.ref('bookings').off('value', window.bookingsListener);
+        window.bookingsListener = null;
+      }
+      
+      // Store loaded range
+      window.loadedDateRange = { start: startDateStr, end: endDateStr };
+      
+      console.log('Setting up listener for bookings from', startDateStr, 'to', endDateStr);
+      
+      // Set up realtime listener with date range
+      window.bookingsListener = database.ref('bookings')
+        .orderByChild('date')
+        .startAt(startDateStr)
+        .endAt(endDateStr)
+        .on('value', (snapshot) => {
+          const jsonData = snapshot.val() || {};
+          const bookingArray = Object.values(jsonData);
+          
+          // Filter out cancelled bookings
+          const activeBookings = bookingArray.filter(booking => 
+            booking.status !== 'cancelled' && booking.status !== 'cancel'
+          );
+          
+          // Filter out holding room bookings (legacy cleanup)
+          bookingData = activeBookings.filter(booking => 
+            booking.room !== 'Henley_Holding_Room' && 
+            booking.room !== '18' &&
+            booking.date !== '2030-01-01'
+          );
+          
+          console.log('Firebase: Loaded ' + bookingData.length + ' bookings (' + startDateStr + ' to ' + endDateStr + ')');
+          
+          if (statusElement) {
+            let statusText = 'Loaded ' + bookingData.length + ' bookings';
+            if (priorityCounsellor) {
+              const priorityCount = bookingData.filter(b => b.client === priorityCounsellor).length;
+              statusText += ' - ' + priorityCount + ' for ' + priorityCounsellor;
+            }
+            statusElement.textContent = statusText;
+            statusElement.style.color = '#28a745';
+            
+            setTimeout(() => {
+              statusElement.textContent = '';
+            }, 3000);
+          }
+          
+          populateCalendar();
+        });
+    }
+    
+    // Check if date is within loaded range, expand if needed
+    async function ensureDateInRange(targetDate) {
+      if (!window.loadedDateRange.start || !window.loadedDateRange.end) return;
+      
+      const target = targetDate;
+      const rangeStart = window.loadedDateRange.start;
+      const rangeEnd = window.loadedDateRange.end;
+      
+      // Check if target is within current range
+      if (target >= rangeStart && target <= rangeEnd) {
+        return; // Already loaded
+      }
+      
+      console.log('Date ' + target + ' outside loaded range, expanding...');
+      
+      // Calculate new range centred on target date
+      const targetDateObj = new Date(target + 'T12:00:00');
+      const newPast = new Date(targetDateObj);
+      newPast.setDate(newPast.getDate() - 14);
+      const newFuture = new Date(targetDateObj);
+      newFuture.setDate(newFuture.getDate() + 28);
+      
+      const newStart = newPast.toISOString().split('T')[0];
+      const newEnd = newFuture.toISOString().split('T')[0];
+      
+      const priorityCounsellor = selectedCounsellor || sessionStorage.getItem('counsellorName') || null;
+      await loadBookingsForRange(newStart, newEnd, priorityCounsellor);
     }
     
     // Load booking data
@@ -4349,20 +4395,15 @@ const activeUpdatedBookings = updatedArray.filter(booking =>
     // Refresh data manually
     function refreshData() {
       console.log('Manual refresh triggered');
-      try {
-        sessionStorage.removeItem('bookingDataCache');
-      } catch (e) {
-        console.warn('Could not clear cache:', e);
-      }
-      
       const priorityCounsellor = selectedCounsellor || sessionStorage.getItem('counsellorName') || null;
-      loadBookingDataWithPriority(priorityCounsellor).then(() => {
-        console.log('Refresh complete, repopulating calendar');
-        populateCalendar();
-      });
+      
+      if (window.loadedDateRange.start && window.loadedDateRange.end) {
+        loadBookingsForRange(window.loadedDateRange.start, window.loadedDateRange.end, priorityCounsellor);
+      } else {
+        loadBookingDataWithPriority(priorityCounsellor);
+      }
     }
   </script>
-  
 <!-- ================================ -->
 <!-- SECTION 8.1: URL & STATE MANAGEMENT -->
 <!-- ================================ -->
