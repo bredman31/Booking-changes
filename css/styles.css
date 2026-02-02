@@ -811,20 +811,20 @@ body {
   cursor: not-allowed;
 }
 /* Paid/Unpaid indicators for own bookings */
+.grid-cell.booked.paid-booking {
+  border-left: 4px solid #0d6efd !important;
+}
+
+.grid-cell.booked.unpaid-booking {
+  border-left: 4px solid #ffc107 !important;
+}
+
 .booking-segment.paid-booking {
-  border-left: 4px solid #0d6efd;
+  border-left: 4px solid #0d6efd !important;
 }
 
 .booking-segment.unpaid-booking {
-  border-left: 4px solid #ffc107;
-}
-
-.grid-cell.paid-booking {
-  border-left: 4px solid #0d6efd;
-}
-
-.grid-cell.unpaid-booking {
-  border-left: 4px solid #ffc107;
+  border-left: 4px solid #ffc107 !important;
 }
 
 /* Hide date text in picker, show only calendar icon */
