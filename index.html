@@ -3402,33 +3402,31 @@ async function lookupCounsellorId(counsellorName) {
         const counsellorId = window.clientId;
         const paymentId = `wallet_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
         
-        // Create booking via webhook
+// Create booking via webhook
         const bookingPayload = {
-          action: 'create',
-          timestamp: new Date().toISOString(),
           client_id: counsellorId,
+          counsellor_id: window.henleyClientId || counsellorId,
           counsellor_name: counsellorName,
-          service_id: serviceId,
-          provider_id: roomId,
-          location_id: locationId,
+          room_id: roomId,
           room_name: room,
-          start_datetime: `${date}T${time}:00`,
-          end_datetime: `${date}T${endTime}:00`,
-          additional_fields: {
-            comments: comments || `Booked via counsellor calendar by ${counsellorName}`
-          },
-          payment: {
-            paymentId: paymentId,
-            paymentAmount: price,
-            paymentStatus: 'paid',
-            paymentMethod: 'wallet'
-          }
+          service_id: serviceId,
+          location_id: locationId,
+          location_name: locationId === '2' ? 'Henley' : 'Buckhurst Hill',
+          date: date,
+          start_time: time,
+          end_time: endTime,
+          amount: price,
+          deduct_credit: true,
+          payment_method: 'credit',
+          source: 'counsellor_calendar',
+          timestamp: new Date().toISOString(),
+          comments: comments || 'Booked via counsellor calendar by ' + counsellorName
         };
         
         console.log('💰 Wallet payment payload:', bookingPayload);
         
         // Send to webhook
-        const WALLET_BOOKING_WEBHOOK_URL = 'https://hook.eu2.make.com/eq57vfwrpkw2rtozjeiy71j88e5sw1kr';
+        const WALLET_BOOKING_WEBHOOK_URL = 'https://hook.eu2.make.com/a6ua2a1yl13y7h7k9aphi9iow53dvwpv';
         const response = await fetch(WALLET_BOOKING_WEBHOOK_URL, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -3442,10 +3440,10 @@ async function lookupCounsellorId(counsellorName) {
         
         // Deduct from wallet in Firebase
         const newBalance = walletBalance - price;
-        await firebase.database().ref(`wallet/${counsellorId}/balance`).set(newBalance);
+        await firebase.database().ref(`credits/${counsellorId}/balance`).set(newBalance);
         
         // Add transaction record
-        const transactionRef = firebase.database().ref(`wallet/${counsellorId}/transactions`).push();
+        const transactionRef = firebase.database().ref(`credits/${counsellorId}/transactions`).push();
         await transactionRef.set({
           type: 'debit',
           amount: price,
@@ -3455,7 +3453,7 @@ async function lookupCounsellorId(counsellorName) {
           source: 'booking_payment'
         });
         
-        await firebase.database().ref(`wallet/${counsellorId}/lastUpdated`).set(new Date().toISOString());
+        await firebase.database().ref(`credits/${counsellorId}/lastUpdated`).set(new Date().toISOString());
         
         console.log('💰 Wallet payment complete. New balance:', newBalance);
         
