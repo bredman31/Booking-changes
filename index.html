@@ -4204,9 +4204,9 @@ async function lookupCounsellorId(counsellorName) {
             cell.classList.add('past-booking');
           }
           
-          cell.innerHTML = `
+            cell.innerHTML = `
             <div class="booking-info">${b.roomDisplayName}</div>
-            <div class="client-name">${bookingCode}${paymentIndicator}</div>
+            <div class="client-name">${bookingCode}</div>
           `;
           
           // Only allow clicking if we have a valid token and not within 24 hours
