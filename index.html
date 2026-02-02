@@ -1344,18 +1344,17 @@ function showPaymentToast(message, type) {
  
   </script>
   
-<!-- ================================ -->
+
 <!-- SECTION 5.1.1: ACCOUNT & WALLET SYSTEM -->
 <!-- ================================ -->
 <script>
 // Global state
 
-// Account/Basket system - weekly billing (Friday-to-Friday)
+// Account/Basket system - weekly billing (Saturday-to-Friday)
 window.counsellorAccount = null;
 window.counsellorWallet = 0;
 
 /**
- /**
  * Get billing week number in format YYYYWNN
  * Billing week runs Saturday 00:00 to Friday 23:59
  */
@@ -1387,11 +1386,11 @@ function getBillingWeek(date) {
     prevFirstSaturday.setDate(prevYearStart.getDate() + prevDaysToFirstSaturday);
     
     const weeksDiff = Math.floor((saturday - prevFirstSaturday) / (7 * 24 * 60 * 60 * 1000));
-    return `${saturday.getFullYear() - 1}W${(weeksDiff + 1).toString().padStart(2, '0')}`;
+    return (saturday.getFullYear() - 1) + 'W' + (weeksDiff + 1).toString().padStart(2, '0');
   }
   
   const weeksDiff = Math.floor((saturday - firstSaturday) / (7 * 24 * 60 * 60 * 1000));
-  return `${saturday.getFullYear()}W${(weeksDiff + 1).toString().padStart(2, '0')}`;
+  return saturday.getFullYear() + 'W' + (weeksDiff + 1).toString().padStart(2, '0');
 }
 
 /**
@@ -1421,11 +1420,11 @@ async function loadAccountData() {
     let previousTotal = 0;
     const previousWeeks = [];
     
-    Object.entries(allData).forEach(([week, data]) => {
+    Object.entries(allData).forEach(function([week, data]) {
       if (!week.match(/^\d{4}W\d{2}$/)) return; // Skip non-week keys
       if (week < currentWeek && data.balance > 0) {
         previousTotal += data.balance;
-        previousWeeks.push({ week, balance: data.balance });
+        previousWeeks.push({ week: week, balance: data.balance });
       }
     });
     
@@ -1457,7 +1456,7 @@ async function loadAccountData() {
 
 /**
  * Update basket display in UI
- * Shows current week and aggregated previous weeks
+ * Shows current week and aggregated previous weeks with separate pay options
  */
 function updateBasketDisplay() {
   const section = document.getElementById('basketSection');
@@ -1478,47 +1477,30 @@ function updateBasketDisplay() {
   const currentBalance = account.currentBalance || 0;
   const previousTotal = account.previousTotal || 0;
   
-  // Don't show if nothing to display
-  if (currentBalance === 0 && previousTotal === 0) {
-    section.innerHTML = `
-      <div class="basket-row">
-        <span class="basket-icon">&#128230;</span>
-        <span class="basket-label">This week:</span>
-        <span class="basket-amount">£0.00</span>
-      </div>
-    `;
-    section.style.display = 'block';
-    return;
-  }
-  
+  // Always show section for logged in users
   let html = '';
   
-  // Previous weeks (aggregated) - show first if exists
+  // Previous weeks (aggregated) - clickable to pay overdue amount
   if (previousTotal > 0) {
     const weekLabel = account.previousWeeks.length > 1 ? 'Previous weeks' : 'Previous week';
-    html += `
-      <div class="basket-row basket-previous">
-        <span class="basket-icon">&#128230;</span>
-        <span class="basket-label">${weekLabel}:</span>
-        <span class="basket-amount">£${(previousTotal / 100).toFixed(2)}</span>
-        <span class="basket-prompt">Please pay now</span>
-      </div>
-    `;
+    html += '<div class="basket-row basket-previous" onclick="payPreviousWeeks()" style="cursor: pointer;" title="Click to pay overdue balance">';
+    html += '  <span class="basket-icon">&#128230;</span>';
+    html += '  <span class="basket-label">' + weekLabel + ':</span>';
+    html += '  <span class="basket-amount">£' + (previousTotal / 100).toFixed(2) + '</span>';
+    html += '  <span class="basket-prompt">Please pay now &#8594;</span>';
+    html += '</div>';
   }
   
   // Current week
-  html += `
-    <div class="basket-row">
-      <span class="basket-icon">&#128230;</span>
-      <span class="basket-label">This week (${account.currentWeek}):</span>
-      <span class="basket-amount">£${(currentBalance / 100).toFixed(2)}</span>
-    </div>
-  `;
+  html += '<div class="basket-row">';
+  html += '  <span class="basket-icon">&#128230;</span>';
+  html += '  <span class="basket-label">This week (' + account.currentWeek + '):</span>';
+  html += '  <span class="basket-amount">£' + (currentBalance / 100).toFixed(2) + '</span>';
+  html += '</div>';
   
-  // Pay button if there's anything to pay
-  const totalToPay = previousTotal + currentBalance;
-  if (totalToPay > 0) {
-    html += `<button class="pay-basket-btn" onclick="payAccountBalance()">Pay £${(totalToPay / 100).toFixed(2)}</button>`;
+  // Pay button for current week only (optional early payment)
+  if (currentBalance > 0) {
+    html += '<button class="pay-basket-btn" onclick="payCurrentWeek()">Pay This Week £' + (currentBalance / 100).toFixed(2) + '</button>';
   }
   
   section.innerHTML = html;
@@ -1536,14 +1518,12 @@ function updateWalletDisplay() {
   const balance = window.counsellorWallet || 0;
   
   if (hasToken && balance > 0) {
-    section.innerHTML = `
-      <div class="wallet-display">
-        <span class="wallet-icon">&#128176;</span>
-        <span class="wallet-label">Wallet:</span>
-        <span class="wallet-amount">£${(balance / 100).toFixed(2)}</span>
-        <span class="wallet-note">From cancelled bookings</span>
-      </div>
-    `;
+    section.innerHTML = '<div class="wallet-display">' +
+      '<span class="wallet-icon">&#128176;</span>' +
+      '<span class="wallet-label">Wallet:</span>' +
+      '<span class="wallet-amount">£' + (balance / 100).toFixed(2) + '</span>' +
+      '<span class="wallet-note">From cancelled bookings</span>' +
+      '</div>';
     section.style.display = 'block';
   } else {
     section.style.display = 'none';
@@ -1558,73 +1538,93 @@ function setupAccountListeners() {
   if (!counsellorId) return;
   
   // Listen for account changes
-  firebase.database().ref('accounts/' + counsellorId).on('value', (snapshot) => {
+  firebase.database().ref('accounts/' + counsellorId).on('value', function(snapshot) {
     console.log('Account data changed, reloading...');
     loadAccountData();
   });
   
-  // Listen for wallet changes
   // Listen for credits changes
-    firebase.database().ref('credits/' + counsellorId + '/balance').on('value', (snapshot) => {
+  firebase.database().ref('credits/' + counsellorId + '/balance').on('value', function(snapshot) {
     window.counsellorWallet = snapshot.val() || 0;
+    window.counsellorCreditBalance = window.counsellorWallet;
     updateWalletDisplay();
   });
 }
 
 /**
- * Pay account balance via Stripe
+ * Pay previous weeks only (overdue amount)
  */
-async function payAccountBalance() {
+async function payPreviousWeeks() {
+  const account = window.counsellorAccount;
+  if (!account || account.previousTotal <= 0) {
+    alert('No previous balance to pay');
+    return;
+  }
+  
   const counsellorId = window.clientId;
   const counsellorName = window.selectedCounsellor || sessionStorage.getItem('counsellorName');
+  const amount = account.previousTotal;
   
-  // Load fresh account data
-  await loadAccountData();
-  const account = window.counsellorAccount;
-  
-  if (!account) {
-    alert('Could not load account data');
-    return;
-  }
-  
-  const totalToPay = (account.previousTotal || 0) + (account.currentBalance || 0);
-  
-  if (totalToPay <= 0) {
-    alert('No balance to pay');
-    return;
-  }
-  
-  console.log('Preparing account payment for £' + (totalToPay / 100).toFixed(2));
-  
-  // Build account_items array from all unpaid weeks
+  // Build account_items array from previous weeks only
   const account_items = [];
   const weeksIncluded = [];
   
-  // Add previous weeks
-  if (account.previousWeeks) {
-    account.previousWeeks.forEach(pw => {
-      const weekData = account.rawData[pw.week];
-      if (weekData && weekData.bookings) {
-        Object.entries(weekData.bookings).forEach(([code, data]) => {
-          account_items.push({ booking_code: code, amount: data.amount, week: pw.week });
-        });
-        weeksIncluded.push(pw.week);
-      }
-    });
+  account.previousWeeks.forEach(function(pw) {
+    const weekData = account.rawData[pw.week];
+    if (weekData && weekData.bookings) {
+      Object.entries(weekData.bookings).forEach(function([code, data]) {
+        account_items.push({ booking_code: code, amount: data.amount, week: pw.week });
+      });
+      weeksIncluded.push(pw.week);
+    }
+  });
+  
+  if (account_items.length === 0) {
+    alert('No bookings found to pay for');
+    return;
   }
   
-  // Add current week
-  if (account.currentBalance > 0 && account.currentBookings) {
-    Object.entries(account.currentBookings).forEach(([code, data]) => {
+  await createAccountPaymentCheckout(amount, account_items, weeksIncluded, 'Overdue balance');
+}
+
+/**
+ * Pay current week only (optional early payment)
+ */
+async function payCurrentWeek() {
+  const account = window.counsellorAccount;
+  if (!account || account.currentBalance <= 0) {
+    alert('No current week balance to pay');
+    return;
+  }
+  
+  const counsellorId = window.clientId;
+  const counsellorName = window.selectedCounsellor || sessionStorage.getItem('counsellorName');
+  const amount = account.currentBalance;
+  
+  // Build account_items array from current week only
+  const account_items = [];
+  const weeksIncluded = [account.currentWeek];
+  
+  if (account.currentBookings) {
+    Object.entries(account.currentBookings).forEach(function([code, data]) {
       account_items.push({ booking_code: code, amount: data.amount, week: account.currentWeek });
     });
-    weeksIncluded.push(account.currentWeek);
   }
   
   if (account_items.length === 0) {
     alert('No bookings found to pay for');
     return;
   }
+  
+  await createAccountPaymentCheckout(amount, account_items, weeksIncluded, 'Current week');
+}
+
+/**
+ * Create Stripe checkout for account payment
+ */
+async function createAccountPaymentCheckout(amount, account_items, weeksIncluded, description) {
+  const counsellorId = window.clientId;
+  const counsellorName = window.selectedCounsellor || sessionStorage.getItem('counsellorName');
   
   const basketRef = 'PB_' + Date.now();
   
@@ -1636,11 +1636,11 @@ async function payAccountBalance() {
     items: [],
     account_items: account_items,
     account_week: weeksIncluded.join(','),
-    account_total: totalToPay,
-    existing_account_balance: totalToPay,
-    total_amount: totalToPay,
+    account_total: amount,
+    existing_account_balance: amount,
+    total_amount: amount,
     total_credit_used: 0,
-    total_stripe: totalToPay,
+    total_stripe: amount,
     status: 'pending',
     created_at: new Date().toISOString()
   };
@@ -1649,7 +1649,7 @@ async function payAccountBalance() {
   
   try {
     // Save basket to Firebase
-    const firebaseUrl = `https://cherry-tree-bookings-default-rtdb.europe-west1.firebasedatabase.app/pending_baskets/${basketRef}.json`;
+    const firebaseUrl = 'https://cherry-tree-bookings-default-rtdb.europe-west1.firebasedatabase.app/pending_baskets/' + basketRef + '.json';
     const saveResponse = await fetch(firebaseUrl, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
@@ -1665,9 +1665,9 @@ async function payAccountBalance() {
       counsellor_name: counsellorName,
       counsellor_id: window.henleyClientId || counsellorId,
       client_id: counsellorId,
-      amount: totalToPay,
+      amount: amount,
       credit_used: 0,
-      description: `Account payment: ${account_items.length} booking(s) - ${weeksIncluded.join(', ')}`,
+      description: description + ': ' + account_items.length + ' booking(s) - ' + weeksIncluded.join(', '),
       basket_ref: basketRef,
       success_url: window.location.origin + window.location.pathname + '?payment=success&basket=' + basketRef,
       cancel_url: window.location.origin + window.location.pathname + '?payment=cancelled'
@@ -1698,286 +1698,14 @@ async function payAccountBalance() {
 }
 
 /**
- * Check if previous weeks are unpaid
+ * Pay full account balance (legacy - combines both)
  */
-function hasPreviousWeekUnpaid() {
-  return window.counsellorAccount && window.counsellorAccount.previousTotal > 0;
-}
-
-
-/**
- * Update payment options in booking modal based on account/wallet state
- */
-function updatePaymentOptionsInModal() {
-  
-  const walletBalance = window.counsellorWallet || 0;
-  const previousTotal = window.counsellorAccount?.previousTotal || 0;
-  const bookingPrice = parseInt(document.getElementById('newBookingPrice')?.value) || 0;
-  
-  // Show/hide wallet option
-  const walletOption = document.getElementById('optionWallet');
-  const walletAmountSpan = document.getElementById('walletAmountOption');
-  
-  if (walletBalance > 0 && walletOption) {
-    walletOption.style.display = 'block';
-    walletAmountSpan.textContent = '£' + (walletBalance / 100).toFixed(2);
-  } else if (walletOption) {
-    walletOption.style.display = 'none';
-  }
-  
-  // Show/hide previous week warning
-  const previousWarning = document.getElementById('previousWeekWarning');
-  const previousAmountSpan = document.getElementById('previousWeekAmount');
-  const accountOption = document.getElementById('optionAccount');
-  
-  if (previousTotal > 0) {
-    // Show warning
-    if (previousWarning) {
-      previousWarning.style.display = 'flex';
-      previousAmountSpan.textContent = '£' + (previousTotal / 100).toFixed(2);
-    }
-    
-    // Disable "Book on Account" - must pay previous first
-    if (accountOption) {
-      accountOption.style.display = 'none';
-    }
-    
-    // Select "Pay Now" by default instead
-    const cardRadio = document.querySelector('input[name="bookingPaymentMethod"][value="card"]');
-    if (cardRadio) cardRadio.checked = true;
-    
-  } else {
-    // No previous week unpaid
-    if (previousWarning) {
-      previousWarning.style.display = 'none';
-    }
-    if (accountOption) {
-      accountOption.style.display = 'block';
-    }
-    
-    // Ensure "Book on Account" is selected by default
-    const accountRadio = document.querySelector('input[name="bookingPaymentMethod"][value="account"]');
-    if (accountRadio) accountRadio.checked = true;
-  }
-  
-  // Update confirm button text based on selection
-  updateConfirmButtonText();
-  
-  // Attach event listeners for radio buttons
-  const radioButtons = document.querySelectorAll('input[name="bookingPaymentMethod"]');
-  radioButtons.forEach(radio => {
-    radio.onchange = updateConfirmButtonText;
-  });
-}
-
-
-/**
- * Update confirm button text based on selected payment method
- */
-function updateConfirmButtonText() {
-  const selectedMethod = document.querySelector('input[name="bookingPaymentMethod"]:checked')?.value;
-  const confirmBtn = document.getElementById('confirmBookingBtn');
-  
-  if (!confirmBtn) return;
-  
-  switch (selectedMethod) {
-    case 'account':
-      confirmBtn.textContent = 'Book on Account';
-      break;
-    case 'card':
-      confirmBtn.textContent = 'Proceed to Payment';
-      break;
-    case 'wallet':
-      confirmBtn.textContent = 'Pay with Wallet';
-      break;
-    default:
-      confirmBtn.textContent = 'Confirm Booking';
-  }
-}
-
-// Add event listeners for radio button changes
-document.addEventListener('DOMContentLoaded', function() {
-  const radioButtons = document.querySelectorAll('input[name="bookingPaymentMethod"]');
-  radioButtons.forEach(radio => {
-    radio.addEventListener('change', updateConfirmButtonText);
-  });
-});
-
-/**
- * Process basket items as "book on account"
- * Sends each booking to 07B webhook - Make.com handles Firebase writes
- */
-async function processBasketOnAccount() {
-  const basket = window.bookingBasket || [];
-  
-  if (basket.length === 0) {
-    alert('Basket is empty');
-    return;
-  }
-  
-  // Load fresh account data
-  await loadAccountData();
+async function payAccountBalance() {
   const account = window.counsellorAccount;
   
-  // Check for unpaid previous weeks
-  if (account && account.previousTotal > 0) {
-    const prevAmount = (account.previousTotal / 100).toFixed(2);
-    alert('Please pay your previous balance of £' + prevAmount + ' before booking on account.');
-    return;
-  }
-  
-  const counsellorId = window.clientId;
-  const counsellorName = window.selectedCounsellor || sessionStorage.getItem('counsellorName');
-  const webhookUrl = 'https://hook.eu2.make.com/a6ua2a1yl13y7h7k9aphi9iow53dvwpv';
-  const paymentGroupId = 'ACCT_' + Date.now();
-  
-  let successCount = 0;
-  let failCount = 0;
-  
-  console.log('Processing', basket.length, 'bookings on account...');
-  
-  // Show processing toast
-  if (typeof showBasketToast === 'function') {
-    showBasketToast('Processing bookings...');
-  }
-  
-  try {
-    for (let i = 0; i < basket.length; i++) {
-      const booking = basket[i];
-      const isCarPark = (booking.room === 'Car Park' || booking.room === 'Car_Park');
-      const serviceId = isCarPark ? '9' : '1';
-      const bookingWeek = getBillingWeek(new Date(booking.date));
-      
-      const payload = {
-        client_id: counsellorId,
-        counsellor_id: window.henleyClientId || counsellorId,
-        counsellor_name: counsellorName,
-        room_id: booking.roomId,
-        room_name: booking.room,
-        service_id: serviceId,
-        location_id: booking.locationId,
-        location_name: booking.locationId === '2' ? 'Henley' : 'Buckhurst Hill',
-        date: booking.date,
-        start_time: booking.time,
-        end_time: booking.endTime,
-        amount: booking.price || 0,
-        deduct_credit: false,
-        payment_method: 'account',
-        account_week: bookingWeek,
-        payment_group_id: paymentGroupId,
-        item_index: i + 1,
-        item_count: basket.length,
-        source: 'counsellor_calendar',
-        timestamp: new Date().toISOString(),
-        comments: booking.comments || ''
-      };
-      
-      console.log('Sending booking ' + (i + 1) + '/' + basket.length + ':', payload);
-      
-      const response = await fetch(webhookUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      });
-      
-      if (response.ok) {
-        const result = await response.json();
-        console.log('Booking created:', result);
-        successCount++;
-      } else {
-        failCount++;
-        console.error('Booking failed:', await response.text());
-      }
-    }
-    
-    // Clear basket on success
-    if (successCount > 0) {
-      window.bookingBasket = [];
-      if (typeof updateBasketUI === 'function') updateBasketUI();
-      if (typeof updateBasketSlotHighlights === 'function') updateBasketSlotHighlights();
-    }
-    
-    // Show result
-    if (failCount === 0) {
-      if (typeof showBasketToast === 'function') {
-        showBasketToast(successCount + ' booking(s) added to account!');
-      }
-      if (typeof showPaymentToast === 'function') {
-        showPaymentToast(successCount + ' booking(s) added to account!', 'success');
-      }
-    } else {
-      if (typeof showBasketToast === 'function') {
-        showBasketToast(successCount + ' added, ' + failCount + ' failed');
-      }
-    }
-    
-    // Refresh account display
-    await loadAccountData();
-    
-    // Refresh calendar
-    if (typeof refreshData === 'function') {
-      setTimeout(() => refreshData(), 1500);
-    }
-    
-  } catch (error) {
-    console.error('Book on Account error:', error);
-    if (typeof showBasketToast === 'function') {
-      showBasketToast('Error: ' + error.message);
-    }
-  }
-}
+  if (!account) {
+    alert('Could not load account data'
 
-/**
- * Add "Book on Account" button to basket panel
- */
-function addAccountButtonToBasket() {
-  const basketActions = document.querySelector('.basket-actions');
-  if (!basketActions) return;
-  
-  // Check if button already exists
-  if (document.getElementById('basketAccountBtn')) return;
-  
-  // Create the button
-  const accountBtn = document.createElement('button');
-  accountBtn.id = 'basketAccountBtn';
-  accountBtn.className = 'basket-checkout';
-  accountBtn.style.cssText = 'background: linear-gradient(135deg, #5c5c8a 0%, #4a4a7a 100%); margin-top: 10px; width: 100%;';
-  accountBtn.innerHTML = '📦 Book on Account';
-  accountBtn.onclick = function() {
-    if (window.bookingBasket.length === 0) return;
-    if (hasPreviousWeekUnpaid()) {
-      alert('Please pay your previous week balance before booking on account.');
-      return;
-    }
-    toggleBasketPanel(); // Close basket panel
-    processBasketOnAccount();
-  };
-  
-  // Add after basket-actions div
-  basketActions.parentNode.insertBefore(accountBtn, basketActions.nextSibling);
-}
-
-// Observe basket panel for when it opens
-const basketObserver = new MutationObserver(function(mutations) {
-  mutations.forEach(function(mutation) {
-    if (mutation.target.classList && mutation.target.classList.contains('open')) {
-      setTimeout(addAccountButtonToBasket, 50);
-    }
-  });
-});
-
-// Start observing when DOM is ready
-document.addEventListener('DOMContentLoaded', function() {
-  const basketPanel = document.querySelector('.basket-panel');
-  if (basketPanel) {
-    basketObserver.observe(basketPanel, { attributes: true, attributeFilter: ['class'] });
-  }
-});
-
-// Also try to add on page load
-setTimeout(addAccountButtonToBasket, 2000);
-
-</script>
 <!-- ================================ -->
 <!-- SECTION 5.1.2: PAYMENT CHOICE MODAL -->
 <!-- ================================ -->
