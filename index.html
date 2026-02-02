@@ -203,18 +203,19 @@
         <div class="controls">
           <div id="dayControls">
             <div class="day-navigation">
-              <button onclick="changeDay(-1)">← Previous Day</button>
+              <button onclick="changeDay(-1)" title="Previous Day">&#8592;</button>
               <input type="date" id="dateSelector" />
-              <button onclick="changeDay(1)">Next Day →</button>
+              <span id="dayDisplayText"></span>
+              <button onclick="changeDay(1)" title="Next Day">&#8594;</button>
               <button onclick="goToToday()" style="margin-left: 10px;">Today</button>
             </div>
           </div>
           
           <div id="weekControls" class="hidden">
             <div class="week-navigation">
-              <button onclick="changeWeek(-1)">← Previous Week</button>
+              <button onclick="changeWeek(-1)" title="Previous Week">&#8592;</button>
               <span id="weekDisplay"></span>
-              <button onclick="changeWeek(1)">Next Week →</button>
+              <button onclick="changeWeek(1)" title="Next Week">&#8594;</button>
             </div>
           </div>
           
@@ -796,6 +797,7 @@ function restoreSessionState() {
           grid.className = `calendar-grid ${currentView}-view`;
           createCalendarGrid();
         }
+        updateDayDisplayText();
         initializeData();
       });
       
@@ -805,9 +807,12 @@ function restoreSessionState() {
         changeForm.addEventListener('submit', handleFormSubmit);
       }
       
-      // Set up date selector with token preservation
-      document.getElementById('dateSelector').addEventListener('change', function() {
+	  
+	  
+        document.getElementById('dateSelector').addEventListener('change', function() {
         currentDate = this.value;
+        updateDayDisplayText();
+        createCalendarGrid();
         populateCalendar();
         updateURL(); // This will preserve the token
       });
@@ -1047,6 +1052,21 @@ loadRoomConfig().then(() => {
       return `${year}-${month}-${day}`;
     }
     
+	function formatDayDisplay(dateString) {
+      const dateObj = new Date(dateString + 'T12:00:00');
+      const dayName = dateObj.toLocaleDateString('en-GB', { weekday: 'long' });
+      const formatted = dateObj.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' });
+      return `${dayName} ${formatted}`;
+    }
+    
+    function updateDayDisplayText() {
+      const dateSelector = document.getElementById('dateSelector');
+      const dayDisplayText = document.getElementById('dayDisplayText');
+      if (dateSelector && dayDisplayText) {
+        dayDisplayText.textContent = formatDayDisplay(dateSelector.value);
+      }
+    }
+	
     // Get room display name from booking data - ADDED ROOM 5
     function getRoomDisplayName(booking) {
       if (booking.room === 'Room_1' || booking.room === '1') return 'Room 1';
@@ -3679,7 +3699,7 @@ async function lookupCounsellorId(counsellorName) {
       updateURL();
     }
     
-    // Change day navigation
+ // Change day navigation
     function changeDay(direction) {
       restoreSessionState();
       const dateSelector = document.getElementById('dateSelector');
@@ -3697,6 +3717,7 @@ async function lookupCounsellorId(counsellorName) {
       dateSelector.value = newDate;
       currentDate = newDate;
       
+      updateDayDisplayText();
       createCalendarGrid();
       populateCalendar();
       updateURL();
@@ -3963,12 +3984,16 @@ async function lookupCounsellorId(counsellorName) {
               }
               
               const bookingCode = booking.bookingId || booking.code || '';
-              const paymentIndicator = booking.isPaid ? '' : ' (Old system)';
               const roomDisplayName = getRoomDisplayName(booking);
+              
+              // Add paid/unpaid class only for own bookings
+              if (isOwnBooking) {
+                cell.classList.add(booking.isPaid ? 'paid-booking' : 'unpaid-booking');
+              }
               
               cell.innerHTML = `
                 <div class="booking-info">${booking.client || ''}</div>
-                <div class="client-name">${bookingCode}${paymentIndicator}</div>
+                <div class="client-name">${bookingCode}</div>
               `;
               
               // Only allow clicking own bookings when authenticated
@@ -4130,14 +4155,16 @@ async function lookupCounsellorId(counsellorName) {
           // Multiple bookings - show side by side
           cell.classList.add('multi-booking');
           
+          const counsellorName = selectedCounsellor || sessionStorage.getItem('counsellorName');
           cell.innerHTML = bookings.map((b, idx) => {
             const bookingCode = b.booking.bookingId || b.booking.code || '';
-            const paymentIndicator = b.booking.isPaid ? '' : ' (Old)';
             const pastClass = b.isWithin24Hours ? ' past-booking' : '';
+            const isOwn = b.booking.client === counsellorName;
+            const paidClass = isOwn ? (b.booking.isPaid ? ' paid-booking' : ' unpaid-booking') : '';
             
-            return `<div class="booking-segment ${b.roomClass}${pastClass}" data-booking-idx="${idx}">
+            return `<div class="booking-segment ${b.roomClass}${pastClass}${paidClass}" data-booking-idx="${idx}">
                       <div class="booking-info">${b.roomDisplayName}</div>
-                      <div class="client-name">${bookingCode}${paymentIndicator}</div>
+                      <div class="client-name">${bookingCode}</div>
                     </div>`;
           }).join('');
           
@@ -4165,7 +4192,11 @@ async function lookupCounsellorId(counsellorName) {
           // Single booking
           const b = bookings[0];
           const bookingCode = b.booking.bookingId || b.booking.code || '';
-          const paymentIndicator = b.booking.isPaid ? '' : ' (Old system)';
+          const counsellorName = selectedCounsellor || sessionStorage.getItem('counsellorName');
+          const isOwn = b.booking.client === counsellorName;
+          if (isOwn) {
+            cell.classList.add(b.booking.isPaid ? 'paid-booking' : 'unpaid-booking');
+          }
           
           cell.classList.add(b.roomClass);
           
