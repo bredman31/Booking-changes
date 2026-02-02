@@ -826,3 +826,29 @@ body {
 .grid-cell.unpaid-booking {
   border-left: 4px solid #ffc107;
 }
+
+/* Hide date text in picker, show only calendar icon */
+#dateSelector {
+  width: 30px;
+  padding: 5px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  cursor: pointer;
+  background: white;
+}
+
+#dateSelector::-webkit-datetime-edit {
+  display: none;
+}
+
+#dateSelector::-webkit-calendar-picker-indicator {
+  margin: 0;
+  padding: 0;
+  cursor: pointer;
+}
+
+#dayDisplayText {
+  font-weight: 600;
+  font-size: 1.1em;
+  margin: 0 10px;
+}
