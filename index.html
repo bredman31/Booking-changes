@@ -1440,10 +1440,11 @@ async function loadAccountData() {
     
     console.log('Account loaded:', window.counsellorAccount);
     
-// Load credits
-const creditsSnap = await firebase.database().ref('credits/' + counsellorId + '/balance').once('value');
-window.counsellorWallet = creditsSnap.val() || 0;
-console.log('Credits loaded:', window.counsellorWallet);
+    // Load credits
+    const creditsSnap = await firebase.database().ref('credits/' + counsellorId + '/balance').once('value');
+    window.counsellorWallet = creditsSnap.val() || 0;
+    window.counsellorCreditBalance = window.counsellorWallet; // For basket compatibility
+    console.log('Credits loaded:', window.counsellorWallet);
     
     // Update displays
     updateBasketDisplay();
@@ -2010,7 +2011,7 @@ function showPaymentChoiceModal(paymentDetails, isBasket = false) {
       };
       
       const total = paymentDetails.totalAmount || 0;
-      const credit = window.counsellorCreditBalance || 0;
+      const credit = window.counsellorWallet || window.counsellorCreditBalance || 0;
       const itemCount = isBasket ? paymentDetails.items?.length || 1 : 1;
       
       // Build summary HTML
