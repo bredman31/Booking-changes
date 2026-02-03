@@ -2362,7 +2362,8 @@ var outstandingBalance = window.counsellorAccount?.previousTotal || 0;
         created_at: new Date().toISOString()
       };
       
-// Add outstanding balance info if present
+console.log('DEBUG outstanding:', outstandingBalance, outstandingWeeks, account_items);
+      // Add outstanding balance info if present
       if (outstandingBalance > 0) {
         pendingBasket.account_items = account_items;
         pendingBasket.account_week = weeksIncluded.join(',');
