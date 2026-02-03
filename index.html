@@ -2316,7 +2316,7 @@ var outstandingBalance = window.counsellorAccount?.previousTotal || 0;
     }
     
     // =========================================
-    // CREDIT PAYMENT PROCESSING
+    // STRIPE PAYMENT PROCESSING
     // =========================================
     async function processStripePayment(items, totalCreditUsed) {
       var counsellorName = selectedCounsellor || sessionStorage.getItem('counsellorName');
@@ -2362,14 +2362,17 @@ var outstandingBalance = window.counsellorAccount?.previousTotal || 0;
         created_at: new Date().toISOString()
       };
       
-      // Add outstanding balance info if present
+// Add outstanding balance info if present
       if (outstandingBalance > 0) {
         pendingBasket.account_items = account_items;
         pendingBasket.account_week = weeksIncluded.join(',');
         pendingBasket.account_total = outstandingBalance;
         pendingBasket.existing_account_balance = outstandingBalance;
+        pendingBasket.outstanding_weeks = outstandingWeeks.map(function(pw) {
+          return { week: pw.week, balance: pw.balance };
+        });
       }
-      
+	  
       console.log('Saving pending basket to Firebase:', pendingBasket);
       
       var firebaseUrl = 'https://cherry-tree-bookings-default-rtdb.europe-west1.firebasedatabase.app/pending_baskets/' + basketRef + '.json';
