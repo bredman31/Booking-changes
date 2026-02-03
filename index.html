@@ -2229,12 +2229,46 @@ var outstandingBalance = window.counsellorAccount?.previousTotal || 0;
       statusEl.textContent = 'Processing credit payment...';
       
       try {
-        const items = normalizeToItems(window.pendingPayment);
-        await processCreditPayments(items, window.pendingPayment.totalAmount);
+await processCreditPayments(items, window.pendingPayment.totalAmount);
+        
+        // Clear outstanding weeks if any
+        var account = window.counsellorAccount;
+        var outstandingBalance = (account && account.previousTotal) ? account.previousTotal : 0;
+        
+        if (outstandingBalance > 0 && account.previousWeeks && account.rawData) {
+          var account_items = [];
+          var outstanding_weeks = [];
+          
+          account.previousWeeks.forEach(function(pw) {
+            outstanding_weeks.push({ week: pw.week, balance: pw.balance });
+            var weekData = account.rawData[pw.week];
+            if (weekData && weekData.bookings) {
+              Object.entries(weekData.bookings).forEach(function([code, data]) {
+                account_items.push({ booking_code: code, amount: data.amount, week: pw.week });
+              });
+            }
+          });
+          
+          var clearPayload = {
+            clear_outstanding: true,
+            client_id: window.clientId,
+            counsellor_name: selectedCounsellor || sessionStorage.getItem('counsellorName'),
+            outstanding_weeks: outstanding_weeks,
+            account_items: account_items
+          };
+          
+          console.log('Clearing outstanding weeks via 07B:', clearPayload);
+          
+          await fetch('https://hook.eu2.make.com/a6ua2a1yl13y7h7k9aphi9iow53dvwpv', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(clearPayload)
+          });
+        }
         
         statusEl.style.background = '#d4edda';
         statusEl.style.color = '#155724';
-        statusEl.textContent = 'âœ… Booking confirmed!';
+        statusEl.textContent = '✅ Booking confirmed!';
         
         // Get the booking date to navigate to
         const bookingDate = window.pendingPayment?.date;
@@ -2366,7 +2400,6 @@ console.log('DEBUG outstanding:', outstandingBalance, outstandingWeeks, account_
       // Add outstanding balance info if present
       if (outstandingBalance > 0) {
         pendingBasket.account_items = account_items;
-        pendingBasket.account_week = weeksIncluded.join(',');
         pendingBasket.account_total = outstandingBalance;
         pendingBasket.existing_account_balance = outstandingBalance;
         pendingBasket.outstanding_weeks = outstandingWeeks.map(function(pw) {
