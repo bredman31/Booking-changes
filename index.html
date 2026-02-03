@@ -2090,20 +2090,34 @@ function showPaymentChoiceModal(paymentDetails, isBasket = false) {
         `;
       }
       
-      summaryHtml += `
-        <div style="border-top: 2px solid #ddd; margin-top: 15px; padding-top: 15px;">
-          <div style="display: flex; justify-content: space-between; font-size: 16px;">
-            <span>Total:</span>
-            <span style="font-weight: bold;">£${(total / 100).toFixed(2)}</span>
-          </div>
-          ${credit > 0 ? `
-          <div style="display: flex; justify-content: space-between; font-size: 14px; color: #4caf50; margin-top: 5px;">
-            <span>Your Credit:</span>
-            <span>£${(credit / 100).toFixed(2)}</span>
-          </div>
-          ` : ''}
-        </div>
-      `;
+var outstandingBalance = window.counsellorAccount?.previousTotal || 0;
+      var grandTotal = total + outstandingBalance;
+      
+      summaryHtml += '<div style="border-top: 2px solid #ddd; margin-top: 15px; padding-top: 15px;">';
+      summaryHtml += '  <div style="display: flex; justify-content: space-between; font-size: 16px;">';
+      summaryHtml += '    <span>Booking:</span>';
+      summaryHtml += '    <span>£' + (total / 100).toFixed(2) + '</span>';
+      summaryHtml += '  </div>';
+      
+      if (outstandingBalance > 0) {
+        summaryHtml += '  <div style="display: flex; justify-content: space-between; font-size: 14px; color: #c62828; margin-top: 5px;">';
+        summaryHtml += '    <span>Outstanding balance:</span>';
+        summaryHtml += '    <span>£' + (outstandingBalance / 100).toFixed(2) + '</span>';
+        summaryHtml += '  </div>';
+        summaryHtml += '  <div style="display: flex; justify-content: space-between; font-size: 16px; font-weight: bold; margin-top: 8px; border-top: 1px solid #eee; padding-top: 8px;">';
+        summaryHtml += '    <span>Total to pay:</span>';
+        summaryHtml += '    <span>£' + (grandTotal / 100).toFixed(2) + '</span>';
+        summaryHtml += '  </div>';
+      }
+      
+      if (credit > 0) {
+        summaryHtml += '  <div style="display: flex; justify-content: space-between; font-size: 14px; color: #4caf50; margin-top: 5px;">';
+        summaryHtml += '    <span>Your Credit:</span>';
+        summaryHtml += '    <span>£' + (credit / 100).toFixed(2) + '</span>';
+        summaryHtml += '  </div>';
+      }
+      
+      summaryHtml += '</div>';
       
       summaryEl.innerHTML = summaryHtml;
       
@@ -2304,129 +2318,123 @@ function showPaymentChoiceModal(paymentDetails, isBasket = false) {
     // =========================================
     // CREDIT PAYMENT PROCESSING
     // =========================================
-    
-    /**
-     * Process items with credit (sends individual webhooks)
-     */
-  async function processStripePayment(items, totalCreditUsed) {
-  const counsellorName = selectedCounsellor || sessionStorage.getItem('counsellorName');
-  const basketRef = 'PB_' + Date.now();
-  const totalStripeAmount = items.reduce((sum, item) => sum + item.stripe_amount, 0);
-  const totalAmount = items.reduce((sum, item) => sum + item.price, 0);
-  
-  // Check for outstanding balance from previous weeks
-  const account = window.counsellorAccount;
-  const outstandingBalance = account?.previousTotal || 0;
-  const outstandingWeeks = account?.previousWeeks || [];
-  
-  // Build account_items array if there's outstanding balance
-  let account_items = [];
-  let weeksIncluded = [];
-  
-  if (outstandingBalance > 0 && account?.rawData) {
-    outstandingWeeks.forEach(function(pw) {
-      const weekData = account.rawData[pw.week];
-      if (weekData && weekData.bookings) {
-        Object.entries(weekData.bookings).forEach(function([code, data]) {
-          account_items.push({ booking_code: code, amount: data.amount, week: pw.week });
+    async function processStripePayment(items, totalCreditUsed) {
+      var counsellorName = selectedCounsellor || sessionStorage.getItem('counsellorName');
+      var basketRef = 'PB_' + Date.now();
+      var totalStripeAmount = items.reduce(function(sum, item) { return sum + item.stripe_amount; }, 0);
+      var totalAmount = items.reduce(function(sum, item) { return sum + item.price; }, 0);
+      
+      // Check for outstanding balance from previous weeks
+      var account = window.counsellorAccount;
+      var outstandingBalance = account?.previousTotal || 0;
+      var outstandingWeeks = account?.previousWeeks || [];
+      
+      // Build account_items array if there's outstanding balance
+      var account_items = [];
+      var weeksIncluded = [];
+      
+      if (outstandingBalance > 0 && account?.rawData) {
+        outstandingWeeks.forEach(function(pw) {
+          var weekData = account.rawData[pw.week];
+          if (weekData && weekData.bookings) {
+            Object.entries(weekData.bookings).forEach(function([code, data]) {
+              account_items.push({ booking_code: code, amount: data.amount, week: pw.week });
+            });
+            weeksIncluded.push(pw.week);
+          }
         });
-        weeksIncluded.push(pw.week);
       }
-    });
-  }
-  
-  // Total to charge = new bookings + outstanding balance
-  const totalToCharge = totalStripeAmount + outstandingBalance;
-  
-  // Save pending basket to Firebase
-  const pendingBasket = {
-    id: basketRef,
-    client_id: window.clientId,
-    counsellor_id: window.henleyClientId,
-    counsellor_name: counsellorName,
-    items: items,
-    total_amount: totalAmount + outstandingBalance,
-    total_credit_used: totalCreditUsed,
-    total_stripe: totalToCharge,
-    status: 'pending',
-    created_at: new Date().toISOString()
-  };
-  
-  // Add outstanding balance info if present
-  if (outstandingBalance > 0) {
-    pendingBasket.account_items = account_items;
-    pendingBasket.account_week = weeksIncluded.join(',');
-    pendingBasket.account_total = outstandingBalance;
-    pendingBasket.existing_account_balance = outstandingBalance;
-  }
-  
-  console.log('📦 Saving pending basket to Firebase:', pendingBasket);
-  
-  const firebaseUrl = 'https://cherry-tree-bookings-default-rtdb.europe-west1.firebasedatabase.app/pending_baskets/' + basketRef + '.json';
-  const saveResponse = await fetch(firebaseUrl, {
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(pendingBasket)
-  });
-  
-  if (!saveResponse.ok) {
-    throw new Error('Could not save basket');
-  }
-  
-  // Build description
-  const itemDescriptions = items.slice(0, 3).map(function(item) {
-    return item.room_name + ' ' + (item.formatted_date || item.date);
-  }).join(', ');
-  
-  let description = items.length > 3 
-    ? itemDescriptions + ' +' + (items.length - 3) + ' more'
-    : itemDescriptions;
-  
-  if (totalCreditUsed > 0) {
-    description += ' [Credit: £' + (totalCreditUsed/100).toFixed(2) + ']';
-  }
-  
-  if (outstandingBalance > 0) {
-    description += ' + Outstanding: £' + (outstandingBalance/100).toFixed(2);
-  }
-  
-  // Create Stripe checkout with basket reference only
-  const checkoutPayload = {
-    counsellor_name: counsellorName,
-    counsellor_id: window.henleyClientId || '',
-    client_id: window.clientId || '',
-    amount: totalToCharge,
-    credit_used: totalCreditUsed,
-    description: 'Room booking: ' + description,
-    basket_ref: basketRef,
-    success_url: STRIPE_CONFIG.successUrl + '&basket=' + basketRef + '&date=' + (items[0]?.date || ''),
-    cancel_url: STRIPE_CONFIG.cancelUrl
-  };
-  
-  console.log('💳 Creating Stripe checkout:', checkoutPayload);
-  
-  const response = await fetch(STRIPE_CONFIG.createCheckoutWebhook, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(checkoutPayload)
-  });
-  
-  if (!response.ok) {
-    throw new Error('Could not create checkout session');
-  }
-  
-  const result = await response.json();
-  
-  if (result.checkout_url) {
-    // Clear basket before redirect
-    window.bookingBasket = [];
-    if (typeof window.updateBasketUI === 'function') window.updateBasketUI();
-    
-    window.location.href = result.checkout_url;
-  } else {
-    throw new Error('No checkout URL returned');
-  }
-}
+      
+      // Total to charge = new bookings + outstanding balance
+      var totalToCharge = totalStripeAmount + outstandingBalance;
+      
+      // Save pending basket to Firebase
+      var pendingBasket = {
+        id: basketRef,
+        client_id: window.clientId,
+        counsellor_id: window.henleyClientId,
+        counsellor_name: counsellorName,
+        items: items,
+        total_amount: totalAmount + outstandingBalance,
+        total_credit_used: totalCreditUsed,
+        total_stripe: totalToCharge,
+        status: 'pending',
+        created_at: new Date().toISOString()
+      };
+      
+      // Add outstanding balance info if present
+      if (outstandingBalance > 0) {
+        pendingBasket.account_items = account_items;
+        pendingBasket.account_week = weeksIncluded.join(',');
+        pendingBasket.account_total = outstandingBalance;
+        pendingBasket.existing_account_balance = outstandingBalance;
+      }
+      
+      console.log('Saving pending basket to Firebase:', pendingBasket);
+      
+      var firebaseUrl = 'https://cherry-tree-bookings-default-rtdb.europe-west1.firebasedatabase.app/pending_baskets/' + basketRef + '.json';
+      var saveResponse = await fetch(firebaseUrl, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(pendingBasket)
+      });
+      
+      if (!saveResponse.ok) {
+        throw new Error('Could not save basket');
+      }
+      
+      // Build description
+      var itemDescriptions = items.slice(0, 3).map(function(item) {
+        return (item.room_name || '') + ' ' + (item.formatted_date || item.date);
+      }).join(', ');
+      var description = items.length > 3 
+        ? itemDescriptions + ' +' + (items.length - 3) + ' more'
+        : itemDescriptions;
+      if (totalCreditUsed > 0) {
+        description += ' [Credit: £' + (totalCreditUsed/100).toFixed(2) + ']';
+      }
+      if (outstandingBalance > 0) {
+        description += ' + Outstanding: £' + (outstandingBalance/100).toFixed(2);
+      }
+      
+      // Create Stripe checkout with basket reference only
+      var checkoutPayload = {
+        counsellor_name: counsellorName,
+        counsellor_id: window.henleyClientId || '',
+        client_id: window.clientId || '',
+        amount: totalToCharge,
+        credit_used: totalCreditUsed,
+        description: 'Room booking: ' + description,
+        basket_ref: basketRef,
+        success_url: STRIPE_CONFIG.successUrl + '&basket=' + basketRef + '&date=' + (items[0]?.date || ''),
+        cancel_url: STRIPE_CONFIG.cancelUrl
+      };
+      
+      console.log('Creating Stripe checkout:', checkoutPayload);
+      
+      var response = await fetch(STRIPE_CONFIG.createCheckoutWebhook, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(checkoutPayload)
+      });
+      
+      if (!response.ok) {
+        throw new Error('Could not create checkout session');
+      }
+      
+      var result = await response.json();
+      
+      if (result.checkout_url) {
+        // Clear basket before redirect
+        window.bookingBasket = [];
+        if (typeof window.updateBasketUI === 'function') window.updateBasketUI();
+        
+        window.location.href = result.checkout_url;
+      } else {
+        throw new Error('No checkout URL returned');
+      }
+    }
+
     // =========================================
     // STRIPE PAYMENT PROCESSING
     // =========================================
