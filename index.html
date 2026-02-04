@@ -75,8 +75,10 @@
 <!-- ================================ -->
 <!-- SECTION 1: HTML STRUCTURE -->
 <!-- ================================ -->
-  <div class="header">
+<div class="header">
     <h2 id="pageTitle">Cherry Tree Centre - Room Booking Calendar</h2>
+    <span id="headerCounsellorName" style="font-size: 15px; color: #555; margin-left: 12px; font-weight: 400;"></span>
+    <a href="help.html" target="_blank" style="margin-left: auto; margin-right: 16px; font-size: 14px; color: #43a047; text-decoration: none; padding: 6px 14px; border: 1px solid #43a047; border-radius: 6px; white-space: nowrap;" onmouseover="this.style.background='#e8f5e9'" onmouseout="this.style.background='transparent'">❓ Help</a>
     <div class="view-selector">
       <button class="view-btn active" onclick="switchView('day')">Day View</button>
       <button class="view-btn" onclick="switchView('week')">Week View</button>
@@ -590,6 +592,8 @@ function restoreSessionState() {
   
   if (token && counsellorName && !selectedCounsellor) {
     selectedCounsellor = counsellorName;
+	var headerName = document.getElementById('headerCounsellorName');
+    if (headerName) headerName.textContent = '👋 Welcome, ' + counsellorName;
     console.log('Session restored: counsellor =', counsellorName);
     return true;
   }
@@ -629,6 +633,8 @@ function restoreSessionState() {
           window.clientId = t.clientId || null;
           window.henleyClientId = t.henleyClientId || null;
           selectedCounsellor = t.name || '';
+		  var headerName = document.getElementById('headerCounsellorName');
+          if (headerName) headerName.textContent = '👋 Welcome, ' + selectedCounsellor;
           
           console.log('💾 Stored in sessionStorage:');
           console.log('  - accessToken:', sessionStorage.getItem('accessToken'));
