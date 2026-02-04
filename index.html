@@ -923,7 +923,13 @@ loadRoomConfig().then(() => {
         return;
       }
       
-      if (isBookingWithin24Hours(changeData.originalDate, changeData.originalTime)) {
+if (isBookingToday(changeData.originalDate)) {
+        // Same-day: allow room/time only, block date changes
+        if (changeData.newDate) {
+          alert('Same-day bookings cannot be moved to a different date. You can change the room or time only.');
+          return;
+        }
+      } else if (isBookingWithin24Hours(changeData.originalDate, changeData.originalTime)) {
         alert('This booking is within 24 hours and cannot be modified online. Please contact the centre directly.');
         return;
       }
