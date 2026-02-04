@@ -1291,6 +1291,7 @@ function handlePaymentReturn() {
   const returnDate = params.get('date');
   
   if (paymentStatus === 'success') {
+  sessionStorage.removeItem('pendingBasket');
     // Show success toast
     showPaymentToast('âœ… Payment successful! Your booking has been confirmed.', 'success');
     
@@ -1311,9 +1312,26 @@ function handlePaymentReturn() {
       if (typeof refreshData === 'function') refreshData();
     }, 1500);
     
-  } else if (paymentStatus === 'cancelled') {
-    // Show cancelled toast
-    showPaymentToast('⚠️ Payment cancelled. No booking was created.', 'warning');
+} else if (paymentStatus === 'cancelled') {
+    // Restore basket from sessionStorage if available
+    const savedBasket = sessionStorage.getItem('pendingBasket');
+    if (savedBasket) {
+      try {
+        window.bookingBasket = JSON.parse(savedBasket);
+        if (typeof updateBasketUI === 'function') updateBasketUI();
+        if (typeof updateBasketSlotHighlights === 'function') {
+          setTimeout(updateBasketSlotHighlights, 500);
+        }
+        sessionStorage.removeItem('pendingBasket');
+        showPaymentToast('⚠️ Payment cancelled. Your basket has been restored.', 'warning');
+      } catch (e) {
+        console.error('Failed to restore basket:', e);
+        sessionStorage.removeItem('pendingBasket');
+        showPaymentToast('⚠️ Payment cancelled. No booking was created.', 'warning');
+      }
+    } else {
+      showPaymentToast('⚠️ Payment cancelled. No booking was created.', 'warning');
+    }
     
     // Clean up URL
     const token = params.get('token');
@@ -2500,6 +2518,9 @@ console.log('DEBUG outstanding:', outstandingBalance, outstandingWeeks, account_
       var result = await response.json();
       
       if (result.checkout_url) {
+        // Save basket to sessionStorage so it can be restored if payment is cancelled
+        sessionStorage.setItem('pendingBasket', JSON.stringify(window.bookingBasket));
+        
         // Clear basket before redirect
         window.bookingBasket = [];
         if (typeof window.updateBasketUI === 'function') window.updateBasketUI();
