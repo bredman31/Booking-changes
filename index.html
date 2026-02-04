@@ -4626,5 +4626,18 @@ function initializeData() {
   <script src="js/token-auth-update.js"></script>
   <!-- Booking enhancements (£0 bookings, basket, etc) -->
   <script src="js/booking-enhancements.js"></script>
+  <script>
+  // Set counsellor name in header after everything has loaded
+  window.addEventListener('load', function() {
+    setTimeout(function() {
+      var name = selectedCounsellor || sessionStorage.getItem('counsellorName');
+      var headerName = document.getElementById('headerCounsellorName');
+      if (headerName && name) {
+        headerName.textContent = '👋 Welcome, ' + name;
+      }
+    }, 1000);
+  });
+</script>
+  
 </body>
 </html>
