@@ -506,7 +506,13 @@ function generateRoomStyles() {
       const hoursDiff = timeDiff / (1000 * 60 * 60);
       return hoursDiff < 24;
     }
-    
+	
+    // Check if booking is today (allows same-day room/time changes)
+    function isBookingToday(bookingDate) {
+      const today = new Date().toISOString().split('T')[0];
+      return bookingDate === today;
+    }
+	
     // Format date and time for SimplybookMe
     function formatDateTimeForSimplybookMe(date, time) {
       if (!date || !time) {
@@ -1194,14 +1200,28 @@ function getRoomMapping(booking) {
       // Check 24-hour restriction
       const isWithin24Hours = isBookingWithin24Hours(date, time);
       
-      if (isWithin24Hours) {
-        if (pastNotice) pastNotice.classList.remove('hidden');
+      const isTodayBooking = isBookingToday(date);
+
+        if (isWithin24Hours && !isTodayBooking) {
+        // Past or tomorrow-within-24h: block everything
+        if (pastNotice) { pastNotice.textContent = 'This booking is within 24 hours and cannot be modified or cancelled online. Please contact the centre directly.'; pastNotice.classList.remove('hidden'); }
         if (cancelBtn) cancelBtn.disabled = true;
         if (submitBtn) submitBtn.disabled = true;
         if (newRoomInput) newRoomInput.disabled = true;
         if (newDateInput) newDateInput.disabled = true;
         if (newTimeInput) newTimeInput.disabled = true;
+      } else if (isTodayBooking) {
+        // Today: allow room/time changes only, no cancel or date change
+        if (pastNotice) { pastNotice.textContent = 'Same-day booking: you can change the room or time, but cancellations and date changes are not available. Please contact the centre to cancel.'; pastNotice.classList.remove('hidden'); }
+        if (cancelBtn) cancelBtn.disabled = true;
+        if (submitBtn) submitBtn.disabled = false;
+        if (newRoomInput) newRoomInput.disabled = false;
+        if (newDateInput) newDateInput.disabled = true;
+        if (newTimeInput) newTimeInput.disabled = false;
+        
+        populateRoomDropdown(room);
       } else {
+        // Future: everything allowed
         if (pastNotice) pastNotice.classList.add('hidden');
         if (cancelBtn) cancelBtn.disabled = false;
         if (submitBtn) submitBtn.disabled = false;
