@@ -1318,11 +1318,14 @@ function handlePaymentReturn() {
     if (savedBasket) {
       try {
         window.bookingBasket = JSON.parse(savedBasket);
-        if (typeof updateBasketUI === 'function') updateBasketUI();
-        if (typeof updateBasketSlotHighlights === 'function') {
-          setTimeout(updateBasketSlotHighlights, 500);
-        }
         sessionStorage.removeItem('pendingBasket');
+        // Delay UI update to ensure booking-enhancements.js has initialised
+        setTimeout(function() {
+          if (typeof updateBasketUI === 'function') updateBasketUI();
+          if (typeof updateBasketSlotHighlights === 'function') updateBasketSlotHighlights();
+          // Auto-open the basket panel so user can see their items
+          if (typeof toggleBasketPanel === 'function') toggleBasketPanel();
+        }, 1500);
         showPaymentToast('⚠️ Payment cancelled. Your basket has been restored.', 'warning');
       } catch (e) {
         console.error('Failed to restore basket:', e);
