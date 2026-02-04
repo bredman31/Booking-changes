@@ -4115,7 +4115,8 @@ async function lookupCounsellorId(counsellorName) {
               `;
               
               // Only allow clicking own bookings when authenticated
-              if (hasValidToken && isOwnBooking && !isWithin24Hours) {
+              const isTodayCell = isBookingToday(booking.date);
+              if (hasValidToken && isOwnBooking && (!isWithin24Hours || isTodayCell)) {
                 cell.style.cursor = 'pointer';
                 cell.title = 'Click to modify this booking';
                 
