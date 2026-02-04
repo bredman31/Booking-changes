@@ -731,12 +731,11 @@
     
     const result = await response.json();
     
-    if (result.checkout_url) {
-      // Clear basket before redirect
+ if (result.checkout_url) {
+      sessionStorage.setItem('pendingBasket', JSON.stringify(window.bookingBasket));
       window.bookingBasket = [];
       updateBasketUI();
-      updateBasketSlotHighlights(); // Clear highlights
-      
+      updateBasketSlotHighlights();
       window.location.href = result.checkout_url;
     } else {
       throw new Error('No checkout URL returned');
