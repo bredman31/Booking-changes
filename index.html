@@ -2223,13 +2223,51 @@ var outstandingBalance = window.counsellorAccount?.previousTotal || 0;
       if (!window.pendingPayment) return;
       
       const statusEl = document.getElementById('paymentChoiceStatus');
+	  const items = normalizeToItems(window.pendingPayment);
       statusEl.style.display = 'block';
       statusEl.style.background = '#fff3cd';
       statusEl.style.color = '#856404';
       statusEl.textContent = 'Processing credit payment...';
       
       try {
-await processCreditPayments(items, window.pendingPayment.totalAmount);
+        var creditWebhookUrl = 'https://hook.eu2.make.com/a6ua2a1yl13y7h7k9aphi9iow53dvwpv';
+        var counsellorName = selectedCounsellor || sessionStorage.getItem('counsellorName');
+        
+        for (var i = 0; i < items.length; i++) {
+          var item = items[i];
+          var payload = {
+            client_id: window.clientId,
+            counsellor_id: window.henleyClientId || window.clientId,
+            counsellor_name: counsellorName,
+            room_id: item.room_id,
+            room_name: item.room_name,
+            service_id: item.service_id || getServiceIdForRoom(item.room_name),
+            location_id: item.location_id,
+            location_name: item.location_name,
+            date: item.date,
+            start_time: item.start_time,
+            end_time: item.end_time,
+            amount: item.price,
+            deduct_credit: true,
+            payment_method: 'credit',
+            source: 'counsellor_calendar',
+            timestamp: new Date().toISOString(),
+            comments: item.comments || null
+          };
+          
+          var response = await fetch(creditWebhookUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+          });
+          
+          if (response.ok) {
+            var result = await response.json();
+            if (result.newBalance !== undefined) {
+              window.counsellorCreditBalance = result.newBalance;
+            }
+          }
+        }
         
         // Clear outstanding weeks if any
         var account = window.counsellorAccount;
