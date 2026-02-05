@@ -3860,6 +3860,7 @@ async function lookupCounsellorId(counsellorName) {
       const todayStr = `${year}-${month}-${day}`;
       
       dateSelector.value = todayStr;
+	  updateDayDisplayText();
       currentDate = todayStr;
       
       createCalendarGrid();
