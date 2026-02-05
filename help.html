@@ -388,23 +388,31 @@
     </div>
   </div>
 
-  <!-- SECTION: Cancelling or Changing a Booking -->
-  <div class="help-section">
-    <button class="section-toggle" onclick="toggleSection(this)">
-      <span class="section-icon">🔄</span>
-      Cancelling or Changing a Booking
-      <span class="section-arrow">▼</span>
-    </button>
-    <div class="section-content">
+<div class="section-content">
       <p>Click on one of <strong>your own bookings</strong> in the calendar (the coloured blocks with your name). The left panel will show the booking details with options to cancel or change it.</p>
 
       <p><strong>To cancel:</strong> Click the red <strong>"Cancel This Appointment"</strong> button. If it was a paid booking, the amount will be added to your wallet credit.</p>
 
       <p><strong>To change:</strong> Use the dropdowns under <strong>"Or Request Changes"</strong> to select a new room, date, or time, then click <strong>"Submit Change Request"</strong>.</p>
 
-      <div class="warn"><strong>Important:</strong> Bookings within 24 hours cannot be cancelled online. Please contact the centre directly if you need to cancel at short notice.</div>
+      <p style="margin-top: 16px; font-weight: 600;">Same-day and future bookings</p>
+      <table class="payment-table">
+        <tr>
+          <th>When</th>
+          <th>What you can do</th>
+        </tr>
+        <tr>
+          <td><strong>Future bookings</strong> (tomorrow onwards)</td>
+          <td>Change room, date, or time. Cancel for a wallet refund.</td>
+        </tr>
+        <tr>
+          <td><strong>Today's bookings</strong></td>
+          <td>Change room or time only. Cannot cancel or move to a different date.</td>
+        </tr>
+      </table>
+
+      <div class="warn"><strong>Important:</strong> Same-day bookings cannot be cancelled online. If you need to cancel a booking on the day, please contact the centre directly.</div>
     </div>
-  </div>
 
   <!-- SECTION: Car Park Bookings -->
   <div class="help-section">
