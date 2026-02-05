@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cherry Tree Centre - Booking Help</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #f5f7fa;
+      color: #333;
+      line-height: 1.6;
+    }
+
+    /* Header */
+    .help-header {
+      background: linear-gradient(135deg, #2e7d32 0%, #43a047 100%);
+      color: white;
+      padding: 24px 32px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .help-header h1 {
+      font-size: 22px;
+      font-weight: 600;
+    }
+    .help-header a {
+      color: white;
+      text-decoration: none;
+      background: rgba(255,255,255,0.2);
+      padding: 8px 18px;
+      border-radius: 6px;
+      font-size: 14px;
+      transition: background 0.2s;
+    }
+    .help-header a:hover { background: rgba(255,255,255,0.35); }
+
+    /* Container */
+    .help-container {
+      max-width: 860px;
+      margin: 0 auto;
+      padding: 32px 24px 60px;
+    }
+
+    /* Quick start summary */
+    .quick-start {
+      background: white;
+      border-radius: 12px;
+      padding: 28px 32px;
+      margin-bottom: 32px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+      border-left: 5px solid #43a047;
+    }
+    .quick-start h2 {
+      font-size: 20px;
+      margin-bottom: 16px;
+      color: #2e7d32;
+    }
+    .quick-steps {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 16px;
+    }
+    .quick-step {
+      text-align: center;
+      padding: 16px 12px;
+      background: #f0f7f0;
+      border-radius: 8px;
+    }
+    .quick-step .step-number {
+      display: inline-block;
+      width: 32px;
+      height: 32px;
+      line-height: 32px;
+      border-radius: 50%;
+      background: #43a047;
+      color: white;
+      font-weight: 700;
+      font-size: 15px;
+      margin-bottom: 8px;
+    }
+    .quick-step .step-text {
+      font-size: 14px;
+      color: #444;
+    }
+
+    /* Expandable sections */
+    .help-section {
+      background: white;
+      border-radius: 12px;
+      margin-bottom: 16px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+      overflow: hidden;
+    }
+    .section-toggle {
+      width: 100%;
+      border: none;
+      background: white;
+      padding: 20px 28px;
+      text-align: left;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      font-size: 17px;
+      font-weight: 600;
+      color: #333;
+      transition: background 0.15s;
+    }
+    .section-toggle:hover { background: #fafafa; }
+    .section-icon { font-size: 22px; flex-shrink: 0; }
+    .section-arrow {
+      margin-left: auto;
+      font-size: 13px;
+      color: #999;
+      transition: transform 0.25s;
+    }
+    .help-section.open .section-arrow { transform: rotate(180deg); }
+    .section-content {
+      display: none;
+      padding: 0 28px 24px;
+      font-size: 15px;
+      color: #555;
+    }
+    .help-section.open .section-content { display: block; }
+
+    /* Content styling */
+    .section-content p { margin-bottom: 12px; }
+    .section-content img {
+      max-width: 100%;
+      border-radius: 8px;
+      border: 1px solid #e0e0e0;
+      margin: 16px 0;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    .tip {
+      background: #fff8e1;
+      border-left: 4px solid #ffb300;
+      padding: 12px 16px;
+      border-radius: 0 6px 6px 0;
+      margin: 14px 0;
+      font-size: 14px;
+    }
+    .tip strong { color: #e65100; }
+    .warn {
+      background: #fce4ec;
+      border-left: 4px solid #e53935;
+      padding: 12px 16px;
+      border-radius: 0 6px 6px 0;
+      margin: 14px 0;
+      font-size: 14px;
+    }
+    .warn strong { color: #c62828; }
+    .key-point {
+      display: flex;
+      gap: 10px;
+      align-items: flex-start;
+      margin-bottom: 10px;
+    }
+    .key-point .kp-icon { font-size: 18px; flex-shrink: 0; margin-top: 1px; }
+
+    /* Colour legend */
+    .colour-legend {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 10px;
+      margin: 14px 0;
+    }
+    .colour-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 14px;
+    }
+    .colour-swatch {
+      width: 28px;
+      height: 28px;
+      border-radius: 4px;
+      border: 1px solid #ddd;
+      flex-shrink: 0;
+    }
+
+    /* Payment options table */
+    .payment-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 14px 0;
+      font-size: 14px;
+    }
+    .payment-table th {
+      background: #f0f7f0;
+      padding: 10px 14px;
+      text-align: left;
+      font-weight: 600;
+      border-bottom: 2px solid #c8e6c9;
+    }
+    .payment-table td {
+      padding: 10px 14px;
+      border-bottom: 1px solid #eee;
+    }
+
+    /* Contact footer */
+    .help-footer {
+      text-align: center;
+      padding: 32px;
+      color: #888;
+      font-size: 14px;
+    }
+    .help-footer a { color: #43a047; }
+
+    /* Mobile */
+    @media (max-width: 600px) {
+      .help-header { padding: 18px 16px; flex-direction: column; gap: 12px; }
+      .help-container { padding: 20px 14px 40px; }
+      .quick-start { padding: 20px 18px; }
+      .section-toggle { padding: 16px 18px; font-size: 15px; }
+      .section-content { padding: 0 18px 20px; font-size: 14px; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="help-header">
+  <h1>🌳 Cherry Tree Centre — Booking Guide</h1>
+  <a href="index.html">← Back to Calendar</a>
+</div>
+
+<div class="help-container">
+
+  <!-- QUICK START -->
+  <div class="quick-start">
+    <h2>Quick Start</h2>
+    <div class="quick-steps">
+      <div class="quick-step">
+        <div class="step-number">1</div>
+        <div class="step-text">Open the link from your email</div>
+      </div>
+      <div class="quick-step">
+        <div class="step-number">2</div>
+        <div class="step-text">Click an empty slot on the calendar</div>
+      </div>
+      <div class="quick-step">
+        <div class="step-number">3</div>
+        <div class="step-text">Choose how to pay and confirm</div>
+      </div>
+      <div class="quick-step">
+        <div class="step-number">4</div>
+        <div class="step-text">Your booking appears on the calendar</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SECTION: The Calendar -->
+  <div class="help-section open">
+    <button class="section-toggle" onclick="toggleSection(this)">
+      <span class="section-icon">📅</span>
+      The Calendar
+      <span class="section-arrow">▼</span>
+    </button>
+    <div class="section-content">
+      <p>When you open the calendar you'll see all the rooms across the top and time slots down the left side. Each coloured block is an existing booking.</p>
+      <img src="img/calendar-view.png" alt="Calendar day view showing rooms and time slots">
+      <div class="key-point"><span class="kp-icon">👆</span><span><strong>Empty white slots</strong> are available — click one to book it.</span></div>
+      <div class="key-point"><span class="kp-icon">🔀</span><span>Use <strong>Day View</strong> or <strong>Week View</strong> buttons (top right) to switch between views.</span></div>
+      <div class="key-point"><span class="kp-icon">⬅️</span><span>Use the <strong>arrows</strong> or the <strong>date picker</strong> at the top to navigate to different days.</span></div>
+      <div class="key-point"><span class="kp-icon">🔄</span><span>Click <strong>Refresh Data</strong> to see the latest bookings.</span></div>
+
+      <p style="margin-top: 16px; font-weight: 600;">What do the colours mean?</p>
+      <p>Each counsellor is assigned a colour so you can quickly see who has booked which slots. Your own bookings will always appear in the same colour.</p>
+
+      <div class="tip"><strong>Tip:</strong> Click the <strong>Today</strong> button to jump back to today's date at any time.</div>
+    </div>
+  </div>
+
+  <!-- SECTION: Making a Booking -->
+  <div class="help-section">
+    <button class="section-toggle" onclick="toggleSection(this)">
+      <span class="section-icon">✅</span>
+      Making a Booking
+      <span class="section-arrow">▼</span>
+    </button>
+    <div class="section-content">
+      <p>Click on any empty (white) time slot in the calendar. A booking panel will appear showing the room, date, time and cost.</p>
+      <img src="img/booking-modal.png" alt="Booking modal showing room details and payment options">
+
+      <p>From here you can:</p>
+      <div class="key-point"><span class="kp-icon">💬</span><span>Add an optional <strong>comment</strong> to your booking.</span></div>
+      <div class="key-point"><span class="kp-icon">💳</span><span>Choose your <strong>payment method</strong> (see Payment Options below).</span></div>
+      <div class="key-point"><span class="kp-icon">🛒</span><span>Click <strong>Add to Basket</strong> if you want to book multiple slots before paying.</span></div>
+
+      <div class="tip"><strong>Tip:</strong> If you're booking a <strong>Car Park</strong> space, you'll need to enter your car registration number in the comments field.</div>
+    </div>
+  </div>
+
+  <!-- SECTION: Using the Basket -->
+  <div class="help-section">
+    <button class="section-toggle" onclick="toggleSection(this)">
+      <span class="section-icon">🛒</span>
+      Using the Basket
+      <span class="section-arrow">▼</span>
+    </button>
+    <div class="section-content">
+      <p>The basket lets you collect several bookings and pay for them all at once. When you add a slot to the basket, it appears as a dark grey block on the calendar so you know it's reserved.</p>
+      <img src="img/basket-panel.png" alt="Basket panel showing multiple bookings ready for checkout">
+
+      <div class="key-point"><span class="kp-icon">🛒</span><span>The <strong>basket button</strong> appears at the bottom right of the screen once you've added an item. Click it to open the basket panel.</span></div>
+      <div class="key-point"><span class="kp-icon">❌</span><span>Click the red <strong>×</strong> next to any item to remove it from the basket.</span></div>
+      <div class="key-point"><span class="kp-icon">🗑️</span><span>Click <strong>Clear All</strong> to empty the entire basket.</span></div>
+      <div class="key-point"><span class="kp-icon">💰</span><span>When you're ready, click <strong>Pay &amp; Confirm</strong> to proceed to payment.</span></div>
+      <div class="key-point"><span class="kp-icon">📒</span><span>Or click <strong>Book on Account</strong> to add everything to your weekly account (see below).</span></div>
+
+      <div class="tip"><strong>Tip:</strong> If you have wallet credit, the basket will show your available credit at the bottom.</div>
+    </div>
+  </div>
+
+  <!-- SECTION: Payment Options -->
+  <div class="help-section">
+    <button class="section-toggle" onclick="toggleSection(this)">
+      <span class="section-icon">💳</span>
+      Payment Options
+      <span class="section-arrow">▼</span>
+    </button>
+    <div class="section-content">
+      <p>When you pay for a booking (or a basket of bookings), you'll see the Payment Options screen:</p>
+      <img src="img/payment-options.png" alt="Payment options showing card, account and credit choices">
+
+      <table class="payment-table">
+        <tr>
+          <th>Option</th>
+          <th>How it works</th>
+        </tr>
+        <tr>
+          <td><strong>Pay with Card</strong></td>
+          <td>Pay immediately via Stripe (secure card payment). You'll be redirected to a payment page and returned to the calendar once complete.</td>
+        </tr>
+        <tr>
+          <td><strong>Book on Account</strong></td>
+          <td>Add to your weekly tab. All bookings for the week accumulate and need to be paid by <strong>Friday at 6pm</strong>. Your running balance is shown on the left side of the calendar.</td>
+        </tr>
+        <tr>
+          <td><strong>Use Wallet</strong></td>
+          <td>Pay using credit in your wallet (from cancelled bookings). Only shown if you have credit available.</td>
+        </tr>
+        <tr>
+          <td><strong>Use Credit + Pay Remainder</strong></td>
+          <td>If your wallet credit doesn't cover the full amount, this option uses all your credit and charges the rest to your card.</td>
+        </tr>
+      </table>
+
+      <div class="warn"><strong>Important:</strong> Account bookings must be paid by <strong>Friday 6pm</strong> each week. If you have an overdue balance from a previous week, you won't be able to book on account until it's cleared.</div>
+    </div>
+  </div>
+
+  <!-- SECTION: Your Account Balance -->
+  <div class="help-section">
+    <button class="section-toggle" onclick="toggleSection(this)">
+      <span class="section-icon">📒</span>
+      Your Account Balance
+      <span class="section-arrow">▼</span>
+    </button>
+    <div class="section-content">
+      <p>If you book on account, your current week's balance is shown at the top left of the calendar under your name. The billing week runs from <strong>Saturday to Friday</strong>.</p>
+
+      <div class="key-point"><span class="kp-icon">💰</span><span><strong>This week</strong> — shows your current running total for unpaid bookings this week.</span></div>
+      <div class="key-point"><span class="kp-icon">⚠️</span><span><strong>Overdue balance</strong> — if a previous week is unpaid, it will show in red. Click on it to pay.</span></div>
+
+      <p>You can pay your account balance at any time by clicking on the balance amount. You don't have to wait until Friday — paying early is fine!</p>
+
+      <div class="tip"><strong>Tip:</strong> When you make a card payment for new bookings, any overdue balance from previous weeks is automatically included, so everything gets settled at once.</div>
+    </div>
+  </div>
+
+  <!-- SECTION: Wallet Credit -->
+  <div class="help-section">
+    <button class="section-toggle" onclick="toggleSection(this)">
+      <span class="section-icon">💰</span>
+      Wallet Credit
+      <span class="section-arrow">▼</span>
+    </button>
+    <div class="section-content">
+      <p>If you cancel a paid booking, the refund goes into your <strong>wallet</strong> as credit rather than back to your card. This credit can be used towards future bookings.</p>
+      <p>Your wallet balance is displayed in the green box on the left side of the calendar. When you make a booking, if you have wallet credit you'll see additional payment options to use it.</p>
+
+      <div class="tip"><strong>Tip:</strong> If your wallet credit is less than the booking cost, you can use the <strong>"Use Credit + Pay Remainder"</strong> option to combine credit with a card payment.</div>
+    </div>
+  </div>
+
+  <!-- SECTION: Cancelling or Changing a Booking -->
+  <div class="help-section">
+    <button class="section-toggle" onclick="toggleSection(this)">
+      <span class="section-icon">🔄</span>
+      Cancelling or Changing a Booking
+      <span class="section-arrow">▼</span>
+    </button>
+    <div class="section-content">
+      <p>Click on one of <strong>your own bookings</strong> in the calendar (the coloured blocks with your name). The left panel will show the booking details with options to cancel or change it.</p>
+
+      <p><strong>To cancel:</strong> Click the red <strong>"Cancel This Appointment"</strong> button. If it was a paid booking, the amount will be added to your wallet credit.</p>
+
+      <p><strong>To change:</strong> Use the dropdowns under <strong>"Or Request Changes"</strong> to select a new room, date, or time, then click <strong>"Submit Change Request"</strong>.</p>
+
+      <div class="warn"><strong>Important:</strong> Bookings within 24 hours cannot be cancelled online. Please contact the centre directly if you need to cancel at short notice.</div>
+    </div>
+  </div>
+
+  <!-- SECTION: Car Park Bookings -->
+  <div class="help-section">
+    <button class="section-toggle" onclick="toggleSection(this)">
+      <span class="section-icon">🅿️</span>
+      Car Park Bookings
+      <span class="section-arrow">▼</span>
+    </button>
+    <div class="section-content">
+      <p>Car park spaces are shown in the last column of the calendar. They work the same as room bookings but with one key difference:</p>
+
+      <div class="warn"><strong>Required:</strong> When booking a car park space, you <strong>must</strong> enter your car registration number in the comments field. The booking cannot be confirmed without it.</div>
+
+      <p>The car park column shows how many spaces are available (e.g. "1/4 booked" means 3 spaces remain). Each car park slot corresponds to one space for one hour.</p>
+    </div>
+  </div>
+
+  <!-- SECTION: Troubleshooting -->
+  <div class="help-section">
+    <button class="section-toggle" onclick="toggleSection(this)">
+      <span class="section-icon">❓</span>
+      Troubleshooting
+      <span class="section-arrow">▼</span>
+    </button>
+    <div class="section-content">
+      <p><strong>My booking isn't showing:</strong> Click the <strong>Refresh Data</strong> button. New bookings can take a few seconds to appear after payment.</p>
+
+      <p><strong>I can't click on a time slot:</strong> The slot is already booked by another counsellor. Only empty (white) slots are available.</p>
+
+      <p><strong>The page looks blank or won't load:</strong> Try opening the link from your email again. Your access link may have expired — contact the centre for a new one.</p>
+
+      <p><strong>Payment didn't go through:</strong> If your card payment was interrupted, no booking will have been created. Your basket will be restored so you can try again.</p>
+
+      <p><strong>I can't book on account:</strong> You may have an overdue balance from a previous week. Pay the outstanding amount first, then the account option will be available again.</p>
+
+      <p><strong>Any other issues:</strong> Please contact the Cherry Tree Centre office and we'll be happy to help.</p>
+    </div>
+  </div>
+
+</div>
+
+<div class="help-footer">
+  <p>Cherry Tree Centre — Henley</p>
+</div>
+
+<script>
+  function toggleSection(btn) {
+    const section = btn.closest('.help-section');
+    section.classList.toggle('open');
+  }
+</script>
+</body>
+</html>
