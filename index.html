@@ -526,7 +526,17 @@ function generateRoomStyles() {
         formattedTime = time + ':00';
       }
       
-      return `${date}T${formattedTime}`;
+    return `${date}T${formattedTime}`;
+    }
+    
+    // Get ISO week number in YYYYWww format (e.g. "2026W06")
+    function getWeekNumber(date) {
+      const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+      const dayNum = d.getUTCDay() || 7;
+      d.setUTCDate(d.getUTCDate() + 4 - dayNum);
+      const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+      const weekNo = Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
+      return `${d.getUTCFullYear()}W${weekNo.toString().padStart(2, '0')}`;
     }
     
     // Get location ID from room name - NOW USES DYNAMIC ROOM CONFIG
@@ -2715,7 +2725,7 @@ async function processMixedPayment(items) {
           roomForWebhook = room.replace('Room ', 'Room_');
         }
         
-        // All cancellations now use cancel action (no more holding room)
+       // All cancellations now use cancel action (no more holding room)
         const payload = {
           timestamp: new Date().toISOString(),
           action: 'cancel',
@@ -2723,6 +2733,7 @@ async function processMixedPayment(items) {
           counsellor_id: window.henleyClientId,
           booking_code: bookingId,
           original_datetime: `${date}T${time}:00`,
+          original_week: getWeekNumber(new Date(date)),
           original_room: roomForWebhook,
           service_id: booking?.serviceId || getServiceIdForRoom(room),
           comments: booking ? (booking.comments || '') : '',
@@ -2870,6 +2881,7 @@ if (!requestedRoomId) {
           original_room_id: originalRoomId,
           original_location_id: originalLocationId,
           original_datetime: `${changeData.originalDate}T${changeData.originalTime}:00`,
+          original_week: getWeekNumber(new Date(changeData.originalDate)),
           requested_room: newRoomUnderscore,
           requested_room_id: requestedRoomId,
           requested_location_id: requestedLocationId,
@@ -2877,11 +2889,13 @@ if (!requestedRoomId) {
             changeData.newDate || changeData.originalDate,
             changeData.newTime || changeData.originalTime
           ),
+          requested_date: changeData.newDate || changeData.originalDate,
+          requested_time: changeData.newTime || changeData.originalTime,
+          requested_week: getWeekNumber(new Date(changeData.newDate || changeData.originalDate)),
           service_id: booking?.serviceId || getServiceIdForRoom(changeData.newRoom || changeData.originalRoom),
           comments: booking ? (booking.comments || '') : '',
           is_paid: booking ? (booking.isPaid ? 'True' : 'No') : 'No'
         };
-        
         console.log('Webhook payload:', webhookPayload);
         
         statusDiv.textContent = 'Sending to booking system...';
@@ -3860,8 +3874,8 @@ async function lookupCounsellorId(counsellorName) {
       const todayStr = `${year}-${month}-${day}`;
       
       dateSelector.value = todayStr;
-	  updateDayDisplayText();
       currentDate = todayStr;
+	  updateDayDisplayText();
       
       createCalendarGrid();
       populateCalendar();
