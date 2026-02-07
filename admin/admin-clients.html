@@ -860,6 +860,8 @@
         <option value="last-desc">Sort: Recent Activity</option>
         <option value="last-asc">Sort: Oldest Activity</option>
       </select>
+      <button class="add-btn" onclick="generateMissingTokens()" style="background:#28a745;">🔑 Generate Missing Tokens</button>
+      <button class="add-btn" onclick="regenerateAllTokens()" style="background:#dc3545;">🔄 Regenerate All</button>
       <button class="add-btn" onclick="openAddModal()">➕ Add Client</button>
     </div>
   </header>
@@ -1860,6 +1862,110 @@
       const token = document.getElementById('rawToken').textContent;
       navigator.clipboard.writeText(token);
       showStatus('Token copied to clipboard!', 'success');
+    }
+    
+// ================================
+    // BULK TOKEN GENERATION
+    // ================================
+    async function generateMissingTokens() {
+      // Find active clients without tokens
+      const needTokens = Object.entries(clients).filter(([id, client]) => 
+        client.active && !client.token
+      );
+      
+      if (needTokens.length === 0) {
+        showStatus('All active clients already have tokens!', 'info');
+        return;
+      }
+      
+      if (!confirm(`Generate tokens for ${needTokens.length} active client(s) without tokens?\n\n${needTokens.map(([id, c]) => `• ${c.name} (${id})`).join('\n')}`)) return;
+      
+      let generated = 0;
+      const results = [];
+      
+      for (const [clientId, client] of needTokens) {
+        try {
+          const newToken = generateToken();
+          await database.ref(`clients/${clientId}/token`).set(newToken);
+          clients[clientId].token = newToken;
+          generated++;
+          results.push({ id: clientId, name: client.name, token: newToken });
+        } catch (error) {
+          console.error(`Error generating token for ${clientId}:`, error);
+        }
+      }
+      
+      renderClients();
+      updateStats();
+      showStatus(`Generated ${generated} new token(s)!`, 'success');
+      showBulkTokenResults(results);
+    }
+    
+    async function regenerateAllTokens() {
+      const activeClients = Object.entries(clients).filter(([id, client]) => client.active);
+      
+      if (activeClients.length === 0) {
+        showStatus('No active clients found!', 'info');
+        return;
+      }
+      
+      if (!confirm(`⚠️ WARNING: This will regenerate tokens for ALL ${activeClients.length} active clients.\n\nAll existing calendar links will stop working!\n\nAre you sure?`)) return;
+      
+      if (!confirm(`Final confirmation: Regenerate ${activeClients.length} tokens? This cannot be undone.`)) return;
+      
+      let generated = 0;
+      const results = [];
+      
+      for (const [clientId, client] of activeClients) {
+        try {
+          const newToken = generateToken();
+          await database.ref(`clients/${clientId}/token`).set(newToken);
+          clients[clientId].token = newToken;
+          generated++;
+          results.push({ id: clientId, name: client.name, token: newToken });
+        } catch (error) {
+          console.error(`Error regenerating token for ${clientId}:`, error);
+        }
+      }
+      
+      renderClients();
+      updateStats();
+      showStatus(`Regenerated ${generated} token(s)!`, 'success');
+      showBulkTokenResults(results);
+    }
+    
+    function showBulkTokenResults(results) {
+      if (results.length === 0) return;
+      
+      const lines = results.map(r => {
+        const link = `${CALENDAR_BASE_URL}?token=${r.token}`;
+        return `${r.name} (${r.id})\n${link}`;
+      }).join('\n\n');
+      
+      // Show in a modal with copy-all button
+      const html = results.map(r => {
+        const link = `${CALENDAR_BASE_URL}?token=${r.token}`;
+        return `<div style="margin-bottom:15px;padding:12px;background:#f8f9fa;border-radius:6px;">
+          <strong>${r.name}</strong> <span style="color:#666;font-size:12px;">(${r.id})</span><br>
+          <code style="font-size:11px;word-break:break-all;color:#007bff;">${link}</code>
+        </div>`;
+      }).join('');
+      
+      // Reuse the token modal
+      document.getElementById('tokenModal').querySelector('.modal-body').innerHTML = `
+        <p style="margin-bottom:15px;color:#666;">Generated ${results.length} token(s). Copy links below to send to clients:</p>
+        <button class="btn btn-primary" style="margin-bottom:15px;" onclick="copyAllTokenResults()">📋 Copy All Links</button>
+        <div id="bulkTokenResults" style="max-height:400px;overflow-y:auto;">${html}</div>
+        <textarea id="bulkTokenText" style="position:absolute;left:-9999px;">${lines}</textarea>
+      `;
+      document.getElementById('tokenModal').querySelector('h2').textContent = '🔑 Bulk Token Results';
+      document.getElementById('tokenModal').classList.add('show');
+    }
+    
+    function copyAllTokenResults() {
+      const text = document.getElementById('bulkTokenText').value;
+      navigator.clipboard.writeText(text);
+      showStatus('All links copied to clipboard!', 'success');
     }
     
     // ================================
