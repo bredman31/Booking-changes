@@ -916,7 +916,7 @@
     const ROOM_ID_MAPPING = {
       'Room_1': '3', 'Room_2': '7', 'Room_4': '8', 'Room_5': '13',
       'Room_6': '9', 'Room_7': '10', 'Room_8': '14', 'Room_9': '15',
-      'Car_Park': '12', 'Online': '11', 'Henley_Holding_Room': '18'
+      'Car_Park': '12', 'Online': '11'
     };
     
     // Default room config
@@ -1366,6 +1366,24 @@
     }
     
     // ================================
+    // HELPER FUNCTIONS
+    // ================================
+    function getWeekNumber(date) {
+      const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+      const dayNum = d.getUTCDay() || 7;
+      d.setUTCDate(d.getUTCDate() + 4 - dayNum);
+      const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+      const weekNo = Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
+      return `${d.getUTCFullYear()}W${weekNo.toString().padStart(2, '0')}`;
+    }
+    
+    function getServiceIdForRoom(roomName) {
+      if (!roomName) return '1';
+      const room = roomName.toLowerCase().replace(/_/g, ' ');
+      return (room === 'car park') ? '9' : '1';
+    }
+    
+    // ================================
     // BOOKING MODIFICATION
     // ================================
     async function submitChange() {
@@ -1389,7 +1407,6 @@
       showStatus('Sending change request...', 'info');
       
       try {
-        const counsellorId = selectedBooking.clientId || '6';
         const originalRoomKey = getRoomKey(selectedBooking) || 'Room_1';
         
         let requestedRoomKey = originalRoomKey;
@@ -1403,17 +1420,24 @@
         const payload = {
           timestamp: new Date().toISOString(),
           action: 'modify',
-          counsellor_id: counsellorId,
+          client_id: selectedBooking.clientId || '',
+          counsellor_id: selectedBooking.counsellorId || '6',
+          counsellor_name: selectedBooking.client || '',
           original_booking_code: selectedBooking.bookingId,
           original_room: originalRoomKey,
           original_room_id: ROOM_ID_MAPPING[originalRoomKey] || '3',
           original_location_id: getLocationId(originalRoomKey),
           original_datetime: `${selectedBooking.date}T${selectedBooking.start}:00`,
+          original_week: getWeekNumber(new Date(selectedBooking.date)),
           requested_room: requestedRoomKey,
           requested_room_id: ROOM_ID_MAPPING[requestedRoomKey] || '3',
           requested_location_id: getLocationId(requestedRoomKey),
           requested_datetime: `${newDate || selectedBooking.date}T${newTime || selectedBooking.start}:00`,
-          service_id: '2',
+          requested_date: newDate || selectedBooking.date,
+          requested_time: newTime || selectedBooking.start,
+          requested_week: getWeekNumber(new Date(newDate || selectedBooking.date)),
+          service_id: selectedBooking.serviceId || getServiceIdForRoom(originalRoomKey),
+          comments: selectedBooking.comments || '',
           is_paid: selectedBooking.isPaid ? 'True' : 'No',
           admin_override: 'true'
         };
@@ -1449,41 +1473,29 @@
       showStatus('Processing cancellation...', 'info');
       
       try {
-        const counsellorId = selectedBooking.clientId || '6';
         const roomKey = getRoomKey(selectedBooking) || 'Room_1';
+        const isPaidBooking = selectedBooking.isPaid;
         
-        let payload;
-        if (selectedBooking.isPaid) {
-          payload = {
-            timestamp: new Date().toISOString(),
-            action: 'modify',
-            counsellor_id: counsellorId,
-            original_booking_code: selectedBooking.bookingId,
-            original_room: roomKey,
-            original_room_id: ROOM_ID_MAPPING[roomKey] || '3',
-            original_location_id: getLocationId(roomKey),
-            original_datetime: `${selectedBooking.date}T${selectedBooking.start}:00`,
-            requested_room: 'Henley_Holding_Room',
-            requested_room_id: '18',
-            requested_location_id: '2',
-            requested_datetime: `2030-01-01T${selectedBooking.start}:00`,
-            service_id: '2',
-            is_paid: 'True',
-            admin_override: 'true'
-          };
-        } else {
-          payload = {
-            timestamp: new Date().toISOString(),
-            action: 'cancel',
-            counsellor_id: counsellorId,
-            booking_code: selectedBooking.bookingId,
-            original_datetime: `${selectedBooking.date}T${selectedBooking.start}:00`,
-            original_room: roomKey,
-            service_id: '2',
-            is_paid: 'No',
-            admin_override: 'true'
-          };
-        }
+        // All cancellations use cancel action directly (no more holding room)
+        const payload = {
+          timestamp: new Date().toISOString(),
+          action: 'cancel',
+          client_id: selectedBooking.clientId || '',
+          counsellor_id: selectedBooking.counsellorId || '6',
+          counsellor_name: selectedBooking.client || '',
+          booking_code: selectedBooking.bookingId,
+          original_datetime: `${selectedBooking.date}T${selectedBooking.start}:00`,
+          original_week: getWeekNumber(new Date(selectedBooking.date)),
+          original_room: roomKey,
+          service_id: selectedBooking.serviceId || getServiceIdForRoom(roomKey),
+          comments: selectedBooking.comments || '',
+          is_paid: isPaidBooking ? 'True' : 'No',
+          payment: isPaidBooking ? {
+            paymentId: selectedBooking.paymentId || null,
+            paymentAmount: selectedBooking.paymentAmount || selectedBooking.price || selectedBooking.stripePaid || 0
+          } : null,
+          admin_override: 'true'
+        };
         
         const response = await fetch(WEBHOOK_URL, {
           method: 'POST',
