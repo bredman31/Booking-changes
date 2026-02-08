@@ -294,7 +294,9 @@
       position: relative;
     }
     
-    /* Heat Map Styles */
+    /* ================================ */
+    /* STRIPED HEAT MAP STYLES          */
+    /* ================================ */
     .heatmap-container {
       flex: 1;
       overflow: auto;
@@ -312,7 +314,7 @@
     }
     
     .heatmap-header-cell {
-      width: 42px;
+      width: 72px;
       text-align: center;
       font-size: 10px;
       font-weight: 600;
@@ -331,24 +333,48 @@
       color: #666;
       text-align: right;
       padding-right: 4px;
+      flex-shrink: 0;
     }
     
+    /* Each cell is a flex row of narrow room stripes */
     .heatmap-cell {
-      width: 40px;
+      width: 70px;
       height: 24px;
       margin: 0 1px;
       border-radius: 3px;
       display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 9px;
-      font-weight: 500;
+      align-items: stretch;
+      overflow: hidden;
+      border: 1px solid #e8e8e8;
       transition: transform 0.1s;
+      cursor: default;
     }
     
     .heatmap-cell:hover {
-      transform: scale(1.1);
+      transform: scale(1.05);
       z-index: 1;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+    }
+    
+    /* Individual room stripe within a cell */
+    .room-stripe {
+      flex: 1;
+      min-width: 0;
+      transition: opacity 0.15s;
+    }
+    
+    .room-stripe.booked {
+      opacity: 1;
+    }
+    
+    .room-stripe.empty {
+      background: #f0f0f0 !important;
+      opacity: 1;
+    }
+    
+    /* Thin separator between stripes for clarity */
+    .room-stripe + .room-stripe {
+      border-left: 1px solid rgba(255,255,255,0.5);
     }
     
     /* Heat map totals row */
@@ -367,10 +393,11 @@
       text-align: right;
       padding-right: 4px;
       font-weight: 600;
+      flex-shrink: 0;
     }
     
     .heatmap-total-cell {
-      width: 40px;
+      width: 70px;
       height: 28px;
       margin: 0 1px;
       border-radius: 3px;
@@ -387,27 +414,39 @@
       opacity: 0.9;
     }
     
-    /* Heat map legend */
+    /* Room colour legend - replaces old count-based legend */
     .heatmap-legend {
       display: flex;
       align-items: center;
-      gap: 12px;
+      gap: 10px;
       margin-top: 10px;
       justify-content: center;
       font-size: 10px;
       color: #666;
+      flex-wrap: wrap;
     }
     
     .legend-item {
       display: flex;
       align-items: center;
-      gap: 4px;
+      gap: 3px;
     }
     
     .legend-box {
       width: 14px;
       height: 14px;
       border-radius: 2px;
+    }
+    
+    .legend-label {
+      font-size: 9px;
+      color: #555;
+      white-space: nowrap;
+    }
+    
+    /* Booking count badge on hover tooltip */
+    .heatmap-cell[title] {
+      position: relative;
     }
     
     /* Daily Breakdown Table */
@@ -623,280 +662,6 @@
       }
       
       .main-content {
-        padding: 8px;
-        gap: 8px;
-      }
-      
-      /* Date Controls */
-      .date-controls {
-        padding: 8px 10px;
-      }
-      
-      .controls-row {
-        flex-direction: column;
-        align-items: stretch;
-        gap: 8px;
-      }
-      
-      .quick-select {
-        display: grid;
-        grid-template-columns: repeat(4, 1fr);
-        gap: 4px;
-      }
-      
-      .quick-btn {
-        padding: 8px 4px;
-        font-size: 11px;
-      }
-      
-      .refresh-btn {
-        width: 100%;
-        padding: 8px;
-        margin-left: 0;
-      }
-      
-      #customDateRange {
-        flex-direction: column !important;
-        gap: 6px !important;
-      }
-      
-      #customDateRange input[type="date"] {
-        width: 100%;
-      }
-      
-      /* Navigation */
-      .navigation-row {
-        flex-wrap: wrap;
-        gap: 6px;
-        justify-content: center;
-      }
-      
-      .nav-btn {
-        min-width: 80px;
-        padding: 6px 8px;
-        font-size: 10px;
-      }
-      
-      .period-display {
-        min-width: 100%;
-        order: -1;
-        margin-bottom: 4px;
-      }
-      
-      .period-value {
-        font-size: 14px;
-      }
-      
-      .today-btn {
-        padding: 6px 12px;
-      }
-      
-      /* Summary Strip */
-      .summary-strip {
-        padding: 8px 12px;
-        gap: 8px;
-        justify-content: space-around;
-      }
-      
-      .summary-item .number {
-        font-size: 16px;
-      }
-      
-      .summary-item .label {
-        font-size: 8px;
-      }
-      
-      .summary-divider {
-        height: 24px;
-      }
-      
-      /* Charts Grid - Stack vertically */
-      .charts-grid {
-        grid-template-columns: 1fr;
-        gap: 8px;
-      }
-      
-      .section-container {
-        min-height: 250px;
-      }
-      
-      .section-header {
-        font-size: 12px;
-        padding: 8px 10px;
-      }
-      
-      .section-body {
-        padding: 8px;
-      }
-      
-      /* Bar Chart */
-      .bar-chart-container {
-        min-height: 250px;
-      }
-      
-      /* Heat Map */
-      .heatmap-container {
-        overflow-x: auto;
-        -webkit-overflow-scrolling: touch;
-      }
-      
-      .heatmap-header-cell {
-        width: 36px;
-        font-size: 9px;
-      }
-      
-      .heatmap-cell {
-        width: 34px;
-        height: 20px;
-        font-size: 8px;
-      }
-      
-      .heatmap-time {
-        font-size: 9px;
-        width: 40px;
-      }
-      
-      .heatmap-total-cell {
-        width: 34px;
-        height: 24px;
-        font-size: 9px;
-      }
-      
-      .heatmap-legend {
-        flex-wrap: wrap;
-        gap: 8px;
-        font-size: 9px;
-      }
-      
-      .legend-box {
-        width: 12px;
-        height: 12px;
-      }
-      
-      /* Counsellor Cards */
-      .counsellor-summary {
-        justify-content: space-around;
-        padding: 6px 8px;
-      }
-      
-      .counsellor-summary .stat-num {
-        font-size: 16px;
-      }
-      
-      .counsellor-card {
-        flex-wrap: wrap;
-        padding: 6px;
-        gap: 6px;
-      }
-      
-      .counsellor-avatar {
-        width: 24px;
-        height: 24px;
-        font-size: 8px;
-      }
-      
-      .counsellor-name {
-        width: auto;
-        flex: 1;
-        font-size: 11px;
-        min-width: 80px;
-      }
-      
-      .counsellor-time-bar {
-        order: 3;
-        width: 100%;
-        gap: 1px;
-      }
-      
-      .time-slot {
-        height: 14px;
-      }
-      
-      .time-slot-segment {
-        min-height: 4px;
-      }
-      
-      .counsellor-stats {
-        gap: 8px;
-      }
-      
-      .counsellor-stat {
-        min-width: 24px;
-      }
-      
-      .counsellor-stat-value {
-        font-size: 11px;
-      }
-      
-      /* Daily Table */
-      .data-table {
-        font-size: 10px;
-      }
-      
-      .data-table th,
-      .data-table td {
-        padding: 5px 4px;
-      }
-    }
-    
-    /* Extra small screens */
-    @media (max-width: 480px) {
-      .summary-strip {
-        flex-wrap: wrap;
-        justify-content: center;
-        gap: 12px;
-      }
-      
-      .summary-divider {
-        display: none;
-      }
-      
-      .summary-item {
-        min-width: 60px;
-      }
-      
-      .nav-btn span {
-        display: none;
-      }
-      
-      .nav-btn::before {
-        content: '←';
-      }
-      
-      #nextBtn::before {
-        content: '';
-      }
-      
-      #nextBtn::after {
-        content: '→';
-      }
-    }
-    
-    /* ================================
-       MOBILE RESPONSIVE STYLES
-       ================================ */
-    @media (max-width: 768px) {
-      /* Header */
-      .admin-header {
-        padding: 8px 12px;
-        flex-wrap: wrap;
-        gap: 8px;
-      }
-      
-      .header-left {
-        gap: 10px;
-      }
-      
-      .header-left h1 {
-        font-size: 14px;
-      }
-      
-      .back-link {
-        font-size: 11px;
-      }
-      
-      /* Main content */
-      .main-content {
         padding: 8px 10px;
         gap: 8px;
       }
@@ -1075,18 +840,18 @@
         font-size: 11px;
       }
       
-      /* Heat map */
+      /* Heat map - striped version mobile */
       .heatmap-container {
         overflow-x: auto;
         -webkit-overflow-scrolling: touch;
       }
       
       .heatmap-grid {
-        min-width: 320px;
+        min-width: 400px;
       }
       
       .heatmap-header-cell {
-        width: 36px;
+        width: 56px;
         font-size: 9px;
       }
       
@@ -1096,26 +861,29 @@
       }
       
       .heatmap-cell {
-        width: 34px;
+        width: 54px;
         height: 20px;
-        font-size: 8px;
       }
       
       .heatmap-total-cell {
-        width: 34px;
+        width: 54px;
         height: 24px;
         font-size: 9px;
       }
       
       .heatmap-legend {
         flex-wrap: wrap;
-        gap: 8px;
+        gap: 6px;
         font-size: 9px;
       }
       
       .legend-box {
         width: 12px;
         height: 12px;
+      }
+      
+      .legend-label {
+        font-size: 8px;
       }
       
       /* Daily table */
@@ -1147,6 +915,19 @@
         min-width: 70px;
         font-size: 9px;
       }
+      
+      .heatmap-header-cell {
+        width: 48px;
+      }
+      
+      .heatmap-cell {
+        width: 46px;
+        height: 18px;
+      }
+      
+      .heatmap-total-cell {
+        width: 46px;
+      }
     }
   </style>
   <style id="dynamicStyles"></style>
@@ -1154,8 +935,8 @@
 <body>
   <header class="admin-header">
     <div class="header-left">
-      <a href="admin-index.html" class="back-link">← Admin Portal</a>
-      <h1>📊 Reports & Analytics</h1>
+      <a href="admin-index.html" class="back-link">&#8592; Admin Portal</a>
+      <h1>&#128202; Reports &amp; Analytics</h1>
     </div>
   </header>
   
@@ -1179,13 +960,13 @@
           <button class="quick-btn" onclick="applyCustomRange()">Apply</button>
         </div>
         
-        <button class="refresh-btn" onclick="loadReports()">🔄 Refresh</button>
+        <button class="refresh-btn" onclick="loadReports()">&#128260; Refresh</button>
       </div>
       
       <!-- Navigation Row -->
       <div class="navigation-row" id="navigationRow">
         <button class="nav-btn" id="prevBtn" onclick="navigatePeriod(-1)">
-          ← <span id="prevLabel">Previous</span>
+          &#8592; <span id="prevLabel">Previous</span>
         </button>
         
         <div class="period-display">
@@ -1195,7 +976,7 @@
         </div>
         
         <button class="nav-btn" id="nextBtn" onclick="navigatePeriod(1)">
-          <span id="nextLabel">Next</span> →
+          <span id="nextLabel">Next</span> &#8594;
         </button>
         
         <button class="today-btn" id="todayBtn" onclick="goToToday()">Today</button>
@@ -1229,7 +1010,7 @@
     <div class="charts-grid">
       <!-- Room Bar Chart -->
       <div class="section-container">
-        <div class="section-header">📊 Room Utilisation</div>
+        <div class="section-header">&#128202; Room Utilisation</div>
         <div class="section-body">
           <div class="bar-chart-container">
             <canvas id="roomBarChart"></canvas>
@@ -1239,7 +1020,7 @@
       
       <!-- Heat Map (Week view) / Daily Breakdown (Day/Month view) -->
       <div class="section-container">
-        <div class="section-header" id="rightPanelHeader">📅 Daily Breakdown</div>
+        <div class="section-header" id="rightPanelHeader">&#128197; Daily Breakdown</div>
         <div class="section-body" id="rightPanelBody">
           <!-- Content switches based on view -->
           <div id="dailyTableContainer">
@@ -1267,13 +1048,8 @@
             <div class="heatmap-container">
               <div class="heatmap-grid" id="heatmapGrid"></div>
             </div>
-            <div class="heatmap-legend">
-              <span>Rooms booked:</span>
-              <div class="legend-item"><div class="legend-box" style="background: #f5f5f5; border: 1px solid #ddd;"></div> 0</div>
-              <div class="legend-item"><div class="legend-box" style="background: #c8e6c9;"></div> 1-2</div>
-              <div class="legend-item"><div class="legend-box" style="background: #81c784;"></div> 3-4</div>
-              <div class="legend-item"><div class="legend-box" style="background: #4caf50;"></div> 5-6</div>
-              <div class="legend-item"><div class="legend-box" style="background: #2e7d32;"></div> 7+</div>
+            <div class="heatmap-legend" id="heatmapLegend">
+              <!-- Legend built dynamically from room config -->
             </div>
           </div>
         </div>
@@ -1417,13 +1193,11 @@
     // ================================
     function getUtilClass(utilisation, isDaily = false) {
       if (isDaily) {
-        // Daily: >70% green, 45-70% yellow, 20-45% orange, <20% red
         if (utilisation >= 70) return 'good';
         if (utilisation >= 45) return 'okay';
         if (utilisation >= 20) return 'poor';
         return 'bad';
       } else {
-        // Weekly/Monthly: >31% green, 20.5-31% yellow, 10-20.5% orange, <10% red
         if (utilisation >= 31) return 'good';
         if (utilisation >= 20.5) return 'okay';
         if (utilisation >= 10) return 'poor';
@@ -1440,19 +1214,6 @@
         'bad': '#dc3545'
       };
       return colors[cls];
-    }
-    
-    function getHeatColor(roomsBooked) {
-      if (roomsBooked >= 7) return '#2e7d32';
-      if (roomsBooked >= 5) return '#4caf50';
-      if (roomsBooked >= 3) return '#81c784';
-      if (roomsBooked >= 1) return '#c8e6c9';
-      return '#f5f5f5';
-    }
-    
-    function getHeatTextColor(roomsBooked) {
-      if (roomsBooked >= 5) return 'white';
-      return '#333';
     }
     
     // ================================
@@ -1765,17 +1526,17 @@
       const counsellorDay = document.getElementById('counsellorDayContainer');
       
       if (currentRange === 'week') {
-        header.textContent = '🔥 Weekly Heat Map';
+        header.textContent = '\uD83D\uDD25 Weekly Room Map';
         dailyTable.style.display = 'none';
         heatmap.style.display = 'block';
         counsellorDay.style.display = 'none';
       } else if (currentRange === 'day') {
-        header.textContent = '👥 Counsellors Today';
+        header.textContent = '\uD83D\uDC65 Counsellors Today';
         dailyTable.style.display = 'none';
         heatmap.style.display = 'none';
         counsellorDay.style.display = 'block';
       } else {
-        header.textContent = '📅 Daily Breakdown';
+        header.textContent = '\uD83D\uDCC5 Daily Breakdown';
         dailyTable.style.display = 'block';
         heatmap.style.display = 'none';
         counsellorDay.style.display = 'none';
@@ -1865,7 +1626,7 @@
       if (filteredBookings.length === 0) {
         container.innerHTML = `
           <div class="no-counsellors">
-            <div class="no-counsellors-icon">📅</div>
+            <div class="no-counsellors-icon">\uD83D\uDCC5</div>
             <div>No bookings scheduled for this day</div>
           </div>
         `;
@@ -1882,7 +1643,7 @@
             name: name,
             bookings: [],
             totalHours: 0,
-            timeSlots: {} // hour -> array of room infos
+            timeSlots: {}
           };
         }
         
@@ -1892,18 +1653,15 @@
         const endHour = parseInt(booking.end.split(':')[0]);
         counsellorMap[name].totalHours += (endHour - startHour);
         
-        // Find room info
         let roomInfo = enabledRooms.find(r => r.dbValues.includes(booking.room));
         if (!roomInfo && booking.location && booking.location.toLowerCase().includes('online')) {
           roomInfo = enabledRooms.find(r => r.key === 'Online');
         }
         
-        // Track time slots with room colour - now as array to support multiple bookings
         for (let h = startHour; h < endHour; h++) {
           if (!counsellorMap[name].timeSlots[h]) {
             counsellorMap[name].timeSlots[h] = [];
           }
-          // Only add if this room isn't already in the array for this hour
           const roomKey = roomInfo ? roomInfo.key : 'unknown';
           if (!counsellorMap[name].timeSlots[h].find(r => r && r.key === roomKey)) {
             counsellorMap[name].timeSlots[h].push(roomInfo);
@@ -1911,15 +1669,12 @@
         }
       });
       
-      // Convert to array and sort by hours (descending)
       const counsellors = Object.values(counsellorMap).sort((a, b) => b.totalHours - a.totalHours);
       
-      // Calculate totals
       const totalCounsellors = counsellors.length;
       const totalBookings = filteredBookings.length;
       const totalHours = counsellors.reduce((sum, c) => sum + c.totalHours, 0);
       
-      // Build HTML
       let html = `
         <div class="counsellor-summary">
           <div class="stat">
@@ -1941,13 +1696,11 @@
       counsellors.forEach(counsellor => {
         const initials = getInitials(counsellor.name);
         
-        // Build time bar (8am-8pm = 13 slots) with room colours
         let timeBarHtml = '';
         for (let h = 8; h <= 20; h++) {
           const roomInfos = counsellor.timeSlots[h];
           if (roomInfos && roomInfos.length > 0) {
             if (roomInfos.length === 1) {
-              // Single booking
               const roomInfo = roomInfos[0];
               if (roomInfo) {
                 timeBarHtml += `<div class="time-slot" style="background: ${roomInfo.color}; border: 1px solid ${roomInfo.borderColor};" title="${h}:00 - ${roomInfo.name}"></div>`;
@@ -1955,7 +1708,6 @@
                 timeBarHtml += `<div class="time-slot" style="background: #ccc;" title="${h}:00 - Unknown"></div>`;
               }
             } else {
-              // Multiple bookings - stack them
               const roomNames = roomInfos.map(r => r ? r.name : 'Unknown').join(' + ');
               let segmentsHtml = roomInfos.map(roomInfo => {
                 if (roomInfo) {
@@ -2004,15 +1756,11 @@
     }
     
     function getContrastColor(hexColor) {
-      // Convert hex to RGB
       const hex = hexColor.replace('#', '');
       const r = parseInt(hex.substr(0, 2), 16);
       const g = parseInt(hex.substr(2, 2), 16);
       const b = parseInt(hex.substr(4, 2), 16);
-      
-      // Calculate luminance
       const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
-      
       return luminance > 0.5 ? '#333' : '#fff';
     }
     
@@ -2022,7 +1770,6 @@
     function displayRoomBarChart(filteredBookings, days, isDaily) {
       const ctx = document.getElementById('roomBarChart').getContext('2d');
       
-      // Calculate data for each room
       const roomData = enabledRooms.map(room => {
         const roomBookings = filteredBookings.filter(b => 
           room.dbValues.includes(b.room) || 
@@ -2049,7 +1796,6 @@
         };
       });
       
-      // Destroy previous chart if exists
       if (barChart) {
         barChart.destroy();
       }
@@ -2107,53 +1853,62 @@
     }
     
     // ================================
-    // HEAT MAP
+    // STRIPED HEAT MAP (Room Stripes)
     // ================================
     function displayHeatMap(days) {
       const container = document.getElementById('heatmapGrid');
       container.innerHTML = '';
       
-      // Create data structure: time -> day -> count
+      // Build data: time -> day -> Set of booked room keys
       const heatData = {};
       BUSINESS_HOURS.forEach(time => {
         heatData[time] = {};
         days.forEach(day => {
-          heatData[time][day] = 0;
+          heatData[time][day] = new Set();
         });
       });
       
-      // Count bookings per time slot
+      // Filter bookings for the week
       const filteredBookings = bookingData.filter(b => 
         b.date >= days[0] && b.date <= days[days.length - 1]
       );
       
+      // For each booking, identify which room it belongs to and mark it
       filteredBookings.forEach(booking => {
         const startHour = parseInt(booking.start.split(':')[0]);
         const endHour = parseInt(booking.end.split(':')[0]);
         
-        for (let h = startHour; h < endHour; h++) {
-          const timeKey = `${String(h).padStart(2, '0')}:00`;
-          if (heatData[timeKey] && heatData[timeKey][booking.date] !== undefined) {
-            heatData[timeKey][booking.date]++;
+        // Find matching room
+        let matchedRoom = enabledRooms.find(r => r.dbValues.includes(booking.room));
+        if (!matchedRoom && booking.location && booking.location.toLowerCase().includes('online')) {
+          matchedRoom = enabledRooms.find(r => r.key === 'Online');
+        }
+        
+        if (matchedRoom) {
+          for (let h = startHour; h < endHour; h++) {
+            const timeKey = `${String(h).padStart(2, '0')}:00`;
+            if (heatData[timeKey] && heatData[timeKey][booking.date] !== undefined) {
+              heatData[timeKey][booking.date].add(matchedRoom.key);
+            }
           }
         }
       });
       
-      // Calculate daily totals
+      // Calculate daily totals for the footer row
       const dailyTotals = {};
       days.forEach(day => {
-        let totalHours = 0;
+        let totalRoomHours = 0;
         BUSINESS_HOURS.forEach(time => {
-          totalHours += heatData[time][day];
+          totalRoomHours += heatData[time][day].size;
         });
         const availableHours = enabledRooms.length * HOURS_PER_DAY;
         dailyTotals[day] = {
-          hours: totalHours,
-          utilisation: availableHours > 0 ? Math.round((totalHours / availableHours) * 100) : 0
+          hours: totalRoomHours,
+          utilisation: availableHours > 0 ? Math.round((totalRoomHours / availableHours) * 100) : 0
         };
       });
       
-      // Header row
+      // === Header row (day names + dates) ===
       const headerRow = document.createElement('div');
       headerRow.className = 'heatmap-header-row';
       days.forEach(day => {
@@ -2165,7 +1920,7 @@
       });
       container.appendChild(headerRow);
       
-      // Data rows
+      // === Data rows (one per hour) ===
       BUSINESS_HOURS.forEach(time => {
         const row = document.createElement('div');
         row.className = 'heatmap-row';
@@ -2176,20 +1931,43 @@
         row.appendChild(timeLabel);
         
         days.forEach(day => {
-          const count = heatData[time][day];
+          const bookedRoomKeys = heatData[time][day];
+          
+          // Create the cell
           const cell = document.createElement('div');
           cell.className = 'heatmap-cell';
-          cell.style.backgroundColor = getHeatColor(count);
-          cell.style.color = getHeatTextColor(count);
-          cell.textContent = count > 0 ? count : '';
-          cell.title = `${day} ${time}: ${count} rooms booked`;
+          
+          // Build tooltip text
+          const bookedNames = enabledRooms
+            .filter(r => bookedRoomKeys.has(r.key))
+            .map(r => r.name);
+          const tooltipText = bookedNames.length > 0
+            ? `${day} ${time}: ${bookedNames.join(', ')}`
+            : `${day} ${time}: No bookings`;
+          cell.title = tooltipText;
+          
+          // Create one stripe per enabled room, in order
+          enabledRooms.forEach(room => {
+            const stripe = document.createElement('div');
+            stripe.className = 'room-stripe';
+            
+            if (bookedRoomKeys.has(room.key)) {
+              stripe.classList.add('booked');
+              stripe.style.backgroundColor = room.color;
+            } else {
+              stripe.classList.add('empty');
+            }
+            
+            cell.appendChild(stripe);
+          });
+          
           row.appendChild(cell);
         });
         
         container.appendChild(row);
       });
       
-      // Totals row
+      // === Totals row ===
       const totalsRow = document.createElement('div');
       totalsRow.className = 'heatmap-totals-row';
       
@@ -2203,16 +1981,32 @@
         const cell = document.createElement('div');
         cell.className = 'heatmap-total-cell';
         
-        // Use weekly thresholds for the totals
         const utilClass = getUtilClass(total.utilisation, false);
         cell.classList.add('bg-' + utilClass);
         
         cell.innerHTML = `${total.utilisation}%`;
-        cell.title = `${day}: ${total.hours} hours booked, ${total.utilisation}% utilisation`;
+        cell.title = `${day}: ${total.hours} room-hours booked, ${total.utilisation}% utilisation`;
         totalsRow.appendChild(cell);
       });
       
       container.appendChild(totalsRow);
+      
+      // === Build room colour legend dynamically ===
+      const legendContainer = document.getElementById('heatmapLegend');
+      legendContainer.innerHTML = '';
+      
+      enabledRooms.forEach(room => {
+        const item = document.createElement('div');
+        item.className = 'legend-item';
+        item.innerHTML = `<div class="legend-box" style="background: ${room.color}; border: 1px solid ${room.borderColor};"></div><span class="legend-label">${room.name}</span>`;
+        legendContainer.appendChild(item);
+      });
+      
+      // Add the "empty" legend item
+      const emptyItem = document.createElement('div');
+      emptyItem.className = 'legend-item';
+      emptyItem.innerHTML = `<div class="legend-box" style="background: #f0f0f0; border: 1px solid #ddd;"></div><span class="legend-label">Available</span>`;
+      legendContainer.appendChild(emptyItem);
     }
     
     // ================================
@@ -2237,7 +2031,6 @@
           ? Math.round((dayHours / availableHours) * 100) 
           : 0;
         
-        const utilClass = getUtilClass(utilisation, isDaily);
         const utilColor = getUtilColor(utilisation, isDaily);
         
         const dateObj = new Date(day + 'T12:00:00');
