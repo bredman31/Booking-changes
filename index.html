@@ -3342,7 +3342,7 @@ async function lookupCounsellorId(counsellorName) {
       }
       
       // Validate car park registration
-      const isCarPark = (room === 'Car Park' || room === 'Car_Park');
+      var isCarPark = (room === 'Car Park' || room === 'Car_Park');
       if (isCarPark && !comments) {
         alert('Please enter a car registration number for Car Park bookings');
         document.getElementById('newBookingComments').focus();
