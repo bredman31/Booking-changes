@@ -783,7 +783,7 @@
           
           basketBtn.textContent = '🛒 Add to Basket';
           basketBtn.onclick = function() {
-            // ✅ FIXED: Check if Car Park and validate registration
+            // Validate Car Park registration
             const isCarPark = (room === 'Car Park' || room === 'Car_Park');
             const commentsInput = document.getElementById('newBookingComments');
             const comments = commentsInput ? commentsInput.value.trim() : '';
@@ -794,28 +794,67 @@
               return;
             }
             
-            const dateObj = new Date(date + 'T12:00:00');
-            const formattedDate = dateObj.toLocaleDateString('en-GB', { 
-              weekday: 'short', 
-              day: 'numeric', 
-              month: 'short', 
-              year: 'numeric' 
-            });
+            const roomIdVal = document.getElementById('newBookingRoomId')?.value || '';
+            const locationIdVal = document.getElementById('newBookingLocationId')?.value || '';
+            const durationVal = parseInt(document.getElementById('modalDuration')?.value) || 1;
             
-            const hour = parseInt(time.split(':')[0]);
-            const endTime = `${String(hour + 1).padStart(2, '0')}:00`;
+            // Check if repeat is active
+            const repeatPanel = document.getElementById('repeatOptionsPanel');
+            const repeatActive = (repeatPanel && repeatPanel.style.display !== 'none');
             
-            addToBasket({
-              room: room,
-              date: date,
-              time: time,
-              endTime: endTime,
-              formattedDate: formattedDate,
-              price: priceValue,
-              roomId: document.getElementById('newBookingRoomId')?.value || '',
-              locationId: document.getElementById('newBookingLocationId')?.value || '',
-              comments: comments || null  // ✅ FIXED: Include comments/registration
-            });
+            if (durationVal > 1 || repeatActive) {
+              // Multi-slot: use generateBookingSlots if available
+              if (typeof generateBookingSlots === 'function') {
+                const slotData = generateBookingSlots();
+                let addedCount = 0;
+                for (let s = 0; s < slotData.slots.length; s++) {
+                  const sl = slotData.slots[s];
+                  const slotDateObj = new Date(sl.date + 'T12:00:00');
+                  const fmtDate = slotDateObj.toLocaleDateString('en-GB', { 
+                    weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' 
+                  });
+                  addToBasket({
+                    room: room,
+                    date: sl.date,
+                    time: sl.time,
+                    endTime: sl.endTime,
+                    formattedDate: fmtDate,
+                    price: sl.price,
+                    roomId: roomIdVal,
+                    locationId: locationIdVal,
+                    comments: comments || null
+                  });
+                  addedCount++;
+                }
+                if (addedCount > 1) {
+                  showBasketToast('Added ' + addedCount + ' slots to basket');
+                }
+              }
+            } else {
+              // Single slot: existing behaviour
+              const dateObj = new Date(date + 'T12:00:00');
+              const formattedDate = dateObj.toLocaleDateString('en-GB', { 
+                weekday: 'short', 
+                day: 'numeric', 
+                month: 'short', 
+                year: 'numeric' 
+              });
+              
+              const hour = parseInt(time.split(':')[0]);
+              const endTime = `${String(hour + 1).padStart(2, '0')}:00`;
+              
+              addToBasket({
+                room: room,
+                date: date,
+                time: time,
+                endTime: endTime,
+                formattedDate: formattedDate,
+                price: priceValue,
+                roomId: roomIdVal,
+                locationId: locationIdVal,
+                comments: comments || null
+              });
+            }
           };
         }
       }, 50);
