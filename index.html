@@ -3252,17 +3252,14 @@ async function lookupCounsellorId(counsellorName) {
       // Update price display
       const priceDisplay = document.getElementById('priceDisplay');
       const priceAmount = document.getElementById('priceAmount');
-      const priceBreakdown = document.getElementById('priceBreakdown');
       
       if (priceResult.amount > 0) {
         priceDisplay.classList.remove('no-rate');
         priceAmount.textContent = `£${(priceResult.amount / 100).toFixed(2)}`;
-        priceBreakdown.textContent = priceResult.breakdown;
         document.getElementById('confirmBookingBtn').disabled = false;
       } else {
         priceDisplay.classList.add('no-rate');
         priceAmount.textContent = '£0.00';
-        priceBreakdown.textContent = priceResult.breakdown;
         document.getElementById('confirmBookingBtn').disabled = true;
       }
       
