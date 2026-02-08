@@ -4096,33 +4096,35 @@ async function lookupCounsellorId(counsellorName) {
 <!-- ================================ -->
 <!-- SECTION 6.3: SLOT AVAILABILITY CHECKING -->
 <!-- ================================ -->
-  <script>
+ <script>
     // Check if a time slot is available (supports capacity for Car Park)
+    // Also checks repeatBookingData for slots loaded on-demand for repeat bookings
     function isSlotAvailable(room, date, time) {
-      // Find room config
-      const roomKey = room.replace(' ', '_');
-      const roomCfg = (window.enabledRooms || []).find(r => r.displayName === room || r.key === roomKey);
-      const capacity = roomCfg?.capacity || 1;
+      var roomKey = room.replace(' ', '_');
+      var roomCfg = (window.enabledRooms || []).find(function(r) { return r.displayName === room || r.key === roomKey; });
+      var capacity = roomCfg?.capacity || 1;
       
-      // Get all room key variants for matching (including 'Car park' lowercase)
-      const roomVariants = [room, roomKey, room.replace('Room ', ''), 'Car_Park', 'Car Park', 'Car park'];
+      var roomVariants = [room, roomKey, room.replace('Room ', ''), 'Car_Park', 'Car Park', 'Car park'];
       
-      const hour = parseInt(time.split(':')[0]);
-      const dayBookings = bookingData.filter(booking => booking.date === date);
+      var hour = parseInt(time.split(':')[0]);
       
-      // Count bookings for this room/hour
-      let bookingCount = 0;
+      // Combine main bookingData with any extra repeat-fetched data
+      var allBookings = (bookingData || []).concat(window.repeatBookingData || []);
+      var dayBookings = allBookings.filter(function(booking) { return booking.date === date; });
       
-      for (const booking of dayBookings) {
-        const bookingRoomMatches = roomVariants.some(variant => 
-          booking.room === variant || 
-          booking.room === roomKey ||
-          (booking.location && booking.location.toLowerCase().includes('online') && room === 'Online')
-        );
+      var bookingCount = 0;
+      
+      for (var i = 0; i < dayBookings.length; i++) {
+        var booking = dayBookings[i];
+        var bookingRoomMatches = roomVariants.some(function(variant) {
+          return booking.room === variant || 
+            booking.room === roomKey ||
+            (booking.location && booking.location.toLowerCase().includes('online') && room === 'Online');
+        });
         
         if (bookingRoomMatches) {
-          const startHour = parseInt(booking.start.split(':')[0]);
-          const endHour = parseInt(booking.end.split(':')[0]);
+          var startHour = parseInt(booking.start.split(':')[0]);
+          var endHour = parseInt(booking.end.split(':')[0]);
           
           if (hour >= startHour && hour < endHour) {
             bookingCount++;
@@ -4135,23 +4137,26 @@ async function lookupCounsellorId(counsellorName) {
     
     // Get current booking count for a room/date/time (for capacity display)
     function getSlotBookingCount(room, date, time) {
-      const roomKey = room.replace(' ', '_');
-      const roomVariants = [room, roomKey, room.replace('Room ', ''), 'Car_Park', 'Car Park', 'Car park'];
+      var roomKey = room.replace(' ', '_');
+      var roomVariants = [room, roomKey, room.replace('Room ', ''), 'Car_Park', 'Car Park', 'Car park'];
       
-      const hour = parseInt(time.split(':')[0]);
-      const dayBookings = bookingData.filter(booking => booking.date === date);
+      var hour = parseInt(time.split(':')[0]);
       
-      let bookingCount = 0;
+      var allBookings = (bookingData || []).concat(window.repeatBookingData || []);
+      var dayBookings = allBookings.filter(function(booking) { return booking.date === date; });
       
-      for (const booking of dayBookings) {
-        const bookingRoomMatches = roomVariants.some(variant => 
-          booking.room === variant || 
-          booking.room === roomKey
-        );
+      var bookingCount = 0;
+      
+      for (var i = 0; i < dayBookings.length; i++) {
+        var booking = dayBookings[i];
+        var bookingRoomMatches = roomVariants.some(function(variant) {
+          return booking.room === variant || 
+            booking.room === roomKey;
+        });
         
         if (bookingRoomMatches) {
-          const startHour = parseInt(booking.start.split(':')[0]);
-          const endHour = parseInt(booking.end.split(':')[0]);
+          var startHour = parseInt(booking.start.split(':')[0]);
+          var endHour = parseInt(booking.end.split(':')[0]);
           
           if (hour >= startHour && hour < endHour) {
             bookingCount++;
