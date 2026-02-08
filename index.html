@@ -3215,8 +3215,26 @@ async function lookupCounsellorId(counsellorName) {
       document.getElementById('modalRoom').textContent = room;
       document.getElementById('modalDate').textContent = formattedDate;
       document.getElementById('modalTime').textContent = `${time} - ${endTime}`;
-      document.getElementById('modalDuration').textContent = '1 Hour';
-      document.getElementById('modalLocation').textContent = locationName;
+      
+      // Configure duration selector (can't extend past 21:00)
+      var durationSelect = document.getElementById('modalDuration');
+      durationSelect.value = '1';
+      var maxDuration = Math.min(8, 21 - hour);
+      for (var di = 0; di < durationSelect.options.length; di++) {
+        durationSelect.options[di].disabled = (parseInt(durationSelect.options[di].value) > maxDuration);
+      }
+      
+      // Reset repeat options
+      document.getElementById('repeatOptionsPanel').style.display = 'none';
+      document.getElementById('repeatToggleBtn').style.display = '';
+      document.getElementById('repeatFrequency').value = 'weekly';
+      document.getElementById('repeatSessions').value = '2';
+      if (document.getElementById('repeatSummary')) document.getElementById('repeatSummary').style.display = 'none';
+      if (document.getElementById('repeatWarnings')) document.getElementById('repeatWarnings').style.display = 'none';
+      
+      // Reset price label
+      var priceLabel = document.getElementById('priceLabel');
+      if (priceLabel) priceLabel.textContent = 'Room Hire Cost';
       
       // Set hidden fields
       document.getElementById('newBookingRoom').value = room;
@@ -3292,17 +3310,36 @@ async function lookupCounsellorId(counsellorName) {
       document.getElementById('newBookingModal').classList.remove('active');
     }
     
-    // Confirm new booking - handles different payment methods
+// Confirm new booking - handles different payment methods
     async function confirmNewBooking() {
-      const room = document.getElementById('newBookingRoom').value;
-      const roomId = document.getElementById('newBookingRoomId').value;
-      const date = document.getElementById('newBookingDate').value;
-      const time = document.getElementById('newBookingTime').value;
-      const endTime = document.getElementById('newBookingEndTime').value;
-      const locationId = document.getElementById('newBookingLocationId').value;
-      const price = parseInt(document.getElementById('newBookingPrice').value) || 0;
-      const serviceId = document.getElementById('newBookingServiceId').value || '1';
-      const comments = document.getElementById('newBookingComments').value.trim();
+      var room = document.getElementById('newBookingRoom').value;
+      var roomId = document.getElementById('newBookingRoomId').value;
+      var date = document.getElementById('newBookingDate').value;
+      var time = document.getElementById('newBookingTime').value;
+      var endTime = document.getElementById('newBookingEndTime').value;
+      var locationId = document.getElementById('newBookingLocationId').value;
+      var price = parseInt(document.getElementById('newBookingPrice').value) || 0;
+      var serviceId = document.getElementById('newBookingServiceId').value || '1';
+      var comments = document.getElementById('newBookingComments').value.trim();
+      
+      // Check if this is a multi-slot booking (duration > 1 or repeat active)
+      var duration = parseInt(document.getElementById('modalDuration').value) || 1;
+      var repeatPanel = document.getElementById('repeatOptionsPanel');
+      var repeatActive = (repeatPanel && repeatPanel.style.display !== 'none');
+      var repeatSessions = repeatActive ? (parseInt(document.getElementById('repeatSessions').value) || 1) : 1;
+      
+      if (duration > 1 || repeatSessions > 1) {
+        // Multi-slot: validate then hand off to multi-slot handler
+        var isCarPark = (room === 'Car Park' || room === 'Car_Park');
+        if (isCarPark && !comments) {
+          alert('Please enter a car registration number for Car Park bookings');
+          document.getElementById('newBookingComments').focus();
+          return;
+        }
+        var selectedMethod = document.querySelector('input[name="bookingPaymentMethod"]:checked')?.value || 'card';
+        await processMultiSlotBooking(selectedMethod);
+        return;
+      }
       
       // Validate car park registration
       const isCarPark = (room === 'Car Park' || room === 'Car_Park');
@@ -3624,6 +3661,433 @@ async function lookupCounsellorId(counsellorName) {
         confirmBtn.disabled = false;
       }
     }
+	
+	// ============================================
+    // MULTI-SLOT BOOKING SUPPORT
+    // ============================================
+    
+    /**
+     * Toggle the repeating booking options panel
+     */
+    function toggleRepeatOptions() {
+      var panel = document.getElementById('repeatOptionsPanel');
+      if (panel.style.display === 'none') {
+        panel.style.display = 'block';
+        updateBookingOptions();
+      } else {
+        cancelRepeat();
+      }
+    }
+    
+    /**
+     * Cancel/close the repeating options and reset to single booking
+     */
+    function cancelRepeat() {
+      document.getElementById('repeatOptionsPanel').style.display = 'none';
+      document.getElementById('repeatFrequency').value = 'weekly';
+      document.getElementById('repeatSessions').value = '2';
+      if (document.getElementById('repeatSummary')) document.getElementById('repeatSummary').style.display = 'none';
+      if (document.getElementById('repeatWarnings')) document.getElementById('repeatWarnings').style.display = 'none';
+      updateBookingOptions();
+    }
+    
+    /**
+     * Generate array of individual hourly slots based on duration and repeat settings.
+     * Reads current modal state. Returns { slots[], unavailable[], totalPrice, duration, sessions }
+     */
+    function generateBookingSlots() {
+      var room = document.getElementById('newBookingRoom').value;
+      var date = document.getElementById('newBookingDate').value;
+      var time = document.getElementById('newBookingTime').value;
+      var locationId = document.getElementById('newBookingLocationId').value;
+      var baseHour = parseInt(time.split(':')[0]);
+      
+      var duration = parseInt(document.getElementById('modalDuration').value) || 1;
+      
+      var repeatPanel = document.getElementById('repeatOptionsPanel');
+      var repeatActive = (repeatPanel && repeatPanel.style.display !== 'none');
+      var sessions = repeatActive ? (parseInt(document.getElementById('repeatSessions').value) || 1) : 1;
+      var frequency = repeatActive ? document.getElementById('repeatFrequency').value : 'weekly';
+      var weekGap = (frequency === 'fortnightly') ? 2 : 1;
+      
+      var slots = [];
+      var unavailable = [];
+      var totalPrice = 0;
+      
+      for (var s = 0; s < sessions; s++) {
+        var slotDate = new Date(date + 'T12:00:00');
+        slotDate.setDate(slotDate.getDate() + (s * weekGap * 7));
+        var slotDateStr = slotDate.toISOString().split('T')[0];
+        
+        for (var h = 0; h < duration; h++) {
+          var slotHour = baseHour + h;
+          var slotTime = String(slotHour).padStart(2, '0') + ':00';
+          var slotEndTime = String(slotHour + 1).padStart(2, '0') + ':00';
+          
+          // Check availability (uses loaded calendar data)
+          var available = true;
+          if (typeof isSlotAvailable === 'function') {
+            available = isSlotAvailable(room, slotDateStr, slotTime);
+          }
+          
+          // Check if already in basket
+          var inBasket = (window.bookingBasket || []).some(function(b) {
+            return b.room === room && b.date === slotDateStr && b.time === slotTime;
+          });
+          
+          if (!available || inBasket) {
+            unavailable.push({
+              date: slotDateStr,
+              time: slotTime,
+              endTime: slotEndTime,
+              reason: inBasket ? 'Already in basket' : 'Already booked'
+            });
+            continue;
+          }
+          
+          var priceResult = calculateBookingPrice(locationId, slotDateStr, slotHour, room);
+          
+          slots.push({
+            date: slotDateStr,
+            time: slotTime,
+            endTime: slotEndTime,
+            price: priceResult.amount
+          });
+          
+          totalPrice += priceResult.amount;
+        }
+      }
+      
+      return {
+        slots: slots,
+        unavailable: unavailable,
+        totalPrice: totalPrice,
+        duration: duration,
+        sessions: sessions,
+        frequency: frequency
+      };
+    }
+    
+    /**
+     * Called when duration, repeat frequency, or repeat sessions change.
+     * Updates the modal displays (price, time, summary, warnings).
+     */
+    function updateBookingOptions() {
+      var room = document.getElementById('newBookingRoom').value;
+      var time = document.getElementById('newBookingTime').value;
+      var baseHour = parseInt(time.split(':')[0]);
+      var duration = parseInt(document.getElementById('modalDuration').value) || 1;
+      
+      // Update time display to show full duration range
+      var endHour = baseHour + duration;
+      var endTimeStr = String(endHour).padStart(2, '0') + ':00';
+      document.getElementById('modalTime').textContent = time + ' - ' + endTimeStr;
+      document.getElementById('newBookingEndTime').value = endTimeStr;
+      
+      // Generate slots and get pricing
+      var slotData = generateBookingSlots();
+      var isMultiSlot = (slotData.slots.length > 1);
+      
+      // Update price
+      var priceAmount = document.getElementById('priceAmount');
+      var priceLabel = document.getElementById('priceLabel');
+      priceAmount.textContent = '\u00A3' + (slotData.totalPrice / 100).toFixed(2);
+      if (priceLabel) {
+        priceLabel.textContent = isMultiSlot ? 'Total Room Hire Cost (' + slotData.slots.length + ' slots)' : 'Room Hire Cost';
+      }
+      
+      // Update hidden price field
+      document.getElementById('newBookingPrice').value = slotData.totalPrice;
+      
+      // Update repeat summary
+      var repeatPanel = document.getElementById('repeatOptionsPanel');
+      var repeatActive = (repeatPanel && repeatPanel.style.display !== 'none');
+      
+      if (repeatActive && slotData.sessions > 1) {
+        var summaryDiv = document.getElementById('repeatSummary');
+        var summaryHtml = '';
+        var currentDate = '';
+        for (var i = 0; i < slotData.slots.length; i++) {
+          var sl = slotData.slots[i];
+          if (sl.date !== currentDate) {
+            if (currentDate !== '') summaryHtml += '<br>';
+            currentDate = sl.date;
+            var dObj = new Date(sl.date + 'T12:00:00');
+            summaryHtml += dObj.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' }) + ': ';
+          } else {
+            summaryHtml += ', ';
+          }
+          summaryHtml += sl.time + '-' + sl.endTime;
+        }
+        summaryDiv.innerHTML = summaryHtml;
+        summaryDiv.style.display = 'block';
+      } else {
+        var summaryEl = document.getElementById('repeatSummary');
+        if (summaryEl) summaryEl.style.display = 'none';
+      }
+      
+      // Update warnings
+      if (slotData.unavailable.length > 0) {
+        var warningsDiv = document.getElementById('repeatWarnings');
+        var warningHtml = 'Unavailable (will be skipped):<br>';
+        for (var u = 0; u < slotData.unavailable.length; u++) {
+          var un = slotData.unavailable[u];
+          var wDate = new Date(un.date + 'T12:00:00');
+          warningHtml += wDate.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' }) + 
+            ' ' + un.time + ' - ' + un.reason + '<br>';
+        }
+        warningsDiv.innerHTML = warningHtml;
+        warningsDiv.style.display = 'block';
+      } else {
+        var warnEl = document.getElementById('repeatWarnings');
+        if (warnEl) warnEl.style.display = 'none';
+      }
+      
+      // Update confirm button (let booking-enhancements.js handle text for single slot)
+      if (isMultiSlot) {
+        var confirmBtn = document.getElementById('confirmBookingBtn');
+        if (confirmBtn) {
+          confirmBtn.textContent = 'Confirm ' + slotData.slots.length + ' Booking' + (slotData.slots.length !== 1 ? 's' : '');
+          confirmBtn.disabled = (slotData.slots.length === 0);
+        }
+      }
+    }
+    
+    /**
+     * Process a multi-slot booking through the selected payment method.
+     * Generates slots, then handles account/wallet/card paths with looping.
+     * Existing single-booking functions are NOT touched.
+     */
+    async function processMultiSlotBooking(paymentMethod) {
+      var slotData = generateBookingSlots();
+      
+      if (slotData.slots.length === 0) {
+        alert('No available slots to book.');
+        return;
+      }
+      
+      var room = document.getElementById('newBookingRoom').value;
+      var roomId = document.getElementById('newBookingRoomId').value;
+      var locationId = document.getElementById('newBookingLocationId').value;
+      var comments = document.getElementById('newBookingComments').value.trim();
+      var counsellorName = selectedCounsellor || sessionStorage.getItem('counsellorName');
+      var counsellorId = window.clientId;
+      var statusDiv = document.getElementById('bookingStatus');
+      var confirmBtn = document.getElementById('confirmBookingBtn');
+      var isCarPark = (room === 'Car Park' || room === 'Car_Park');
+      var serviceId = isCarPark ? '9' : '1';
+      var totalSlots = slotData.slots.length;
+      
+      // Build formatted date for first slot (used for calendar navigation)
+      var firstDate = slotData.slots[0].date;
+      
+      // Build success message helper
+      function buildSuccessMessage(action) {
+        var msg = '<strong>' + totalSlots + ' Booking' + (totalSlots > 1 ? 's' : '') + ' ' + action + '!</strong><br><small>';
+        msg += room;
+        if (slotData.duration > 1) msg += ' (' + slotData.duration + ' hours)';
+        msg += '<br>';
+        var dates = [];
+        var currentDate = '';
+        for (var i = 0; i < slotData.slots.length; i++) {
+          if (slotData.slots[i].date !== currentDate) {
+            currentDate = slotData.slots[i].date;
+            var d = new Date(currentDate + 'T12:00:00');
+            dates.push(d.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' }));
+          }
+        }
+        msg += dates.join(', ');
+        if (slotData.unavailable.length > 0) {
+          msg += '<br>' + slotData.unavailable.length + ' unavailable slot(s) skipped';
+        }
+        msg += '</small>';
+        return msg;
+      }
+      
+      try {
+        
+        // =====================
+        // ACCOUNT
+        // =====================
+        if (paymentMethod === 'account') {
+          statusDiv.className = 'booking-status processing';
+          statusDiv.textContent = 'Adding ' + totalSlots + ' bookings to account...';
+          statusDiv.style.display = 'block';
+          confirmBtn.disabled = true;
+          
+          var ACCOUNT_URL = 'https://hook.eu2.make.com/a6ua2a1yl13y7h7k9aphi9iow53dvwpv';
+          var successCount = 0;
+          var failCount = 0;
+          
+          for (var a = 0; a < slotData.slots.length; a++) {
+            var slot = slotData.slots[a];
+            var bookingWeek = getBillingWeek(new Date(slot.date));
+            
+            statusDiv.textContent = 'Adding booking ' + (a + 1) + ' of ' + totalSlots + ' to account...';
+            
+            var accountPayload = {
+              client_id: counsellorId,
+              counsellor_id: window.henleyClientId || counsellorId,
+              counsellor_name: counsellorName,
+              room_id: roomId,
+              room_name: room,
+              service_id: serviceId,
+              location_id: locationId,
+              location_name: locationId === '2' ? 'Henley' : 'Buckhurst Hill',
+              date: slot.date,
+              start_time: slot.time,
+              end_time: slot.endTime,
+              amount: slot.price,
+              deduct_credit: false,
+              payment_method: 'account',
+              account_week: bookingWeek,
+              source: 'counsellor_calendar',
+              timestamp: new Date().toISOString(),
+              comments: comments || 'Booked via counsellor calendar by ' + counsellorName
+            };
+            
+            var accResp = await fetch(ACCOUNT_URL, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(accountPayload)
+            });
+            
+            if (accResp.ok) { successCount++; } else { failCount++; }
+          }
+          
+          statusDiv.className = 'booking-status success';
+          statusDiv.innerHTML = buildSuccessMessage('Added to Account');
+          
+          if (typeof showPaymentToast === 'function') {
+            showPaymentToast(successCount + ' booking(s) added to account!', 'success');
+          }
+          
+          setTimeout(function() {
+            closeNewBookingModal();
+            currentDate = firstDate;
+            var dateSelector = document.getElementById('dateSelector');
+            if (dateSelector) dateSelector.value = firstDate;
+            currentWeekStart = getWeekStartDate(new Date(firstDate + 'T12:00:00'));
+            loadAccountData();
+            refreshData();
+          }, 3000);
+        }
+        
+        // =====================
+        // WALLET
+        // =====================
+        else if (paymentMethod === 'wallet') {
+          var walletBalance = window.counsellorWallet || 0;
+          
+          if (walletBalance < slotData.totalPrice) {
+            statusDiv.className = 'booking-status error';
+            statusDiv.innerHTML = '<strong>Insufficient Wallet Balance</strong><br>' +
+              '<small>Wallet: \u00A3' + (walletBalance / 100).toFixed(2) + 
+              ' | Required: \u00A3' + (slotData.totalPrice / 100).toFixed(2) + '</small>';
+            statusDiv.style.display = 'block';
+            return;
+          }
+          
+          statusDiv.className = 'booking-status processing';
+          statusDiv.textContent = 'Processing ' + totalSlots + ' wallet payments...';
+          statusDiv.style.display = 'block';
+          confirmBtn.disabled = true;
+          
+          var WALLET_URL = 'https://hook.eu2.make.com/a6ua2a1yl13y7h7k9aphi9iow53dvwpv';
+          
+          for (var w = 0; w < slotData.slots.length; w++) {
+            var wSlot = slotData.slots[w];
+            
+            statusDiv.textContent = 'Processing wallet payment ' + (w + 1) + ' of ' + totalSlots + '...';
+            
+            var walletPayload = {
+              client_id: counsellorId,
+              counsellor_id: window.henleyClientId || counsellorId,
+              counsellor_name: counsellorName,
+              room_id: roomId,
+              room_name: room,
+              service_id: serviceId,
+              location_id: locationId,
+              location_name: locationId === '2' ? 'Henley' : 'Buckhurst Hill',
+              date: wSlot.date,
+              start_time: wSlot.time,
+              end_time: wSlot.endTime,
+              amount: wSlot.price,
+              deduct_credit: true,
+              payment_method: 'credit',
+              source: 'counsellor_calendar',
+              timestamp: new Date().toISOString(),
+              comments: comments || 'Booked via counsellor calendar by ' + counsellorName
+            };
+            
+            var walResp = await fetch(WALLET_URL, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(walletPayload)
+            });
+            
+            if (walResp.ok) {
+              var walResult = await walResp.json();
+              if (walResult.newBalance !== undefined) {
+                window.counsellorCreditBalance = walResult.newBalance;
+              }
+            }
+          }
+          
+          await loadAccountData();
+          
+          statusDiv.className = 'booking-status success';
+          statusDiv.innerHTML = buildSuccessMessage('Paid with Wallet');
+          
+          setTimeout(function() {
+            closeNewBookingModal();
+            currentDate = firstDate;
+            var dateSelector = document.getElementById('dateSelector');
+            if (dateSelector) dateSelector.value = firstDate;
+            currentWeekStart = getWeekStartDate(new Date(firstDate + 'T12:00:00'));
+            refreshData();
+          }, 3000);
+        }
+        
+        // =====================
+        // CARD — use existing payment choice modal with items array
+        // =====================
+        else if (paymentMethod === 'card') {
+          closeNewBookingModal();
+          
+          var items = slotData.slots.map(function(slot) {
+            var dObj = new Date(slot.date + 'T12:00:00');
+            return {
+              room: room,
+              roomId: roomId,
+              date: slot.date,
+              time: slot.time,
+              endTime: slot.endTime,
+              formattedDate: dObj.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' }),
+              price: slot.price,
+              locationId: locationId,
+              comments: comments || null
+            };
+          });
+          
+          var paymentDetails = {
+            totalAmount: slotData.totalPrice,
+            items: items
+          };
+          
+          showPaymentChoiceModal(paymentDetails, true);
+        }
+        
+      } catch (error) {
+        console.error('Multi-slot booking error:', error);
+        statusDiv.className = 'booking-status error';
+        statusDiv.innerHTML = '<strong>Error</strong><br><small>' + error.message + '</small>';
+        statusDiv.style.display = 'block';
+        confirmBtn.disabled = false;
+      }
+    }
+	
+	
   </script>
   
 <!-- ================================ -->
