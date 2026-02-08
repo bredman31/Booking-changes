@@ -258,18 +258,56 @@
             <span class="detail-label">Time</span>
             <span class="detail-value" id="modalTime">-</span>
           </div>
-          <div class="detail-row">
+<div class="detail-row">
             <span class="detail-label">Duration</span>
-            <span class="detail-value" id="modalDuration">1 Hour</span>
-          </div>
-          <div class="detail-row">
-            <span class="detail-label">Location</span>
-            <span class="detail-value" id="modalLocation">-</span>
+            <span class="detail-value">
+              <select id="modalDuration" onchange="updateBookingOptions()" style="padding: 4px 8px; border-radius: 4px; border: 1px solid #ccc; font-size: 14px;">
+                <option value="1">1 Hour</option>
+                <option value="2">2 Hours</option>
+                <option value="3">3 Hours</option>
+                <option value="4">4 Hours</option>
+                <option value="5">5 Hours</option>
+                <option value="6">6 Hours</option>
+                <option value="7">7 Hours</option>
+                <option value="8">8 Hours</option>
+              </select>
+            </span>
           </div>
         </div>
         
+        <!-- Repeating Booking Toggle -->
+        <div style="margin: 10px 0;">
+          <button type="button" id="repeatToggleBtn" onclick="toggleRepeatOptions()" 
+                  style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; padding: 8px 16px; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer;">
+            &#128257; Repeating Booking
+          </button>
+          <div id="repeatOptionsPanel" style="display: none; margin-top: 10px; padding: 12px; background: #f0f0ff; border: 1px solid #667eea; border-radius: 8px;">
+            <div style="display: flex; gap: 15px; align-items: center; flex-wrap: wrap;">
+              <div>
+                <label style="font-size: 13px; font-weight: 600; color: #333; display: block; margin-bottom: 4px;">Frequency</label>
+                <select id="repeatFrequency" onchange="updateBookingOptions()" style="padding: 4px 8px; border-radius: 4px; border: 1px solid #ccc; font-size: 14px;">
+                  <option value="weekly">Weekly</option>
+                  <option value="fortnightly">Fortnightly</option>
+                </select>
+              </div>
+              <div>
+                <label style="font-size: 13px; font-weight: 600; color: #333; display: block; margin-bottom: 4px;">Sessions</label>
+                <select id="repeatSessions" onchange="updateBookingOptions()" style="padding: 4px 8px; border-radius: 4px; border: 1px solid #ccc; font-size: 14px;">
+                  <option value="2">2 sessions</option>
+                  <option value="3">3 sessions</option>
+                  <option value="4">4 sessions</option>
+                  <option value="5">5 sessions</option>
+                  <option value="6">6 sessions</option>
+                </select>
+              </div>
+              <button type="button" onclick="cancelRepeat()" style="background: none; border: 1px solid #999; color: #666; padding: 4px 10px; border-radius: 4px; font-size: 12px; cursor: pointer; align-self: flex-end;">Cancel</button>
+            </div>
+            <div id="repeatSummary" style="margin-top: 10px; font-size: 13px; color: #155724; background: #d4edda; padding: 8px 10px; border-radius: 6px; display: none;"></div>
+            <div id="repeatWarnings" style="margin-top: 6px; font-size: 13px; color: #856404; background: #fff3cd; padding: 8px 10px; border-radius: 6px; display: none;"></div>
+          </div>
+        </div>
         
-		<!-- Comments/Registration Field -->
+        <!-- Comments/Registration Field -->
         <div class="comments-field" id="commentsFieldContainer" style="margin: 15px 0; padding: 12px; background: #f8f9fa; border-radius: 6px;">
           <label for="newBookingComments" id="commentsLabel" style="font-weight: 600; color: #333; display: block; margin-bottom: 5px;">
             <span id="commentsLabelText">Comments</span>
@@ -282,10 +320,9 @@
           </small>
         </div>
 		
-        <div class="price-display" id="priceDisplay">
-          <div class="price-label">Room Hire Cost</div>
-          <div class="price-amount" id="priceAmount">£0.00</div>
-          <div class="price-breakdown" id="priceBreakdown">Calculating...</div>
+        <div class="price-display" id="priceDisplay" style="padding: 10px 15px;">
+          <div class="price-label" id="priceLabel" style="font-size: 13px;">Room Hire Cost</div>
+          <div class="price-amount" id="priceAmount" style="font-size: 22px;">&#163;0.00</div>
         </div>
        
 <!-- Previous Week Warning (shown if unpaid) -->
