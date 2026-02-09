@@ -4,9 +4,10 @@
   <meta charset="UTF-8">
   <title>Cherry Tree Therapy Centre - Room Booking Calendar</title>
   
-  <!-- Firebase Scripts -->
+<!-- Firebase Scripts -->
   <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-database-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-auth-compat.js"></script>
   
   <!-- Stylesheet -->
   <link rel="stylesheet" href="css/styles.css">
@@ -473,14 +474,13 @@ const STRIPE_CONFIG = {
   // URLs for redirect after payment (auto-detected from current page)
   get successUrl() {
     const base = window.location.origin + window.location.pathname;
-    const token = sessionStorage.getItem('accessToken');
-    return base + '?payment=success' + (token ? '&token=' + token : '');
+    return base + '?payment=success';
   },
   get cancelUrl() {
     const base = window.location.origin + window.location.pathname;
-    const token = sessionStorage.getItem('accessToken');
-    return base + '?payment=cancelled' + (token ? '&token=' + token : '');
+    return base + '?payment=cancelled';
   }
+};
 };
     
     // Global state variables
@@ -632,155 +632,30 @@ function generateRoomStyles() {
       return rooms;
     }
 
-// Restore session state from storage - call this at start of any navigation
-function restoreSessionState() {
-  const token = sessionStorage.getItem('accessToken');
-  const counsellorName = sessionStorage.getItem('counsellorName');
-  
-  if (token && counsellorName && !selectedCounsellor) {
-    selectedCounsellor = counsellorName;
-	var headerName = document.getElementById('headerCounsellorName');
-    if (headerName) headerName.textContent = '👋 Welcome, ' + counsellorName;
-    console.log('Session restored: counsellor =', counsellorName);
-    return true;
-  }
-  
-  if (token && !counsellorName) {
-    console.warn('Token exists but no counsellor name found');
-    return false;
-  }
-  
-  return !!token;
-}
+// restoreSessionState removed — counsellor-auth.js handles session
   </script>
   
 <!-- ================================ -->
-<!-- SECTION 4.1: TOKEN AUTHENTICATION -->
+<!-- SECTION 4.1: TOKEN AUTH REMOVED — Now handled by counsellor-auth.js -->
 <!-- ================================ -->
-  <script>
-    // FIXED: Token validation function WITH DEBUGGING
-    async function validateAccessToken(token) {
-      console.log('🔍 validateAccessToken called with token:', token);
-      
-      try {
-        console.log('📡 Checking Firebase for token:', token);
-        const snap = await database.ref('therapist_tokens/' + token).once('value');
-        const t = snap.val();
-        
-        console.log('📦 Firebase returned:', t);
-        
-        if (t && t.active) {
-          console.log('âœ… Token is valid and active');
-          console.log('👤 Counsellor name:', t.name);
-          console.log('🆔 Client ID:', t.clientId);
-          
-          sessionStorage.setItem('accessToken', token);
-          sessionStorage.setItem('counsellorName', t.name || '');
-          sessionStorage.setItem('henleyClientId', t.henleyClientId || '');
-          window.clientId = t.clientId || null;
-          window.henleyClientId = t.henleyClientId || null;
-          selectedCounsellor = t.name || '';
-		  var headerName = document.getElementById('headerCounsellorName');
-          if (headerName) headerName.textContent = '👋 Welcome, ' + selectedCounsellor;
-          
-          console.log('💾 Stored in sessionStorage:');
-          console.log('  - accessToken:', sessionStorage.getItem('accessToken'));
-          console.log('  - counsellorName:', sessionStorage.getItem('counsellorName'));
-          console.log('  - selectedCounsellor global:', selectedCounsellor);
-          console.log('  - window.clientId:', window.clientId);
-          
-          return true;
-        } else {
-          console.log('⚠️ Token invalid or inactive');
-          console.log('  - Token data exists?', !!t);
-          console.log('  - Token active?', t?.active);
-        }
-        return false;
-      } catch (e) {
-        console.error('🚨 Token validation error:', e);
-        console.error('  - Error message:', e.message);
-        console.error('  - Stack:', e.stack);
-        return false;
-      }
-    }
-  </script>
   
 <!-- ================================ -->
 <!-- SECTION 4.2: URL PARAMETER PARSING -->
 <!-- ================================ -->
   <script>
-    // FIXED: Process valid session function WITH DEBUGGING
-    function processValidSession(params) {
-      console.log('🎯 processValidSession called with params:', Object.fromEntries(params));
-      
+    // Parse URL parameters for view, date, and booking modification
+    // Auth is now handled by counsellor-auth.js — this only reads navigation params
+    function parseURLParams() {
+      const params = new URLSearchParams(window.location.search);
       const view = params.get('view');
       const date = params.get('date');
       const bookingId = params.get('booking');
       const room = params.get('room');
       const time = params.get('time');
       const modify = params.get('modify');
-
-      console.log('📋 Extracted params:');
-      console.log('  - view:', view);
-      console.log('  - date:', date);
-      console.log('  - modify:', modify);
 
       if (view === 'day' || view === 'week') {
         currentView = view;
-        console.log('  - Set currentView to:', currentView);
-      }
-
-      if (date) {
-        currentDate = date;
-        const dateEl = document.getElementById('dateSelector');
-        if (dateEl) {
-          dateEl.value = currentDate;
-          console.log('  - Set date selector to:', currentDate);
-        }
-        const d = new Date(date + 'T12:00:00');
-        currentWeekStart = getWeekStartDate(d);
-        console.log('  - Set week start to:', formatDate(currentWeekStart));
-      }
-
-      if (modify === 'true' && bookingId && room && date && time) {
-        window.bookingToModify = {
-          bookingId,
-          room: decodeURIComponent(room),
-          date,
-          time: decodeURIComponent(time)
-        };
-        console.log('  - Set booking to modify:', window.bookingToModify);
-      }
-
-      console.log('🚀 Calling initializeWithFullAccess...');
-      // Initialize with full access when token is valid
-      initializeWithFullAccess();
-    }
-
-    // Parse non-token parameters
-    function parseNonTokenParams(params) {
-      const view = params.get('view');
-      const counsellor = params.get('counsellor');
-      const clientName = params.get('name');
-      const clientId = params.get('clientId');
-      const date = params.get('date');
-      const bookingId = params.get('booking');
-      const room = params.get('room');
-      const time = params.get('time');
-      const modify = params.get('modify');
-
-      if (view === 'day' || view === 'week') currentView = view;
-
-      if (clientId && clientName) {
-        selectedCounsellor = decodeURIComponent(clientName);
-        window.clientId = clientId;
-      } else if (counsellor) {
-        selectedCounsellor = decodeURIComponent(counsellor);
-        window.clientId = null;
-      } else {
-        // last resort: if a previous token set the name, reuse it for rendering
-        const storedName = sessionStorage.getItem('counsellorName');
-        if (storedName) selectedCounsellor = storedName;
       }
 
       if (date) {
@@ -800,42 +675,8 @@ function restoreSessionState() {
         };
       }
 
-      // Initialize with read-only access when no token
-      initializeWithReadOnlyAccess();
-    }
-
-    // FIXED: Parse URL parameters - token-first and async
-    function parseURLParams() {
-      const params = new URLSearchParams(window.location.search);
-      const tokenFromURL = params.get('token');
-      const tokenFromSession = sessionStorage.getItem('accessToken');
-
-      if (tokenFromURL) {
-        validateAccessToken(tokenFromURL).then(ok => {
-          if (ok) {
-            processValidSession(params);
-            updateURL(); // ensures token stays in URL
-          } else {
-            sessionStorage.removeItem('accessToken');
-            sessionStorage.removeItem('counsellorName');
-            // fall back to non-token params below
-            parseNonTokenParams(params);
-          }
-        });
-      } else if (tokenFromSession) {
-        validateAccessToken(tokenFromSession).then(ok => {
-          if (ok) {
-            processValidSession(params);
-            updateURL();
-          } else {
-            sessionStorage.removeItem('accessToken');
-            sessionStorage.removeItem('counsellorName');
-            parseNonTokenParams(params);
-          }
-        });
-      } else {
-        parseNonTokenParams(params);
-      }
+      // Counsellor is authenticated — initialise with full access
+      initializeWithFullAccess();
     }
   </script>
   
@@ -942,13 +783,13 @@ loadRoomConfig().then(() => {
       }, true);
     }
     
-    // Handle form submit with token
+   // Handle form submit — user is authenticated via Firebase Auth
     function handleFormSubmit(e) {
       e.preventDefault();
       
-      const token = sessionStorage.getItem('accessToken');
-      if (!token) {
-        alert('Session expired. Please use your access link to continue.');
+      if (!firebase.auth().currentUser) {
+        alert('Session expired. Please sign in again.');
+        window.location.reload();
         return;
       }
       
@@ -961,7 +802,7 @@ loadRoomConfig().then(() => {
         newDate: document.getElementById('newDateInput').value,
         newTime: document.getElementById('newTimeInput').value,
         counsellorName: selectedCounsellor,
-        accessToken: token
+        accessToken: 'firebase-auth'
       };
       
       // Booking change validation
@@ -1011,7 +852,7 @@ if (isBookingToday(changeData.originalDate)) {
             <p>Invalid or expired access token.</p>
             <p>Please use the link provided in your weekly email.</p>
             <hr style="margin: 20px 0;">
-            <p style="font-size: 14px; color: #666;">If you believe this is an error, please contact the Cherry Tree Centre.</p>
+            <p style="font-size: 14px; color: #666;">If you believe this is an error, please contact the Cherry Tree Therapy Centre.</p>
           </div>
         </div>
       `;
@@ -1381,10 +1222,8 @@ function handlePaymentReturn() {
       if (dateSelector) dateSelector.value = returnDate;
     }
     
-    // Clean up URL (preserve token if present)
-    const token = params.get('token');
-    const cleanUrl = window.location.pathname + (token ? '?token=' + token : '');
-    window.history.replaceState({}, '', cleanUrl);
+    // Clean up URL
+    window.history.replaceState({}, '', window.location.pathname);
     
     // Refresh data to show new booking
     setTimeout(() => {
@@ -1415,10 +1254,8 @@ function handlePaymentReturn() {
       showPaymentToast('⚠️ Payment cancelled. No booking was created.', 'warning');
     }
     
-    // Clean up URL
-    const token = params.get('token');
-    const cleanUrl = window.location.pathname + (token ? '?token=' + token : '');
-    window.history.replaceState({}, '', cleanUrl);
+     // Clean up URL
+      window.history.replaceState({}, '', window.location.pathname);
   }
 }
 
@@ -5108,12 +4945,17 @@ function initializeData() {
       });
   }
 }
-    // Initialize when DOM is ready - CORRECTED VERSION
+// Initialize when DOM is ready — wait for Firebase Auth to complete first
     document.addEventListener('DOMContentLoaded', function() {
-      console.log('DOM loaded, starting initialization...');
+      console.log('DOM loaded, waiting for authentication...');
       handlePaymentReturn();
-      // Call parseURLParams which will handle the rest of initialization
-      parseURLParams(); // This handles everything now
+    });
+
+    // counsellor-auth.js dispatches this event after successful login
+    document.addEventListener('counsellorAuthReady', function(e) {
+      console.log('Auth ready, starting calendar initialization...');
+      console.log('Counsellor:', e.detail.counsellorName, 'ClientId:', e.detail.clientId);
+      parseURLParams();
     });
   </script>
   
@@ -5147,21 +4989,10 @@ function initializeData() {
   })();
   </script>
   
-  <script src="js/token-auth-update.js"></script>
-  <!-- Booking enhancements (£0 bookings, basket, etc) -->
+  <!-- Booking enhancements (Â£0 bookings, basket, etc) -->
   <script src="js/booking-enhancements.js"></script>
-  <script>
-  // Set counsellor name in header after everything has loaded
-  window.addEventListener('load', function() {
-    setTimeout(function() {
-      var name = selectedCounsellor || sessionStorage.getItem('counsellorName');
-      var headerName = document.getElementById('headerCounsellorName');
-      if (headerName && name) {
-        headerName.textContent = '👋 Welcome, ' + name;
-      }
-    }, 1000);
-  });
-</script>
-  
+
+  <!-- Firebase Auth for counsellor portal -->
+  <script src="js/counsellor-auth.js"></script>
 </body>
 </html>
