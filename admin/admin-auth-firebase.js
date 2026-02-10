@@ -1,5 +1,5 @@
 /**
- * ADMIN-AUTH-FIREBASE.JS - Cherry Tree Centre Admin Authentication
+ * ADMIN-AUTH-FIREBASE.JS - Cherry Tree Therapy Centre Admin Authentication
  * ================================================================
  * Self-contained Firebase Auth + per-user PIN authentication for all admin pages.
  * 
@@ -249,13 +249,13 @@
       <div class="auth-box">
         <!-- Section 1: Loading / checking auth state -->
         <div id="authLoading" class="auth-section active">
-          <h1>🌳 Cherry Tree Centre</h1>
+          <h1>🌳 Cherry Tree Therapy Centre</h1>
           <p class="auth-subtitle">Checking authentication...</p>
         </div>
 
         <!-- Section 2: Email/Password login -->
         <div id="authLogin" class="auth-section">
-          <h1>🌳 Cherry Tree Centre</h1>
+          <h1>🌳 Cherry Tree Therapy Centre</h1>
           <p class="auth-subtitle">Admin Portal — Sign In</p>
           <div class="auth-field">
             <label for="authEmail">Email</label>
