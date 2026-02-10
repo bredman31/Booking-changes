@@ -847,8 +847,8 @@
         <option value="all">All Status</option>
         <option value="active">Active Only</option>
         <option value="inactive">Inactive Only</option>
-        <option value="with-token">With Token</option>
-        <option value="no-token">No Token</option>
+        <option value="with-login">With Login</option>
+        <option value="no-login">No Login</option>
         <option value="recent">Booked Recently (30 days)</option>
         <option value="dormant">No Booking 30+ Days</option>
       </select>
@@ -862,8 +862,6 @@
         <option value="last-desc">Sort: Recent Activity</option>
         <option value="last-asc">Sort: Oldest Activity</option>
       </select>
-      <button class="add-btn" onclick="generateMissingTokens()" style="background:#28a745;">🔑 Generate Missing Tokens</button>
-      <button class="add-btn" onclick="regenerateAllTokens()" style="background:#dc3545;">🔄 Regenerate All</button>
       <button class="add-btn" onclick="openAddModal()">➕ Add Client</button>
     </div>
   </header>
@@ -884,7 +882,7 @@
       </div>
       <div class="stat-card with-token">
         <div class="stat-value" id="tokenCount">-</div>
-        <div class="stat-label">With Token</div>
+        <div class="stat-label">With Login</div>
       </div>
       <div class="stat-card" style="border-left: 3px solid #17a2b8;">
         <div class="stat-value" id="bookedRecentCount" style="color: #17a2b8;">-</div>
@@ -908,7 +906,7 @@
               <th class="sortable" onclick="sortBy('status')">Status <span class="sort-icon" data-col="status"></span></th>
               <th class="sortable" onclick="sortBy('last')">Last Booking <span class="sort-icon" data-col="last"></span></th>
               <th class="sortable" onclick="sortBy('bookings')">Bookings (6mo) <span class="sort-icon" data-col="bookings"></span></th>
-              <th>Token</th>
+              <th>Login</th>
               <th>Actions</th>
             </tr>
           </thead>
@@ -1043,43 +1041,12 @@
       </div>
       <div class="modal-footer">
         <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
-        <button class="btn btn-success" id="generateTokenBtn" onclick="generateNewToken()" style="display: none;">🔑 Generate Token</button>
         <button class="btn btn-primary" onclick="saveClient()">Save Client</button>
       </div>
     </div>
   </div>
   
-  <!-- Token Link Modal -->
-  <div class="modal-overlay" id="tokenModal">
-    <div class="modal">
-      <div class="modal-header">
-        <h2>🔗 Client Access Link</h2>
-        <button class="modal-close" onclick="closeTokenModal()">&times;</button>
-      </div>
-      <div class="modal-body">
-        <p style="margin-bottom: 15px; color: #666;">Share this link with the client to access their booking calendar:</p>
-        
-        <div class="form-group">
-          <label>Calendar Link</label>
-          <div class="token-display">
-            <code id="calendarLink">-</code>
-            <button class="copy-btn" onclick="copyCalendarLink()">📋 Copy Link</button>
-          </div>
-        </div>
-        
-        <div class="form-group">
-          <label>Raw Token</label>
-          <div class="token-display">
-            <code id="rawToken">-</code>
-            <button class="copy-btn" onclick="copyRawToken()">📋 Copy Token</button>
-          </div>
-        </div>
-      </div>
-      <div class="modal-footer">
-        <button class="btn btn-primary" onclick="closeTokenModal()">Done</button>
-      </div>
-    </div>
-  </div>
+<!-- (Token Modal removed — replaced by firebase-account-manager.js auth section in client modal) -->
   
   <script>
     // ================================
@@ -1099,6 +1066,13 @@
     const database = firebase.database();
     
     const CALENDAR_BASE_URL = 'https://bredman31.github.io/booking-changes/index.html';
+  </script>
+  
+  <!-- Auth scripts (after Firebase init) -->
+  <script src="admin-auth-firebase.js"></script>
+  <script src="firebase-account-manager.js"></script>
+  
+  <script>
     
     let clients = {};
     let bookings = [];
@@ -1254,12 +1228,12 @@
     // ================================
     // STATS
     // ================================
-    function updateStats() {
+      function updateStats() {
       const clientList = Object.values(clients);
       const total = clientList.length;
       const active = clientList.filter(c => c.active).length;
       const inactive = total - active;
-      const withToken = clientList.filter(c => c.token).length;
+      const withToken = clientList.filter(c => c.firebaseUid).length;
       
       // Count clients who booked in last 30 days
       const now = new Date();
@@ -1314,8 +1288,8 @@
         let matchesStatus = true;
         if (statusFilter === 'active') matchesStatus = client.active;
         else if (statusFilter === 'inactive') matchesStatus = !client.active;
-        else if (statusFilter === 'with-token') matchesStatus = !!client.token;
-        else if (statusFilter === 'no-token') matchesStatus = !client.token;
+        else if (statusFilter === 'with-login') matchesStatus = !!client.firebaseUid;
+        else if (statusFilter === 'no-login') matchesStatus = !client.firebaseUid;
         else if (statusFilter === 'recent') matchesStatus = stats.lastBookingDate && stats.lastBookingDate >= thirtyDaysAgo;
         else if (statusFilter === 'dormant') matchesStatus = !stats.lastBookingDate || stats.lastBookingDate < thirtyDaysAgo;
         
@@ -1417,18 +1391,14 @@
             <td>${lastBookingHtml}</td>
             <td><span class="booking-count">${stats.last6Months || 0}</span></td>
             <td>
-              ${client.token 
-                ? `<span class="token-badge">${client.token.substring(0, 8)}...</span>`
-                : `<span class="token-badge no-token">No token</span>`
+              ${client.firebaseUid 
+                ? '<span class="token-badge" style="background:#d4edda; color:#155724;">✅ Active</span>'
+                : '<span class="token-badge no-token">No login</span>'
               }
             </td>
             <td>
               <div class="action-btns">
                 <button class="action-btn edit" onclick="editClient('${id}')">Edit</button>
-                ${client.token 
-                  ? `<button class="action-btn token" onclick="showToken('${id}')">🔗</button>`
-                  : `<button class="action-btn token" onclick="generateTokenFor('${id}')">+🔑</button>`
-                }
               </div>
             </td>
           </tr>
@@ -1618,8 +1588,10 @@
       document.getElementById('clientNewSystemId').value = '';
       document.getElementById('clientFreeAgentId').value = '';
       document.getElementById('clientLastBooking').value = 'N/A';
-      document.getElementById('tokenSection').style.display = 'none';
-      document.getElementById('generateTokenBtn').style.display = 'none';
+// Clear auth section for new client
+      if (window.accountManager) {
+        window.accountManager.clearAuthSection();
+      }
       document.getElementById('analysisTabBtn').style.display = 'none';
       
       populateLocationCheckboxes([]);
@@ -1666,18 +1638,10 @@
       // Use helper function for locations
       populateLocationCheckboxes(getClientLocations(client));
       
-      // Show token section if exists
-      if (client.token) {
-        document.getElementById('tokenSection').style.display = 'block';
-        document.getElementById('tokenDisplay').textContent = client.token;
-        document.getElementById('generateTokenBtn').style.display = 'inline-block';
-        document.getElementById('generateTokenBtn').textContent = '🔄 Regenerate Token';
-      } else {
-        document.getElementById('tokenSection').style.display = 'none';
-        document.getElementById('generateTokenBtn').style.display = 'inline-block';
-        document.getElementById('generateTokenBtn').textContent = '🔑 Generate Token';
+    // Populate auth management section
+      if (window.accountManager) {
+        window.accountManager.populateAuthSection(clientId);
       }
-    }
     
     function populateLocationCheckboxes(selectedLocations) {
       const container = document.getElementById('locationCheckboxes');
@@ -1773,203 +1737,7 @@
       }
     }
     
-    // ================================
-    // TOKEN MANAGEMENT
-    // ================================
-    function generateToken() {
-      const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
-      let token = '';
-      for (let i = 0; i < 32; i++) {
-        token += chars.charAt(Math.floor(Math.random() * chars.length));
-      }
-      return token;
-    }
-    
-    async function generateNewToken() {
-      const clientId = document.getElementById('editClientId').value;
-      if (!clientId) return;
-      
-      const newToken = generateToken();
-      
-      try {
-        await database.ref(`clients/${clientId}/token`).set(newToken);
-        
-        clients[clientId].token = newToken;
-        
-        document.getElementById('tokenSection').style.display = 'block';
-        document.getElementById('tokenDisplay').textContent = newToken;
-        document.getElementById('generateTokenBtn').textContent = '🔄 Regenerate Token';
-        
-        renderClients();
-        showStatus('New token generated!', 'success');
-        
-      } catch (error) {
-        console.error('Error generating token:', error);
-        showStatus('Error generating token: ' + error.message, 'error');
-      }
-    }
-    
-    async function generateTokenFor(clientId) {
-      const client = clients[clientId];
-      if (!client) return;
-      
-      if (!confirm(`Generate access token for ${client.name}?`)) return;
-      
-      const newToken = generateToken();
-      
-      try {
-        await database.ref(`clients/${clientId}/token`).set(newToken);
-        
-        clients[clientId].token = newToken;
-        
-        renderClients();
-        updateStats();
-        showToken(clientId);
-        
-      } catch (error) {
-        console.error('Error generating token:', error);
-        showStatus('Error generating token: ' + error.message, 'error');
-      }
-    }
-    
-    function showToken(clientId) {
-      const client = clients[clientId];
-      if (!client || !client.token) return;
-      
-      const calendarLink = `${CALENDAR_BASE_URL}?token=${client.token}`;
-      
-      document.getElementById('calendarLink').textContent = calendarLink;
-      document.getElementById('rawToken').textContent = client.token;
-      
-      document.getElementById('tokenModal').classList.add('show');
-    }
-    
-    function closeTokenModal() {
-      document.getElementById('tokenModal').classList.remove('show');
-    }
-    
-    function copyToken() {
-      const token = document.getElementById('tokenDisplay').textContent;
-      navigator.clipboard.writeText(token);
-      showStatus('Token copied to clipboard!', 'success');
-    }
-    
-    function copyCalendarLink() {
-      const link = document.getElementById('calendarLink').textContent;
-      navigator.clipboard.writeText(link);
-      showStatus('Calendar link copied to clipboard!', 'success');
-    }
-    
-    function copyRawToken() {
-      const token = document.getElementById('rawToken').textContent;
-      navigator.clipboard.writeText(token);
-      showStatus('Token copied to clipboard!', 'success');
-    }
-    
-// ================================
-    // BULK TOKEN GENERATION
-    // ================================
-    async function generateMissingTokens() {
-      // Find active clients without tokens
-      const needTokens = Object.entries(clients).filter(([id, client]) => 
-        client.active && !client.token
-      );
-      
-      if (needTokens.length === 0) {
-        showStatus('All active clients already have tokens!', 'info');
-        return;
-      }
-      
-      if (!confirm(`Generate tokens for ${needTokens.length} active client(s) without tokens?\n\n${needTokens.map(([id, c]) => `• ${c.name} (${id})`).join('\n')}`)) return;
-      
-      let generated = 0;
-      const results = [];
-      
-      for (const [clientId, client] of needTokens) {
-        try {
-          const newToken = generateToken();
-          await database.ref(`clients/${clientId}/token`).set(newToken);
-          clients[clientId].token = newToken;
-          generated++;
-          results.push({ id: clientId, name: client.name, token: newToken });
-        } catch (error) {
-          console.error(`Error generating token for ${clientId}:`, error);
-        }
-      }
-      
-      renderClients();
-      updateStats();
-      showStatus(`Generated ${generated} new token(s)!`, 'success');
-      showBulkTokenResults(results);
-    }
-    
-    async function regenerateAllTokens() {
-      const activeClients = Object.entries(clients).filter(([id, client]) => client.active);
-      
-      if (activeClients.length === 0) {
-        showStatus('No active clients found!', 'info');
-        return;
-      }
-      
-      if (!confirm(`⚠️ WARNING: This will regenerate tokens for ALL ${activeClients.length} active clients.\n\nAll existing calendar links will stop working!\n\nAre you sure?`)) return;
-      
-      if (!confirm(`Final confirmation: Regenerate ${activeClients.length} tokens? This cannot be undone.`)) return;
-      
-      let generated = 0;
-      const results = [];
-      
-      for (const [clientId, client] of activeClients) {
-        try {
-          const newToken = generateToken();
-          await database.ref(`clients/${clientId}/token`).set(newToken);
-          clients[clientId].token = newToken;
-          generated++;
-          results.push({ id: clientId, name: client.name, token: newToken });
-        } catch (error) {
-          console.error(`Error regenerating token for ${clientId}:`, error);
-        }
-      }
-      
-      renderClients();
-      updateStats();
-      showStatus(`Regenerated ${generated} token(s)!`, 'success');
-      showBulkTokenResults(results);
-    }
-    
-    function showBulkTokenResults(results) {
-      if (results.length === 0) return;
-      
-      const lines = results.map(r => {
-        const link = `${CALENDAR_BASE_URL}?token=${r.token}`;
-        return `${r.name} (${r.id})\n${link}`;
-      }).join('\n\n');
-      
-      // Show in a modal with copy-all button
-      const html = results.map(r => {
-        const link = `${CALENDAR_BASE_URL}?token=${r.token}`;
-        return `<div style="margin-bottom:15px;padding:12px;background:#f8f9fa;border-radius:6px;">
-          <strong>${r.name}</strong> <span style="color:#666;font-size:12px;">(${r.id})</span><br>
-          <code style="font-size:11px;word-break:break-all;color:#007bff;">${link}</code>
-        </div>`;
-      }).join('');
-      
-      // Reuse the token modal
-      document.getElementById('tokenModal').querySelector('.modal-body').innerHTML = `
-        <p style="margin-bottom:15px;color:#666;">Generated ${results.length} token(s). Copy links below to send to clients:</p>
-        <button class="btn btn-primary" style="margin-bottom:15px;" onclick="copyAllTokenResults()">📋 Copy All Links</button>
-        <div id="bulkTokenResults" style="max-height:400px;overflow-y:auto;">${html}</div>
-        <textarea id="bulkTokenText" style="position:absolute;left:-9999px;">${lines}</textarea>
-      `;
-      document.getElementById('tokenModal').querySelector('h2').textContent = '🔑 Bulk Token Results';
-      document.getElementById('tokenModal').classList.add('show');
-    }
-    
-    function copyAllTokenResults() {
-      const text = document.getElementById('bulkTokenText').value;
-      navigator.clipboard.writeText(text);
-      showStatus('All links copied to clipboard!', 'success');
-    }
-    
+ 
     // ================================
     // STATUS MESSAGES
     // ================================
@@ -1988,9 +1756,6 @@
       if (e.target === this) closeModal();
     });
     
-    document.getElementById('tokenModal').addEventListener('click', function(e) {
-      if (e.target === this) closeTokenModal();
-    });
   </script>
 <script src="admin-auth-firebase.js"></script>
 </body>
