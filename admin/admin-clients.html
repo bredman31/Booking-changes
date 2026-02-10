@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Client Management - Cherry Tree Theerapy Centre</title>
+  <title>Client Management - Cherry Tree Therapy Centre</title>
   
   <!-- Firebase -->
  <!-- Firebase -->
@@ -999,15 +999,7 @@
             </div>
           </div>
           
-          <div class="form-group" id="tokenSection" style="display: none;">
-            <label>Access Token</label>
-            <div class="token-display">
-              <code id="tokenDisplay">No token assigned</code>
-              <button class="copy-btn" onclick="copyToken()">📋 Copy Token</button>
-            </div>
-          </div>
-        </div>
-        
+       
         <!-- Analysis Tab -->
         <div class="tab-content" id="analysisTabContent">
           <div class="analysis-section">
@@ -1639,9 +1631,10 @@
       populateLocationCheckboxes(getClientLocations(client));
       
     // Populate auth management section
-      if (window.accountManager) {
+if (window.accountManager) {
         window.accountManager.populateAuthSection(clientId);
       }
+    }
     
     function populateLocationCheckboxes(selectedLocations) {
       const container = document.getElementById('locationCheckboxes');
@@ -1707,7 +1700,7 @@
       
       // Preserve existing fields if editing
       if (editId && clients[editId]) {
-        if (clients[editId].token) clientData.token = clients[editId].token;
+        if (clients[editId].firebaseUid) clientData.firebaseUid = clients[editId].firebaseUid;
         if (clients[editId].newSystemId) clientData.newSystemId = clients[editId].newSystemId;
         clientData.createdAt = clients[editId].createdAt || new Date().toISOString();
       } else {
@@ -1757,7 +1750,5 @@
     });
     
   </script>
-<script src="admin-auth-firebase.js"></script>
 </body>
-</html>
 </html>
