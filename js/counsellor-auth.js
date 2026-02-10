@@ -608,6 +608,7 @@
 
     // Store in sessionStorage for compatibility with any code that still checks
     sessionStorage.setItem('counsellorName', counsellorData.name);
+    sessionStorage.setItem('accessToken', 'firebase-auth');
     if (counsellorData.henleyClientId) {
       sessionStorage.setItem('henleyClientId', counsellorData.henleyClientId);
     }
