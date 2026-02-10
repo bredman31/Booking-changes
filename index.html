@@ -631,7 +631,10 @@ function generateRoomStyles() {
       return rooms;
     }
 
-// restoreSessionState removed — counsellor-auth.js handles session
+// restoreSessionState — now a no-op stub, auth handled by counsellor-auth.js
+function restoreSessionState() {
+  return true;
+}
   </script>
   
 <!-- ================================ -->
