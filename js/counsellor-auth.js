@@ -631,11 +631,7 @@
       setTimeout(() => overlay.remove(), 400);
     }
 
-    // Remove injected styles after overlay is gone
-    setTimeout(() => {
-      const style = document.getElementById('counsellor-auth-styles');
-      if (style) style.remove();
-    }, 500);
+// Keep styles — change password modal still needs them
 
     // Dispatch event so the page can initialise the calendar
     document.dispatchEvent(new CustomEvent('counsellorAuthReady', {
