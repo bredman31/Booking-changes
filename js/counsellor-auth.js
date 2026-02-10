@@ -216,17 +216,16 @@
       .cauth-section { display: none; }
       .cauth-section.active { display: block; }
 
-      /* Header auth controls */
+     /* Header auth controls */
       .header-auth-controls {
         display: flex;
-        align-items: center;
-        gap: 8px;
+        flex-direction: column;
+        gap: 4px;
         margin-left: 8px;
       }
-      .header-auth-controls button,
-      .header-auth-controls a {
-        font-size: 13px;
-        padding: 5px 12px;
+      .header-auth-controls button {
+        font-size: 12px;
+        padding: 4px 10px;
         border-radius: 5px;
         cursor: pointer;
         white-space: nowrap;
