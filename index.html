@@ -220,7 +220,8 @@
           <div id="weekControls" class="hidden">
             <div class="week-navigation">
               <button onclick="changeWeek(-1)" title="Previous Week">&#8592;</button>
-              <input type="date" id="weekDateSelector" title="Jump to week" />
+              <button onclick="document.getElementById('weekDateSelector').showPicker()" title="Pick a date" style="font-size: 16px; padding: 4px 8px;">&#128197;</button>
+              <input type="date" id="weekDateSelector" title="Jump to week" style="position: absolute; opacity: 0; pointer-events: none; width: 0; height: 0;" />
               <span id="weekDisplay"></span>
               <button onclick="changeWeek(1)" title="Next Week">&#8594;</button>
               <button onclick="goToThisWeek()" style="margin-left: 10px;">This Week</button>
