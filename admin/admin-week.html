@@ -914,11 +914,14 @@
     
     const WEBHOOK_URL = 'https://hook.eu2.make.com/p754q5eks857boisu6m3unr6qer6be4t';
     
-    const ROOM_ID_MAPPING = {
-      'Room_1': '3', 'Room_2': '7', 'Room_4': '8', 'Room_5': '13',
-      'Room_6': '9', 'Room_7': '10', 'Room_8': '14', 'Room_9': '15',
-      'Car_Park': '12', 'Online': '11'
-    };
+// Get room ID from Firebase room config — no hardcoded mapping
+    function getRoomId(roomKey) {
+      if (roomConfig[roomKey] && roomConfig[roomKey].henleyRoomId) {
+        return roomConfig[roomKey].henleyRoomId;
+      }
+      console.warn('No henleyRoomId found for room:', roomKey);
+      return null;
+    }
     
     // Default room config
     const defaultRoomConfig = {
@@ -1426,12 +1429,12 @@
           counsellor_name: selectedBooking.client || '',
           original_booking_code: selectedBooking.bookingId,
           original_room: originalRoomKey,
-          original_room_id: ROOM_ID_MAPPING[originalRoomKey] || '3',
+          original_room_id: getRoomId(originalRoomKey),
           original_location_id: getLocationId(originalRoomKey),
           original_datetime: `${selectedBooking.date}T${selectedBooking.start}:00`,
           original_week: getWeekNumber(new Date(selectedBooking.date)),
           requested_room: requestedRoomKey,
-          requested_room_id: ROOM_ID_MAPPING[requestedRoomKey] || '3',
+          requested_room_id: getRoomId(requestedRoomKey),
           requested_location_id: getLocationId(requestedRoomKey),
           requested_datetime: `${newDate || selectedBooking.date}T${newTime || selectedBooking.start}:00`,
           requested_date: newDate || selectedBooking.date,
