@@ -1045,11 +1045,14 @@
     const FREE_BOOKING_WEBHOOK_URL = 'https://hook.eu2.make.com/eq57vfwrpkw2rtozjeiy71j88e5sw1kr'; // Scenario 05 - free bookings
     const ACCOUNT_BOOKING_WEBHOOK_URL = 'https://hook.eu2.make.com/a6ua2a1yl13y7h7k9aphi9iow53dvwpv'; // Scenario 07B - account/credit bookings
     
-    const ROOM_ID_MAPPING = {
-      'Room_1': '3', 'Room_2': '7', 'Room_4': '8', 'Room_5': '13',
-      'Room_6': '9', 'Room_7': '10', 'Room_8': '14', 'Room_9': '15',
-      'Car_Park': '12', 'Online': '11'
-    };
+   // Get room ID from Firebase room config — no hardcoded mapping
+    function getRoomId(roomKey) {
+      if (roomConfig[roomKey] && roomConfig[roomKey].henleyRoomId) {
+        return roomConfig[roomKey].henleyRoomId;
+      }
+      console.warn('No henleyRoomId found for room:', roomKey);
+      return null;
+    }
     
     // Default room config (fallback)
     const defaultRoomConfig = {
@@ -1625,12 +1628,12 @@
           counsellor_name: selectedBooking.client || '',
           original_booking_code: selectedBooking.bookingId,
           original_room: originalRoom,
-          original_room_id: ROOM_ID_MAPPING[originalRoom] || '3',
+          original_room_id: getRoomId(originalRoom),
           original_location_id: getLocationId(originalRoom),
           original_datetime: `${selectedBooking.date}T${selectedBooking.start}:00`,
           original_week: getWeekNumber(new Date(selectedBooking.date)),
           requested_room: requestedRoom,
-          requested_room_id: ROOM_ID_MAPPING[requestedRoom] || '3',
+          original_room_id: getRoomId(originalRoom),
           requested_location_id: getLocationId(requestedRoom),
           requested_datetime: `${newDate || selectedBooking.date}T${newTime || selectedBooking.start}:00`,
           requested_date: newDate || selectedBooking.date,
@@ -1723,7 +1726,11 @@
       resetForm();
       
       const locationId = getLocationId(roomKey);
-      const roomId = ROOM_ID_MAPPING[roomKey] || '3';
+      const roomId = getRoomId(roomKey);
+      if (!roomId) {
+        alert('Room configuration error: no SBM Room ID found for ' + roomKey + '. Please check the room configurator.');
+        return;
+      }
       const hour = parseInt(time.split(':')[0]);
       const endHour = hour + 1;
       const endTime = `${String(endHour).padStart(2, '0')}:00`;
