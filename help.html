@@ -224,8 +224,8 @@
 <body>
 
 <div class="help-header">
-  <h1>🌳 Cherry Tree Centre — Booking Guide</h1>
-  <a href="index.html">← Back to Calendar</a>
+  <h1>&#127795; Cherry Tree Centre &#8211; Booking Guide</h1>
+  <a href="index.html">&#8592; Back to Calendar</a>
 </div>
 
 <div class="help-container">
@@ -236,7 +236,7 @@
     <div class="quick-steps">
       <div class="quick-step">
         <div class="step-number">1</div>
-        <div class="step-text">Open the link from your email</div>
+        <div class="step-text">Go to the booking page and sign in with your email &amp; password</div>
       </div>
       <div class="quick-step">
         <div class="step-number">2</div>
@@ -244,7 +244,7 @@
       </div>
       <div class="quick-step">
         <div class="step-number">3</div>
-        <div class="step-text">Choose how to pay and confirm</div>
+        <div class="step-text">Set your duration and choose how to pay</div>
       </div>
       <div class="quick-step">
         <div class="step-number">4</div>
@@ -253,20 +253,48 @@
     </div>
   </div>
 
-  <!-- SECTION: The Calendar -->
+  <!-- SECTION: Logging In -->
   <div class="help-section open">
     <button class="section-toggle" onclick="toggleSection(this)">
-      <span class="section-icon">📅</span>
+      <span class="section-icon">&#128274;</span>
+      Logging In
+      <span class="section-arrow">&#9660;</span>
+    </button>
+    <div class="section-content">
+      <p>The booking system uses a secure login. You'll need the <strong>email address</strong> and <strong>password</strong> provided by the Cherry Tree Centre to sign in.</p>
+
+      <p style="margin-top: 16px; font-weight: 600;">Signing in</p>
+      <div class="key-point"><span class="kp-icon">&#127760;</span><span>Go to the booking page URL provided in your welcome email.</span></div>
+      <div class="key-point"><span class="kp-icon">&#9993;&#65039;</span><span>Enter your <strong>email address</strong> and <strong>password</strong>, then click <strong>Sign In</strong>.</span></div>
+      <div class="key-point"><span class="kp-icon">&#9989;</span><span>Once signed in, you'll stay logged in even if you close the browser. You won't need to sign in again unless you actively sign out.</span></div>
+
+      <p style="margin-top: 16px; font-weight: 600;">Changing your password</p>
+      <p>You can change your password at any time from the calendar page. Look for the <strong>Change Password</strong> option near your name in the header. You'll need to enter your current password first, then choose a new one.</p>
+
+      <p style="margin-top: 16px; font-weight: 600;">Forgotten your password?</p>
+      <p>Click the <strong>Forgot Password?</strong> link on the sign-in screen. Enter your email address and you'll receive an email with a link to reset your password. Check your spam/junk folder if the email doesn't arrive within a few minutes.</p>
+
+      <p style="margin-top: 16px; font-weight: 600;">Signing out</p>
+      <p>Click the <strong>Sign Out</strong> button in the header area. You'll be returned to the sign-in screen. You'll need to sign in again next time you visit.</p>
+
+      <div class="tip"><strong>Tip:</strong> We recommend changing your password from the initial one provided to something memorable and secure. Your password must be at least 6 characters.</div>
+    </div>
+  </div>
+
+  <!-- SECTION: The Calendar -->
+  <div class="help-section">
+    <button class="section-toggle" onclick="toggleSection(this)">
+      <span class="section-icon">&#128197;</span>
       The Calendar
-      <span class="section-arrow">▼</span>
+      <span class="section-arrow">&#9660;</span>
     </button>
     <div class="section-content">
       <p>When you open the calendar you'll see all the rooms across the top and time slots down the left side. Each coloured block is an existing booking.</p>
       <img src="img/calendar-view.png" alt="Calendar day view showing rooms and time slots">
-      <div class="key-point"><span class="kp-icon">👆</span><span><strong>Empty white slots</strong> are available — click one to book it.</span></div>
-      <div class="key-point"><span class="kp-icon">🔀</span><span>Use <strong>Day View</strong> or <strong>Week View</strong> buttons (top right) to switch between views.</span></div>
-      <div class="key-point"><span class="kp-icon">⬅️</span><span>Use the <strong>arrows</strong> or the <strong>date picker</strong> at the top to navigate to different days.</span></div>
-      <div class="key-point"><span class="kp-icon">🔄</span><span>Click <strong>Refresh Data</strong> to see the latest bookings.</span></div>
+      <div class="key-point"><span class="kp-icon">&#128070;</span><span><strong>Empty white slots</strong> are available &#8211; click one to book it.</span></div>
+      <div class="key-point"><span class="kp-icon">&#128256;</span><span>Use <strong>Day View</strong> or <strong>Week View</strong> buttons (top right) to switch between views.</span></div>
+      <div class="key-point"><span class="kp-icon">&#11013;&#65039;</span><span>Use the <strong>arrows</strong> or the <strong>date picker</strong> at the top to navigate to different days.</span></div>
+      <div class="key-point"><span class="kp-icon">&#128260;</span><span>Click <strong>Refresh Data</strong> to see the latest bookings.</span></div>
 
       <p style="margin-top: 16px; font-weight: 600;">What do the colours mean?</p>
       <p>Each counsellor is assigned a colour so you can quickly see who has booked which slots. Your own bookings will always appear in the same colour.</p>
@@ -278,39 +306,89 @@
   <!-- SECTION: Making a Booking -->
   <div class="help-section">
     <button class="section-toggle" onclick="toggleSection(this)">
-      <span class="section-icon">✅</span>
+      <span class="section-icon">&#9989;</span>
       Making a Booking
-      <span class="section-arrow">▼</span>
+      <span class="section-arrow">&#9660;</span>
     </button>
     <div class="section-content">
       <p>Click on any empty (white) time slot in the calendar. A booking panel will appear showing the room, date, time and cost.</p>
       <img src="img/booking-modal.png" alt="Booking modal showing room details and payment options">
 
       <p>From here you can:</p>
-      <div class="key-point"><span class="kp-icon">💬</span><span>Add an optional <strong>comment</strong> to your booking.</span></div>
-      <div class="key-point"><span class="kp-icon">💳</span><span>Choose your <strong>payment method</strong> (see Payment Options below).</span></div>
-      <div class="key-point"><span class="kp-icon">🛒</span><span>Click <strong>Add to Basket</strong> if you want to book multiple slots before paying.</span></div>
+      <div class="key-point"><span class="kp-icon">&#9201;</span><span>Set the <strong>duration</strong> &#8211; choose from 1 to 8 hours using the dropdown (see Multi-Hour Bookings below).</span></div>
+      <div class="key-point"><span class="kp-icon">&#128172;</span><span>Add an optional <strong>comment</strong> to your booking.</span></div>
+      <div class="key-point"><span class="kp-icon">&#128179;</span><span>Choose your <strong>payment method</strong> (see Payment Options below).</span></div>
+      <div class="key-point"><span class="kp-icon">&#128722;</span><span>Click <strong>Add to Basket</strong> if you want to book multiple slots before paying.</span></div>
+      <div class="key-point"><span class="kp-icon">&#128257;</span><span>Click <strong>Repeat this booking</strong> to set up a recurring series (see Repeating Bookings below).</span></div>
 
       <div class="tip"><strong>Tip:</strong> If you're booking a <strong>Car Park</strong> space, you'll need to enter your car registration number in the comments field.</div>
+    </div>
+  </div>
+
+  <!-- SECTION: Multi-Hour Bookings -->
+  <div class="help-section">
+    <button class="section-toggle" onclick="toggleSection(this)">
+      <span class="section-icon">&#9201;</span>
+      Multi-Hour Bookings
+      <span class="section-arrow">&#9660;</span>
+    </button>
+    <div class="section-content">
+      <p>Need a room for longer than one hour? When the booking panel opens, use the <strong>Duration</strong> dropdown to select how many consecutive hours you need &#8211; from 1 up to 8 hours.</p>
+
+      <div class="key-point"><span class="kp-icon">&#128200;</span><span>The <strong>total price</strong> updates automatically as you change the duration, so you can see exactly what it will cost.</span></div>
+      <div class="key-point"><span class="kp-icon">&#128339;</span><span>The <strong>time display</strong> in the booking panel updates to show your full time range (e.g. 10:00 &#8211; 13:00 for a 3-hour booking).</span></div>
+      <div class="key-point"><span class="kp-icon">&#128683;</span><span>If any of the consecutive hours are already booked, the duration option will be <strong>limited</strong> accordingly. The last available slot is 20:00, so bookings cannot extend past 21:00.</span></div>
+
+      <p>Behind the scenes, each hour is created as a separate booking, so they will appear as individual coloured blocks on the calendar. This also means you can cancel individual hours if your plans change.</p>
+
+      <div class="tip"><strong>Tip:</strong> Multi-hour bookings can be combined with the basket &#8211; add a 3-hour morning session and a 2-hour afternoon session, then pay for everything together.</div>
+    </div>
+  </div>
+
+  <!-- SECTION: Repeating Bookings -->
+  <div class="help-section">
+    <button class="section-toggle" onclick="toggleSection(this)">
+      <span class="section-icon">&#128257;</span>
+      Repeating Bookings
+      <span class="section-arrow">&#9660;</span>
+    </button>
+    <div class="section-content">
+      <p>If you have a regular slot each week (or fortnight), you can book multiple sessions at once using the <strong>Repeat</strong> feature.</p>
+
+      <p style="margin-top: 16px; font-weight: 600;">How to set up a repeating booking</p>
+      <div class="key-point"><span class="kp-icon">1&#65039;&#8419;</span><span>Click an empty slot and the booking panel will open as usual.</span></div>
+      <div class="key-point"><span class="kp-icon">2&#65039;&#8419;</span><span>Click the <strong>Repeat this booking</strong> button to expand the repeat options.</span></div>
+      <div class="key-point"><span class="kp-icon">3&#65039;&#8419;</span><span>Choose <strong>Weekly</strong> or <strong>Fortnightly</strong> from the frequency dropdown.</span></div>
+      <div class="key-point"><span class="kp-icon">4&#65039;&#8419;</span><span>Select how many <strong>sessions</strong> you want (e.g. 4 sessions = 4 weeks of bookings).</span></div>
+
+      <p>The booking panel will show a <strong>summary</strong> listing all the dates and times that will be booked. The <strong>total price</strong> updates to reflect all sessions combined.</p>
+
+      <p style="margin-top: 16px; font-weight: 600;">Availability warnings</p>
+      <p>If any of the repeat dates clash with an existing booking, the panel will show a warning listing which slots are unavailable. These slots will be <strong>skipped automatically</strong> &#8211; only the available slots will be booked.</p>
+
+      <p style="margin-top: 16px; font-weight: 600;">Combining with multi-hour</p>
+      <p>You can use duration and repeat together. For example, select a 2-hour duration and repeat weekly for 6 sessions to book 12 slots in one go.</p>
+
+      <div class="tip"><strong>Tip:</strong> You can collapse the repeat options by clicking the button again, or click <strong>Cancel</strong> to reset back to a single booking.</div>
     </div>
   </div>
 
   <!-- SECTION: Using the Basket -->
   <div class="help-section">
     <button class="section-toggle" onclick="toggleSection(this)">
-      <span class="section-icon">🛒</span>
+      <span class="section-icon">&#128722;</span>
       Using the Basket
-      <span class="section-arrow">▼</span>
+      <span class="section-arrow">&#9660;</span>
     </button>
     <div class="section-content">
       <p>The basket lets you collect several bookings and pay for them all at once. When you add a slot to the basket, it appears as a dark grey block on the calendar so you know it's reserved.</p>
       <img src="img/basket-panel.png" alt="Basket panel showing multiple bookings ready for checkout">
 
-      <div class="key-point"><span class="kp-icon">🛒</span><span>The <strong>basket button</strong> appears at the bottom right of the screen once you've added an item. Click it to open the basket panel.</span></div>
-      <div class="key-point"><span class="kp-icon">❌</span><span>Click the red <strong>×</strong> next to any item to remove it from the basket.</span></div>
-      <div class="key-point"><span class="kp-icon">🗑️</span><span>Click <strong>Clear All</strong> to empty the entire basket.</span></div>
-      <div class="key-point"><span class="kp-icon">💰</span><span>When you're ready, click <strong>Pay &amp; Confirm</strong> to proceed to payment.</span></div>
-      <div class="key-point"><span class="kp-icon">📒</span><span>Or click <strong>Book on Account</strong> to add everything to your weekly account (see below).</span></div>
+      <div class="key-point"><span class="kp-icon">&#128722;</span><span>The <strong>basket button</strong> appears at the bottom right of the screen once you've added an item. Click it to open the basket panel.</span></div>
+      <div class="key-point"><span class="kp-icon">&#10060;</span><span>Click the red <strong>&times;</strong> next to any item to remove it from the basket.</span></div>
+      <div class="key-point"><span class="kp-icon">&#128465;&#65039;</span><span>Click <strong>Clear All</strong> to empty the entire basket.</span></div>
+      <div class="key-point"><span class="kp-icon">&#128176;</span><span>When you're ready, click <strong>Pay &amp; Confirm</strong> to proceed to payment.</span></div>
+      <div class="key-point"><span class="kp-icon">&#128210;</span><span>Or click <strong>Book on Account</strong> to add everything to your weekly account (see below).</span></div>
 
       <div class="tip"><strong>Tip:</strong> If you have wallet credit, the basket will show your available credit at the bottom.</div>
     </div>
@@ -319,9 +397,9 @@
   <!-- SECTION: Payment Options -->
   <div class="help-section">
     <button class="section-toggle" onclick="toggleSection(this)">
-      <span class="section-icon">💳</span>
+      <span class="section-icon">&#128179;</span>
       Payment Options
-      <span class="section-arrow">▼</span>
+      <span class="section-arrow">&#9660;</span>
     </button>
     <div class="section-content">
       <p>When you pay for a booking (or a basket of bookings), you'll see the Payment Options screen:</p>
@@ -357,17 +435,17 @@
   <!-- SECTION: Your Account Balance -->
   <div class="help-section">
     <button class="section-toggle" onclick="toggleSection(this)">
-      <span class="section-icon">📒</span>
+      <span class="section-icon">&#128210;</span>
       Your Account Balance
-      <span class="section-arrow">▼</span>
+      <span class="section-arrow">&#9660;</span>
     </button>
     <div class="section-content">
       <p>If you book on account, your current week's balance is shown at the top left of the calendar under your name. The billing week runs from <strong>Saturday to Friday</strong>.</p>
 
-      <div class="key-point"><span class="kp-icon">💰</span><span><strong>This week</strong> — shows your current running total for unpaid bookings this week.</span></div>
-      <div class="key-point"><span class="kp-icon">⚠️</span><span><strong>Overdue balance</strong> — if a previous week is unpaid, it will show in red. Click on it to pay.</span></div>
+      <div class="key-point"><span class="kp-icon">&#128176;</span><span><strong>This week</strong> &#8211; shows your current running total for unpaid bookings this week.</span></div>
+      <div class="key-point"><span class="kp-icon">&#9888;&#65039;</span><span><strong>Overdue balance</strong> &#8211; if a previous week is unpaid, it will show in red. Click on it to pay.</span></div>
 
-      <p>You can pay your account balance at any time by clicking on the balance amount. You don't have to wait until Friday — paying early is fine!</p>
+      <p>You can pay your account balance at any time by clicking on the balance amount. You don't have to wait until Friday &#8211; paying early is fine!</p>
 
       <div class="tip"><strong>Tip:</strong> When you make a card payment for new bookings, any overdue balance from previous weeks is automatically included, so everything gets settled at once.</div>
     </div>
@@ -376,9 +454,9 @@
   <!-- SECTION: Wallet Credit -->
   <div class="help-section">
     <button class="section-toggle" onclick="toggleSection(this)">
-      <span class="section-icon">💰</span>
+      <span class="section-icon">&#128176;</span>
       Wallet Credit
-      <span class="section-arrow">▼</span>
+      <span class="section-arrow">&#9660;</span>
     </button>
     <div class="section-content">
       <p>If you cancel a paid booking, the refund goes into your <strong>wallet</strong> as credit rather than back to your card. This credit can be used towards future bookings.</p>
@@ -391,9 +469,9 @@
   <!-- SECTION: Cancelling or Changing a Booking -->
   <div class="help-section">
     <button class="section-toggle" onclick="toggleSection(this)">
-      <span class="section-icon">🔄</span>
+      <span class="section-icon">&#128260;</span>
       Cancelling or Changing a Booking
-      <span class="section-arrow">▼</span>
+      <span class="section-arrow">&#9660;</span>
     </button>
     <div class="section-content">
       <p>Click on one of <strong>your own bookings</strong> in the calendar (the coloured blocks with your name). The left panel will show the booking details with options to cancel or change it.</p>
@@ -425,9 +503,9 @@
   <!-- SECTION: Car Park Bookings -->
   <div class="help-section">
     <button class="section-toggle" onclick="toggleSection(this)">
-      <span class="section-icon">🅿️</span>
+      <span class="section-icon">&#127359;&#65039;</span>
       Car Park Bookings
-      <span class="section-arrow">▼</span>
+      <span class="section-arrow">&#9660;</span>
     </button>
     <div class="section-content">
       <p>Car park spaces are shown in the last column of the calendar. They work the same as room bookings but with one key difference:</p>
@@ -441,16 +519,22 @@
   <!-- SECTION: Troubleshooting -->
   <div class="help-section">
     <button class="section-toggle" onclick="toggleSection(this)">
-      <span class="section-icon">❓</span>
+      <span class="section-icon">&#10067;</span>
       Troubleshooting
-      <span class="section-arrow">▼</span>
+      <span class="section-arrow">&#9660;</span>
     </button>
     <div class="section-content">
+      <p><strong>I can't sign in:</strong> Double-check your email address and password. Passwords are case-sensitive. If you've forgotten your password, use the <strong>Forgot Password?</strong> link on the sign-in screen to reset it.</p>
+
+      <p><strong>I didn't receive the password reset email:</strong> Check your spam or junk folder. The email comes from a noreply address. If it still hasn't arrived after a few minutes, try again or contact the Cherry Tree Centre.</p>
+
       <p><strong>My booking isn't showing:</strong> Click the <strong>Refresh Data</strong> button. New bookings can take a few seconds to appear after payment.</p>
 
       <p><strong>I can't click on a time slot:</strong> The slot is already booked by another counsellor. Only empty (white) slots are available.</p>
 
-      <p><strong>The page looks blank or won't load:</strong> Try opening the link from your email again. Your access link may have expired — contact the centre for a new one.</p>
+      <p><strong>I can't select a longer duration:</strong> The room may already be booked in one of the following hours. You can only extend into consecutive available slots, and bookings cannot go past 21:00.</p>
+
+      <p><strong>Some repeat dates show warnings:</strong> This means those slots clash with existing bookings. The clashing slots will be skipped &#8211; only available slots are included in the total.</p>
 
       <p><strong>Payment didn't go through:</strong> If your card payment was interrupted, no booking will have been created. Your basket will be restored so you can try again.</p>
 
@@ -463,7 +547,7 @@
 </div>
 
 <div class="help-footer">
-  <p>Cherry Tree Centre — Henley</p>
+  <p>Cherry Tree Centre &#8211; Henley</p>
 </div>
 
 <script>
