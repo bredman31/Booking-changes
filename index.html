@@ -4078,7 +4078,10 @@ async function lookupCounsellorId(counsellorName) {
       var roomCfg = (window.enabledRooms || []).find(function(r) { return r.displayName === room || r.key === roomKey; });
       var capacity = roomCfg?.capacity || 1;
       
-      var roomVariants = [room, roomKey, room.replace('Room ', ''), 'Car_Park', 'Car Park', 'Car park'];
+      var roomVariants = [room, roomKey, room.replace('Room ', '')];
+if (room === 'Car Park' || room === 'Car_Park' || room === 'car park') {
+    roomVariants.push('Car_Park', 'Car Park', 'Car park');
+}
       
       var hour = parseInt(time.split(':')[0]);
       
@@ -4112,7 +4115,11 @@ async function lookupCounsellorId(counsellorName) {
     // Get current booking count for a room/date/time (for capacity display)
     function getSlotBookingCount(room, date, time) {
       var roomKey = room.replace(' ', '_');
-      var roomVariants = [room, roomKey, room.replace('Room ', ''), 'Car_Park', 'Car Park', 'Car park'];
+      var roomVariants = [room, roomKey, room.replace('Room ', '')];
+if (room === 'Car Park' || room === 'Car_Park') {
+    roomVariants.push('Car_Park', 'Car Park', 'Car park');
+}
+
       
       var hour = parseInt(time.split(':')[0]);
       
