@@ -417,7 +417,6 @@
         } catch (e) {
           msg = 'This email already has a Firebase Auth account. See Firebase Console → Authentication to find their UID.';
         }
-      }
       } else if (error.code === 'auth/invalid-email') {
         msg = 'Invalid email address format.';
       } else if (error.code === 'auth/weak-password') {
