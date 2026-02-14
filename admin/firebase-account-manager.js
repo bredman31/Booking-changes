@@ -401,7 +401,23 @@
       // Friendly error messages
       let msg = 'Error: ' + error.message;
       if (error.code === 'auth/email-already-in-use') {
-        msg = 'This email already has a Firebase Auth account. If this is the right email, try sending a password reset instead.';
+        // Try to find existing UID from admin_uids
+        try {
+          const adminSnap = await database.ref('config/admin_uids').once('value');
+          const adminUids = adminSnap.val() || {};
+          // admin_uids stores {uid: role} — we need to check Firebase Auth for the matching email
+          // Since we can't look up by email client-side, ask admin to link manually
+          showAuthStatus(
+            'This email already has a Firebase Auth account (likely an admin). ' +
+            'Enter their UID below to link it to this counsellor profile.',
+            'info'
+          );
+          showUidLinkForm(clientId, email);
+          return;
+        } catch (e) {
+          msg = 'This email already has a Firebase Auth account. See Firebase Console → Authentication to find their UID.';
+        }
+      }
       } else if (error.code === 'auth/invalid-email') {
         msg = 'Invalid email address format.';
       } else if (error.code === 'auth/weak-password') {
@@ -463,6 +479,65 @@
     }
   }
 
+// ================================
+  // LINK EXISTING ACCOUNT BY UID
+  // ================================
+  function showUidLinkForm(clientId, email) {
+    const noAccount = document.getElementById('authNoAccount');
+    noAccount.innerHTML = `
+      <div style="background:#e3f2fd; padding:15px; border-radius:8px; margin-bottom:15px; border:1px solid #90caf9;">
+        <div style="color:#1565c0; font-size:13px;">
+          ℹ️ This email already has a Firebase Auth account.<br>
+          <small>Find the UID in Firebase Console → Authentication → Users, then paste it below.</small>
+        </div>
+      </div>
+      <div style="margin-bottom:12px;">
+        <label style="display:block; font-weight:500; margin-bottom:6px; color:#555; font-size:13px;">
+          Firebase UID
+        </label>
+        <input type="text" id="authLinkUid" 
+               style="width:100%; padding:10px; border:1px solid #ddd; border-radius:6px; font-size:14px; font-family:'Courier New',monospace;"
+               placeholder="Paste UID from Firebase Console">
+      </div>
+      <button type="button" onclick="window.accountManager.linkExistingAccount('${clientId}')"
+              style="background:#17a2b8; color:white; border:none; padding:10px 20px; border-radius:6px; 
+                     cursor:pointer; font-size:14px; font-weight:600; width:100%;">
+        🔗 Link Existing Account
+      </button>
+    `;
+  }
+
+  async function linkExistingAccount(clientId) {
+    const uid = document.getElementById('authLinkUid')?.value.trim();
+    if (!uid) {
+      showAuthStatus('Please enter the Firebase UID.', 'error');
+      return;
+    }
+
+    if (!confirm('Link UID ' + uid + ' to client ' + clientId + '?')) return;
+
+    try {
+      showAuthStatus('Writing UID mapping...', 'info');
+
+      await database.ref('uid_mapping/' + uid).set(clientId);
+      await database.ref('clients/' + clientId + '/firebaseUid').set(uid);
+
+      clients[clientId].firebaseUid = uid;
+      currentFirebaseUid = uid;
+
+      showAuthStatus('✅ Existing account linked successfully!', 'success');
+
+      document.getElementById('authNoAccount').style.display = 'none';
+      document.getElementById('authHasAccount').style.display = 'block';
+      document.getElementById('authAccountEmail').textContent = 'Email: ' + (clients[clientId]?.email || 'Unknown');
+      document.getElementById('authAccountUid').textContent = 'UID: ' + uid;
+
+      renderClients();
+    } catch (error) {
+      showAuthStatus('Error linking account: ' + error.message, 'error');
+    }
+  }
+
   // ================================
   // INITIALISE
   // ================================
@@ -482,9 +557,9 @@
     populateAuthSection: populateAuthSection,
     clearAuthSection: clearAuthSection,
     createAccount: createAccount,
-    sendPasswordReset: sendPasswordReset
+    sendPasswordReset: sendPasswordReset,
+    linkExistingAccount: linkExistingAccount
   };
-
   // Run init
   init();
 
