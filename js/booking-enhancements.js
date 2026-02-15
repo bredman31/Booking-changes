@@ -4,7 +4,7 @@
  * Cherry Tree Centre - Booking System Enhancements
  *  
  * Features:
- * 1. Fixes £0 booking issue (greyed out button)
+ * 1. Fixes Â£0 booking issue (greyed out button)
  * 2. Adds multi-booking basket functionality
  * 3. Changes button text based on price
  * 4. FIXED: Basket payment now works with Stripe and Credits
@@ -19,7 +19,7 @@
 
 (function() {
   'use strict';
-  console.log('🛒 booking-enhancements.js v2.3 loading...');
+  console.log('ðŸ›’ booking-enhancements.js v2.3 loading...');
 
   // ============================================
   // BASKET STATE
@@ -292,7 +292,7 @@
     const basketBtn = document.createElement('button');
     basketBtn.className = 'basket-btn hidden';
     basketBtn.id = 'basketBtn';
-    basketBtn.innerHTML = '🛒 Basket <span class="basket-count" id="basketCount">0</span>';
+    basketBtn.innerHTML = 'ðŸ›’ Basket <span class="basket-count" id="basketCount">0</span>';
     basketBtn.onclick = toggleBasketPanel;
     document.body.appendChild(basketBtn);
 
@@ -309,24 +309,24 @@
     panel.id = 'basketPanel';
     panel.innerHTML = `
       <div class="basket-header">
-        <h3>🛒 Booking Basket</h3>
-        <button class="basket-close" onclick="toggleBasketPanel()">×</button>
+        <h3>ðŸ›’ Booking Basket</h3>
+        <button class="basket-close" onclick="toggleBasketPanel()">Ã—</button>
       </div>
       <div class="basket-items" id="basketItems">
         <div class="basket-empty">
-          <div class="basket-empty-icon">🛒</div>
+          <div class="basket-empty-icon">ðŸ›’</div>
           <p>Your basket is empty</p>
           <p style="font-size: 13px;">Click on available slots to add bookings</p>
         </div>
       </div>
       <div class="basket-footer">
         <div id="basketCreditInfo" class="basket-credit-info" style="display: none;">
-          <span>💳 Your Credit:</span>
-          <span id="basketCreditAmount">£0.00</span>
+          <span>ðŸ’³ Your Credit:</span>
+          <span id="basketCreditAmount">Â£0.00</span>
         </div>
         <div class="basket-total">
           <span>Total:</span>
-          <span class="basket-total-amount" id="basketTotal">£0.00</span>
+          <span class="basket-total-amount" id="basketTotal">Â£0.00</span>
         </div>
         <div class="basket-actions">
           <button class="basket-clear" onclick="clearBasket()">Clear All</button>
@@ -342,7 +342,7 @@
     toast.id = 'basketToast';
     document.body.appendChild(toast);
 
-    console.log('✅ Basket UI injected');
+    console.log('âœ… Basket UI injected');
   }
 
  // ============================================
@@ -354,24 +354,13 @@
    */
   function getRoomIdForCell(roomName) {
     if (!roomName) return null;
-    
-    const normalized = roomName.trim();
-    
-    if (normalized === 'Car Park' || normalized === 'Car_Park') {
-      return 'car-park';
+    // After migration, basket items store roomKeys directly (e.g. "H4")
+    // But also handle display names for backward compatibility
+    if (window.getRoomKey) {
+      const key = window.getRoomKey({room: roomName});
+      if (key) return key;
     }
-    if (normalized === 'Online') {
-      return 'online';
-    }
-    
-    // Extract number from "Room 1", "Room_1", "Room 6", etc.
-    const match = normalized.match(/(\d+)/);
-    if (match) {
-      return match[1];
-    }
-    
-    // Fallback
-    return normalized.toLowerCase().replace(/[\s_]/g, '-');
+    return roomName;
   }
   
   window.updateBasketSlotHighlights = function() {
@@ -423,7 +412,7 @@
   };
 
   window.addToBasket = function(booking) {
-    console.log('🛒 addToBasket called with:', booking);
+    console.log('ðŸ›’ addToBasket called with:', booking);
     
     // Check for duplicates
     const exists = window.bookingBasket.some(b => 
@@ -433,13 +422,13 @@
     );
     
     if (exists) {
-      showBasketToast('⚠️ This slot is already in your basket');
+      showBasketToast('âš ï¸ This slot is already in your basket');
       return;
     }
 
     window.bookingBasket.push(booking);
     updateBasketUI();
-    showBasketToast('✅ Added to basket');
+    showBasketToast('âœ… Added to basket');
     
     // Close modal if open
     const modal = document.getElementById('newBookingModal');
@@ -447,7 +436,7 @@
     
     // Update slot highlighting AFTER modal closes (small delay)
     setTimeout(function() {
-      console.log('🛒 Updating highlights after add');
+      console.log('ðŸ›’ Updating highlights after add');
       updateBasketSlotHighlights();
     }, 100);
   };
@@ -455,7 +444,7 @@
   window.removeFromBasket = function(index) {
     window.bookingBasket.splice(index, 1);
     updateBasketUI();
-    showBasketToast('🗑️ Removed from basket');
+    showBasketToast('ðŸ—‘ï¸ Removed from basket');
     
     // Update slot highlighting
     setTimeout(updateBasketSlotHighlights, 50);
@@ -466,7 +455,7 @@
     if (confirm('Clear all items from basket?')) {
       window.bookingBasket = [];
       updateBasketUI();
-      showBasketToast('🗑️ Basket cleared');
+      showBasketToast('ðŸ—‘ï¸ Basket cleared');
       
       // Update slot highlighting
       setTimeout(updateBasketSlotHighlights, 50);
@@ -485,7 +474,7 @@
     // Only show credit info if there's credit and the basket has paid items
     if (credit > 0 && total > 0) {
       creditInfoEl.style.display = 'flex';
-      creditAmountEl.textContent = '£' + (credit / 100).toFixed(2);
+      creditAmountEl.textContent = 'Â£' + (credit / 100).toFixed(2);
     } else {
       creditInfoEl.style.display = 'none';
     }
@@ -508,7 +497,7 @@
       if (count === 0) {
         itemsEl.innerHTML = `
           <div class="basket-empty">
-            <div class="basket-empty-icon">🛒</div>
+            <div class="basket-empty-icon">ðŸ›’</div>
             <p>Your basket is empty</p>
             <p style="font-size: 13px;">Click on available slots to add bookings</p>
           </div>
@@ -516,12 +505,12 @@
       } else {
         itemsEl.innerHTML = window.bookingBasket.map((b, i) => `
           <div class="basket-item">
-            <button class="basket-item-remove" onclick="removeFromBasket(${i})">×</button>
-            <div class="basket-item-room">${b.room}</div>
-            <div class="basket-item-date">📅 ${b.formattedDate}</div>
-            <div class="basket-item-time">🕐 ${b.time} - ${b.endTime}</div>
-            <div class="basket-item-price">${b.price > 0 ? '£' + (b.price / 100).toFixed(2) : 'FREE'}</div>
-            ${b.comments ? `<div class="basket-item-comments">🚗 ${b.comments}</div>` : ''}
+            <button class="basket-item-remove" onclick="removeFromBasket(${i})">Ã—</button>
+            <div class="basket-item-room">${window.getRoomDisplayName ? window.getRoomDisplayName(b.room) : b.room}</div>
+            <div class="basket-item-date">ðŸ“… ${b.formattedDate}</div>
+            <div class="basket-item-time">ðŸ• ${b.time} - ${b.endTime}</div>
+            <div class="basket-item-price">${b.price > 0 ? 'Â£' + (b.price / 100).toFixed(2) : 'FREE'}</div>
+            ${b.comments ? `<div class="basket-item-comments">ðŸš— ${b.comments}</div>` : ''}
           </div>
         `).join('');
       }
@@ -529,12 +518,12 @@
 
     // Update total
     const total = window.bookingBasket.reduce((sum, b) => sum + (b.price || 0), 0);
-    if (totalEl) totalEl.textContent = total > 0 ? `£${(total / 100).toFixed(2)}` : 'FREE';
+    if (totalEl) totalEl.textContent = total > 0 ? `Â£${(total / 100).toFixed(2)}` : 'FREE';
 
     // Update checkout button text
     if (checkoutBtn) {
       if (total > 0) {
-        checkoutBtn.textContent = `Pay & Confirm (£${(total / 100).toFixed(2)})`;
+        checkoutBtn.textContent = `Pay & Confirm (Â£${(total / 100).toFixed(2)})`;
       } else {
         checkoutBtn.textContent = 'Confirm All Bookings';
       }
@@ -581,7 +570,7 @@
             timestamp: new Date().toISOString(),
             client_id: window.clientId || sessionStorage.getItem('clientId') || '',
             counsellor_name: counsellorName,
-            service_id: '2',
+            service_id: window.getServiceIdForRoom ? (window.getServiceIdForRoom(booking.room) || '1') : '1',
             provider_id: booking.roomId,
             location_id: booking.locationId,
             room_name: booking.room,
@@ -623,9 +612,9 @@
       toggleBasketPanel();
 
       if (failCount === 0) {
-        showBasketToast(`✅ ${successCount} booking(s) confirmed!`);
+        showBasketToast(`âœ… ${successCount} booking(s) confirmed!`);
       } else {
-        showBasketToast(`⚠️ ${successCount} confirmed, ${failCount} failed`);
+        showBasketToast(`âš ï¸ ${successCount} confirmed, ${failCount} failed`);
       }
 
       // Refresh calendar
@@ -650,7 +639,7 @@
           price: b.price,
           roomId: b.roomId,
           locationId: b.locationId,
-          comments: b.comments || null  // ✅ FIXED: Include comments
+          comments: b.comments || null  // âœ… FIXED: Include comments
         }))
       };
       
@@ -662,7 +651,7 @@
         showPaymentChoiceModal(paymentDetails, true);
       } else {
         // Fallback: Direct to Stripe without credit option
-        console.log('💳 Payment modal not available, using direct Stripe');
+        console.log('ðŸ’³ Payment modal not available, using direct Stripe');
         checkoutBtn.disabled = true;
         checkoutBtn.textContent = 'Preparing payment...';
         
@@ -670,9 +659,9 @@
           await directStripeCheckout(paymentDetails);
         } catch (error) {
           console.error('Checkout error:', error);
-          showBasketToast('❌ Payment error: ' + error.message);
+          showBasketToast('âŒ Payment error: ' + error.message);
           checkoutBtn.disabled = false;
-          checkoutBtn.textContent = `Pay & Confirm (£${(total / 100).toFixed(2)})`;
+          checkoutBtn.textContent = `Pay & Confirm (Â£${(total / 100).toFixed(2)})`;
         }
       }
     }
@@ -686,9 +675,10 @@
     const total = paymentDetails.totalAmount;
     
     // Build description from items
-    const itemDescriptions = paymentDetails.items.map(item => 
-      `${item.room} ${item.formattedDate} ${item.time}`
-    ).join(', ');
+    const itemDescriptions = paymentDetails.items.map(item => {
+      const displayName = window.getRoomDisplayName ? window.getRoomDisplayName(item.room) : item.room;
+      return `${displayName} ${item.formattedDate} ${item.time}`;
+    }).join(', ');
     
     const description = `Room bookings: ${itemDescriptions}`;
     
@@ -714,7 +704,7 @@
       cancel_url: window.STRIPE_CONFIG?.cancelUrl || (window.location.href + '?payment=cancelled')
     };
     
-    console.log('💳 Creating Stripe checkout:', checkoutPayload);
+    console.log('ðŸ’³ Creating Stripe checkout:', checkoutPayload);
     
     const webhookUrl = window.STRIPE_CONFIG?.createCheckoutWebhook || 
                        'https://hook.eu2.make.com/cpg4px3j3jcbj5k7ea7kniu3vfy3c7gq';
@@ -781,10 +771,11 @@
             confirmBtn.parentNode.insertBefore(basketBtn, confirmBtn);
           }
           
-          basketBtn.textContent = '🛒 Add to Basket';
+          basketBtn.textContent = 'ðŸ›’ Add to Basket';
           basketBtn.onclick = function() {
             // Validate Car Park registration
-            const isCarPark = (room === 'Car Park' || room === 'Car_Park');
+            const roomKey = window.getRoomKey ? window.getRoomKey({room: room}) : room;
+            const isCarPark = window.isCarPark ? window.isCarPark(roomKey) : false;
             const commentsInput = document.getElementById('newBookingComments');
             const comments = commentsInput ? commentsInput.value.trim() : '';
             
@@ -796,6 +787,8 @@
             
             const roomIdVal = document.getElementById('newBookingRoomId')?.value || '';
             const locationIdVal = document.getElementById('newBookingLocationId')?.value || '';
+            // Read the roomKey from the hidden field (set by index.html openNewBookingModal)
+            const roomKeyForBasket = document.getElementById('newBookingRoom')?.value || room;
             const durationVal = parseInt(document.getElementById('modalDuration')?.value) || 1;
             
             // Check if repeat is active
@@ -814,7 +807,7 @@
                     weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' 
                   });
                   addToBasket({
-                    room: room,
+                    room: roomKeyForBasket,
                     date: sl.date,
                     time: sl.time,
                     endTime: sl.endTime,
@@ -844,7 +837,7 @@
               const endTime = `${String(hour + 1).padStart(2, '0')}:00`;
               
               addToBasket({
-                room: room,
+                room: roomKeyForBasket,
                 date: date,
                 time: time,
                 endTime: endTime,
@@ -884,15 +877,15 @@
         const isPastDate = new Date(selectedDate + 'T23:59:59') < now;
         if (isPastDate) return;
         
-        const roomIds = {
-          'Room 1': '1', 'Room 2': '2', 'Room 4': '4', 
-          'Room 5': '5', 'Room 6': '6', 'Room 7': '7', 'Online': 'online'
-        };
+        // Use dynamic room config — cell IDs are "cell-{roomKey}-{time}"
+        const rooms = window.enabledRooms || [];
         const businessHours = ['08:00','09:00','10:00','11:00','12:00','13:00','14:00','15:00','16:00','17:00','18:00','19:00','20:00'];
         
-        Object.entries(roomIds).forEach(([roomName, roomId]) => {
+        rooms.forEach(room => {
+          const roomKey = room.key;
+          const roomName = room.displayName;
           businessHours.forEach(time => {
-            const cellId = `cell-${roomId}-${time}`;
+            const cellId = `cell-${roomKey}-${time}`;
             const cell = document.getElementById(cellId);
             
             if (!cell || cell.classList.contains('booked')) return;
@@ -914,7 +907,7 @@
         });
         
         // Update basket highlights after populating calendar
-        console.log('🛒 populateDayView complete, updating highlights');
+        console.log('ðŸ›’ populateDayView complete, updating highlights');
         setTimeout(updateBasketSlotHighlights, 50);
       };
     }
@@ -928,7 +921,7 @@
     const dateSelector = document.getElementById('dateSelector');
     if (dateSelector) {
       dateSelector.addEventListener('change', function() {
-        console.log('🛒 Date changed to:', this.value);
+        console.log('ðŸ›’ Date changed to:', this.value);
         // Delay to allow calendar to re-render
         setTimeout(updateBasketSlotHighlights, 200);
       });
@@ -945,7 +938,7 @@
       // Check if it's a navigation button
       if (text.includes('Previous') || text.includes('Next') || text.includes('Today') ||
           id.includes('prev') || id.includes('next') || id.includes('today')) {
-        console.log('🛒 Navigation button clicked');
+        console.log('ðŸ›’ Navigation button clicked');
         // Delay to allow calendar to re-render
         setTimeout(updateBasketSlotHighlights, 300);
       }
@@ -963,7 +956,7 @@
     // Hook into date changes after a short delay to ensure DOM is ready
     setTimeout(hookDateChanges, 500);
     
-    console.log('✅ booking-enhancements.js v2.3 loaded - £0 fix + basket + comments + slot highlighting (fixed)!');
+    console.log('âœ… booking-enhancements.js v2.3 loaded - Â£0 fix + basket + comments + slot highlighting (fixed)!');
   }
 
   // Run when DOM is ready
@@ -974,5 +967,3 @@
   }
 
 })();
-
-
