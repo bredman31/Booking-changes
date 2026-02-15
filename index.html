@@ -148,15 +148,11 @@
 <div class="header">
     <h2 id="pageTitle">Cherry Tree Therapy Centre - Room Booking Calendar</h2>
     <span id="headerCounsellorName" style="font-size: 15px; color: #555; margin-left: 12px; font-weight: 400;"></span>
-    <div id="locationSelectorContainer" style="display: none; margin-left: 12px;">
-      <select id="locationSelector" onchange="handleLocationChange(this.value)" style="padding: 6px 10px; border: 1px solid #43a047; border-radius: 6px; font-size: 13px; color: #333; background: #e8f5e9; cursor: pointer; font-weight: 500;">
-      </select>
-    </div>
     <div class="view-selector" style="margin-left: auto;">
       <button class="view-btn active" onclick="switchView('day')">Day View</button>
       <button class="view-btn" onclick="switchView('week')">Week View</button>
     </div>
-    <a href="help.html" target="_blank" style="margin-left: 16px; margin-right: 8px; font-size: 14px; color: #43a047; text-decoration: none; padding: 6px 14px; border: 1px solid #43a047; border-radius: 6px; white-space: nowrap;" onmouseover="this.style.background='#e8f5e9'" onmouseout="this.style.background='transparent'">❓ Help</a>
+    <a href="help.html" target="_blank" style="margin-left: 16px; margin-right: 8px; font-size: 14px; color: #43a047; text-decoration: none; padding: 6px 14px; border: 1px solid #43a047; border-radius: 6px; white-space: nowrap;" onmouseover="this.style.background='#e8f5e9'" onmouseout="this.style.background='transparent'">â“ Help</a>
     <div class="counsellor-filter hidden" id="counsellorFilterContainer" style="display:none !important;">
       <label>Counsellor:</label>
       <select id="counsellorSelect" onchange="filterByCounsellor()">
@@ -330,7 +326,7 @@
   <div class="modal-overlay" id="newBookingModal">
     <div class="booking-modal">
       <div class="modal-header" style="position: relative;">
-        <h2>📅 Book This Slot</h2>
+        <h2>ðŸ“… Book This Slot</h2>
         <button class="close-btn" onclick="closeNewBookingModal()">&times;</button>
       </div>
       <div class="modal-body">
@@ -416,9 +412,9 @@
        
 <!-- Previous Week Warning (shown if unpaid) -->
 <div id="previousWeekWarning" class="previous-week-warning" style="display: none;">
-  <div class="warning-icon">📦</div>
+  <div class="warning-icon">ðŸ“¦</div>
   <div class="warning-content">
-    <div class="warning-title">Previous week: <span id="previousWeekAmount">£0.00</span></div>
+    <div class="warning-title">Previous week: <span id="previousWeekAmount">Â£0.00</span></div>
     <div class="warning-text">Please pay now</div>
   </div>
 </div>
@@ -441,7 +437,7 @@
   
   <label class="payment-option" id="optionWallet" style="display: none;">
     <input type="radio" name="bookingPaymentMethod" value="wallet">
-    <span class="payment-option-title">Use Wallet (<span id="walletAmountOption">£0.00</span>)</span>
+    <span class="payment-option-title">Use Wallet (<span id="walletAmountOption">Â£0.00</span>)</span>
     <span class="payment-option-desc">Pay from cancelled booking funds</span>
   </label>
 </div>
@@ -476,7 +472,7 @@
         <!-- Option A: Pay fully with credit (shown when credit >= total) -->
         <div id="paymentOptionCredit" style="display: none; margin-bottom: 15px;">
           <button onclick="processPaymentWithCredit()" style="width: 100%; padding: 15px; background: linear-gradient(135deg, #4caf50 0%, #45a049 100%); color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: 600; cursor: pointer;">
-            💰 Pay with Wallet
+            ðŸ’° Pay with Wallet
           </button>
           <p style="text-align: center; font-size: 12px; color: #666; margin-top: 8px;">
             Use your available wallet balance
@@ -486,7 +482,7 @@
         <!-- Option B: Pay with card (shown always) -->
         <div id="paymentOptionCard" style="margin-bottom: 15px;">
           <button onclick="processPaymentWithCard()" style="width: 100%; padding: 15px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: 600; cursor: pointer;">
-            💳 Pay with Card
+            ðŸ’³ Pay with Card
           </button>
           <p id="paymentOptionCardNote" style="text-align: center; font-size: 12px; color: #666; margin-top: 8px;">
             Pay the full amount by card
@@ -496,7 +492,7 @@
 		<!-- Option D: Book on Account (shown when no previous week unpaid) -->
         <div id="paymentOptionAccount" style="display: none; margin-bottom: 15px;">
            <button onclick="processBasketOnAccount()" style="width: 100%; padding: 15px; background: linear-gradient(135deg, #5c5c8a 0%, #4a4a7a 100%); color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: 600; cursor: pointer;">
-          📦 Book All on Account
+          ðŸ“¦ Book All on Account
           </button>
            <p style="text-align: center; font-size: 12px; color: #666; margin-top: 8px;">
              Add to weekly basket - pay by Friday 6pm
@@ -506,7 +502,7 @@
         <!-- Option C: Partial credit + card (shown when 0 < credit < total) -->
         <div id="paymentOptionPartial" style="display: none; margin-bottom: 15px;">
           <button onclick="processPaymentWithPartialCredit()" style="width: 100%; padding: 15px; background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%); color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: 600; cursor: pointer;">
-            💳 Use Credit + Pay Remainder
+            ðŸ’³ Use Credit + Pay Remainder
           </button>
           <p id="paymentOptionPartialNote" style="text-align: center; font-size: 12px; color: #666; margin-top: 8px;">
             <!-- Populated dynamically -->
@@ -663,24 +659,27 @@ function generateRoomStyles() {
       return `${d.getUTCFullYear()}W${weekNo.toString().padStart(2, '0')}`;
     }
     
-    // Get location ID from room name - NOW USES DYNAMIC ROOM CONFIG
+    // Get location ID from room name - USES DYNAMIC ROOM CONFIG
     function getLocationIdFromRoom(roomName) {
-      // Normalize room name to match config keys (e.g., "Room 8" -> "Room_8")
-      const normalizedName = roomName ? roomName.replace(' ', '_') : '';
-      
-      // Check the dynamic room config first
-      if (window.roomConfig && window.roomConfig[normalizedName]) {
-        const roomLocation = window.roomConfig[normalizedName].location;
-        // Return '2' for Henley, '1' for Buckhurst Hill
-        return roomLocation === 'henley' ? '2' : '1';
+      // Use room-config.js to resolve, handles both keys and display names
+      if (window.getLocationIdForRoom && window.getRoomKey) {
+        const roomKey = window.getRoomKey({room: roomName});
+        if (roomKey) {
+          const locId = window.getLocationIdForRoom(roomKey);
+          if (locId) return locId;
+        }
       }
       
-      // Also check with original name (handles "Room 8" format)
+      // Direct lookup in roomConfig (handles both key and displayName)
       if (window.roomConfig) {
+        // Try direct key match
+        if (window.roomConfig[roomName]) {
+          return window.roomConfig[roomName].location === 'henley' ? '2' : '1';
+        }
+        // Try displayName match
         for (const key in window.roomConfig) {
-          const room = window.roomConfig[key];
-          if (room.displayName === roomName || key === roomName) {
-            return room.location === 'henley' ? '2' : '1';
+          if (window.roomConfig[key].displayName === roomName) {
+            return window.roomConfig[key].location === 'henley' ? '2' : '1';
           }
         }
       }
@@ -719,14 +718,14 @@ function generateRoomStyles() {
       return rooms;
     }
 
-// restoreSessionState — now a no-op stub, auth handled by counsellor-auth.js
+// restoreSessionState â€” now a no-op stub, auth handled by counsellor-auth.js
 function restoreSessionState() {
   return true;
 }
   </script>
   
 <!-- ================================ -->
-<!-- SECTION 4.1: TOKEN AUTH REMOVED — Now handled by counsellor-auth.js -->
+<!-- SECTION 4.1: TOKEN AUTH REMOVED â€” Now handled by counsellor-auth.js -->
 <!-- ================================ -->
   
 <!-- ================================ -->
@@ -734,7 +733,7 @@ function restoreSessionState() {
 <!-- ================================ -->
   <script>
     // Parse URL parameters for view, date, and booking modification
-    // Auth is now handled by counsellor-auth.js — this only reads navigation params
+    // Auth is now handled by counsellor-auth.js â€” this only reads navigation params
     function parseURLParams() {
       const params = new URLSearchParams(window.location.search);
       const view = params.get('view');
@@ -765,7 +764,7 @@ function restoreSessionState() {
         };
       }
 
-      // Counsellor is authenticated — initialise with full access
+      // Counsellor is authenticated â€” initialise with full access
       initializeWithFullAccess();
     }
   </script>
@@ -873,7 +872,7 @@ loadRoomConfig().then(() => {
       }, true);
     }
     
-   // Handle form submit — user is authenticated via Firebase Auth
+   // Handle form submit â€” user is authenticated via Firebase Auth
     function handleFormSubmit(e) {
       e.preventDefault();
       
@@ -992,11 +991,11 @@ if (isBookingToday(changeData.originalDate)) {
       if (currentRoom === 'Holding Room') {
         newRoomInput.innerHTML = '<option value="">Select a room (required)</option>';
         
-        // Add all rooms from both locations
-        ['Room 1', 'Room 2', 'Room 4', 'Room 5', 'Room 6', 'Room 7', 'Online'].forEach(roomName => {
+        // Add all enabled rooms from config
+        (window.enabledRooms || []).forEach(room => {
           const option = document.createElement('option');
-          option.value = roomName;
-          option.textContent = roomName;
+          option.value = room.displayName;
+          option.textContent = room.displayName;
           newRoomInput.appendChild(option);
         });
         
@@ -1027,13 +1026,7 @@ if (isBookingToday(changeData.originalDate)) {
       }
     }
     
-    // Convert room display name to underscore format for webhook
-    function convertRoomNameToUnderscore(roomName) {
-      if (roomName && roomName.startsWith('Room ')) {
-        return roomName.replace('Room ', 'Room_');
-      }
-      return roomName;
-    }
+    // convertRoomNameToUnderscore REMOVED — no longer needed after migration
     
     // Get week start date (Monday)
     function getWeekStartDate(date) {
@@ -1077,65 +1070,15 @@ if (isBookingToday(changeData.originalDate)) {
     }
 	
     // Get room display name from booking data - ADDED ROOM 5
+    // Delegate to room-config.js v2.0 (no hardcoded room names)
     function getRoomDisplayName(booking) {
-      if (booking.room === 'Room_1' || booking.room === '1') return 'Room 1';
-      if (booking.room === 'Room_2' || booking.room === '2') return 'Room 2';
-      if (booking.room === 'Room_4' || booking.room === '4') return 'Room 4';
-      if (booking.room === 'Room_5' || booking.room === '5') return 'Room 5';
-      if (booking.room === 'Room_6' || booking.room === '6') return 'Room 6';
-      if (booking.room === 'Room_7' || booking.room === '7') return 'Room 7';
-      if (booking.room === 'Henley_Holding_Room' || booking.room === '18') return 'Holding Room';
-      if (booking.location && booking.location.toLowerCase().includes('online')) return 'Online';
-      return booking.room || 'Unknown';
+      return window.getRoomDisplayName ? window.getRoomDisplayName(booking) : (booking.room || 'Unknown');
     }
     
-    // Get room mapping for CSS classes - UPDATED FOR CAR PARK
-function getRoomMapping(booking) {
-  let roomNumber = null;
-  let roomClass = '';
-  
-  // Try to find room in enabled rooms config (uses window.getRoomKey from room-config.js)
-  const roomKey = typeof window.getRoomKey === 'function' ? window.getRoomKey(booking) : null;
-  
-  if (roomKey) {
-    // Match the cell ID format used in createDayGrid
-    if (roomKey.startsWith('Room_')) {
-      roomNumber = roomKey.replace('Room_', ''); // "Room_6" -> "6"
-    } else if (roomKey === 'Car_Park') {
-      roomNumber = 'car-park';
-    } else if (roomKey === 'Online') {
-      roomNumber = 'online';
-    } else {
-      roomNumber = roomKey.toLowerCase().replace('_', '-');
+    // Delegate to room-config.js v2.0 — returns {roomNumber: roomKey, roomClass: css-class}
+    function getRoomMapping(booking) {
+      return window.getRoomMapping ? window.getRoomMapping(booking) : { roomNumber: null, roomClass: '' };
     }
-    roomClass = roomKey.toLowerCase().replace('_', '-');
-    return { roomNumber, roomClass };
-  }
-  
-  // Fallback: handle Car Park directly if getRoomKey failed (missing return bug in room-config.js)
-  if (booking.room && (booking.room.toLowerCase() === 'car park' || booking.room.toLowerCase() === 'car_park')) {
-    return { roomNumber: 'car-park', roomClass: 'car-park' };
-  }
-  
-  // Fallback for legacy room data
-  if (booking.room === 'Room_1' || booking.room === '1') {
-    roomNumber = '1'; roomClass = 'room-1';
-  } else if (booking.room === 'Room_2' || booking.room === '2') {
-    roomNumber = '2'; roomClass = 'room-2';
-  } else if (booking.room === 'Room_4' || booking.room === '4') {
-    roomNumber = '4'; roomClass = 'room-4';
-  } else if (booking.room === 'Room_5' || booking.room === '5') {
-    roomNumber = '5'; roomClass = 'room-5';
-  } else if (booking.room === 'Room_6' || booking.room === '6') {
-    roomNumber = '6'; roomClass = 'room-6';
-  } else if (booking.room === 'Room_7' || booking.room === '7') {
-    roomNumber = '7'; roomClass = 'room-7';
-  } else if (booking.location && booking.location.toLowerCase().includes('online')) {
-    roomNumber = 'online'; roomClass = 'online';
-  }
-  
-  return { roomNumber, roomClass };
-}
   </script>
   
 <!-- ================================ -->
@@ -1303,7 +1246,7 @@ function handlePaymentReturn() {
   if (paymentStatus === 'success') {
   sessionStorage.removeItem('pendingBasket');
     // Show success toast
-    showPaymentToast('âœ… Payment successful! Your booking has been confirmed.', 'success');
+    showPaymentToast('Ã¢Å“â€¦ Payment successful! Your booking has been confirmed.', 'success');
     
     // Jump to the booking date if provided
     if (returnDate) {
@@ -1334,14 +1277,14 @@ function handlePaymentReturn() {
           // Auto-open the basket panel so user can see their items
           if (typeof toggleBasketPanel === 'function') toggleBasketPanel();
         }, 1500);
-        showPaymentToast('⚠️ Payment cancelled. Your basket has been restored.', 'warning');
+        showPaymentToast('âš ï¸ Payment cancelled. Your basket has been restored.', 'warning');
       } catch (e) {
         console.error('Failed to restore basket:', e);
         sessionStorage.removeItem('pendingBasket');
-        showPaymentToast('⚠️ Payment cancelled. No booking was created.', 'warning');
+        showPaymentToast('âš ï¸ Payment cancelled. No booking was created.', 'warning');
       }
     } else {
-      showPaymentToast('⚠️ Payment cancelled. No booking was created.', 'warning');
+      showPaymentToast('âš ï¸ Payment cancelled. No booking was created.', 'warning');
     }
     
      // Clean up URL
@@ -1359,7 +1302,7 @@ function showPaymentToast(message, type) {
   toast.className = `payment-toast ${type}`;
   toast.innerHTML = `
     <span>${message}</span>
-    <button onclick="this.parentElement.remove()" style="background:none;border:none;color:inherit;cursor:pointer;font-size:20px;margin-left:15px;line-height:1;">×</button>
+    <button onclick="this.parentElement.remove()" style="background:none;border:none;color:inherit;cursor:pointer;font-size:20px;margin-left:15px;line-height:1;">Ã—</button>
   `;
   document.body.appendChild(toast);
   
@@ -1513,7 +1456,7 @@ function updateBasketDisplay() {
     html += '<div class="basket-row basket-previous" onclick="payPreviousWeeks()" style="cursor: pointer;" title="Click to pay overdue balance">';
     html += '  <span class="basket-icon">&#128230;</span>';
     html += '  <span class="basket-label">' + weekLabel + ':</span>';
-    html += '  <span class="basket-amount">£' + (previousTotal / 100).toFixed(2) + '</span>';
+    html += '  <span class="basket-amount">Â£' + (previousTotal / 100).toFixed(2) + '</span>';
     html += '  <span class="basket-prompt">Please pay now &#8594;</span>';
     html += '</div>';
   }
@@ -1522,12 +1465,12 @@ function updateBasketDisplay() {
   html += '<div class="basket-row">';
   html += '  <span class="basket-icon">&#128230;</span>';
   html += '  <span class="basket-label">This week (' + account.currentWeek + '):</span>';
-  html += '  <span class="basket-amount">£' + (currentBalance / 100).toFixed(2) + '</span>';
+  html += '  <span class="basket-amount">Â£' + (currentBalance / 100).toFixed(2) + '</span>';
   html += '</div>';
   
   // Pay button for current week only (optional early payment)
   if (currentBalance > 0) {
-    html += '<button class="pay-basket-btn" onclick="payCurrentWeek()">Pay This Week £' + (currentBalance / 100).toFixed(2) + '</button>';
+    html += '<button class="pay-basket-btn" onclick="payCurrentWeek()">Pay This Week Â£' + (currentBalance / 100).toFixed(2) + '</button>';
   }
   
   section.innerHTML = html;
@@ -1548,7 +1491,7 @@ function updateWalletDisplay() {
     section.innerHTML = '<div class="wallet-display">' +
       '<span class="wallet-icon">&#128176;</span>' +
       '<span class="wallet-label">Wallet:</span>' +
-      '<span class="wallet-amount">£' + (balance / 100).toFixed(2) + '</span>' +
+      '<span class="wallet-amount">Â£' + (balance / 100).toFixed(2) + '</span>' +
       '<span class="wallet-note">From cancelled bookings</span>' +
       '</div>';
     section.style.display = 'block';
@@ -1848,7 +1791,7 @@ function updatePaymentOptionsInModal() {
   
   if (walletBalance > 0 && walletOption) {
     walletOption.style.display = 'block';
-    walletAmountSpan.textContent = '£' + (walletBalance / 100).toFixed(2);
+    walletAmountSpan.textContent = 'Â£' + (walletBalance / 100).toFixed(2);
   } else if (walletOption) {
     walletOption.style.display = 'none';
   }
@@ -1862,7 +1805,7 @@ function updatePaymentOptionsInModal() {
     // Show warning
     if (previousWarning) {
       previousWarning.style.display = 'flex';
-      previousAmountSpan.textContent = '£' + (previousTotal / 100).toFixed(2);
+      previousAmountSpan.textContent = 'Â£' + (previousTotal / 100).toFixed(2);
     }
     
     // Disable "Book on Account" - must pay previous first
@@ -1949,7 +1892,7 @@ async function processBasketOnAccount() {
   // Check for unpaid previous weeks
   if (account && account.previousTotal > 0) {
     const prevAmount = (account.previousTotal / 100).toFixed(2);
-    alert('Please pay your previous balance of £' + prevAmount + ' before booking on account.');
+    alert('Please pay your previous balance of Â£' + prevAmount + ' before booking on account.');
     return;
   }
   
@@ -1971,8 +1914,8 @@ async function processBasketOnAccount() {
   try {
     for (var i = 0; i < basket.length; i++) {
       var booking = basket[i];
-      var isCarPark = (booking.room === 'Car Park' || booking.room === 'Car_Park');
-      var serviceId = isCarPark ? '9' : '1';
+      var isCarPark = window.isCarPark ? window.isCarPark(booking.room) : false;
+      var serviceId = window.getServiceIdForRoom ? (window.getServiceIdForRoom(booking.room) || '1') : '1';
       var bookingWeek = getBillingWeek(new Date(booking.date));
       
       var payload = {
@@ -2149,18 +2092,18 @@ function showPaymentChoiceModal(paymentDetails, isBasket = false) {
       let summaryHtml = '';
       if (isBasket && paymentDetails.items) {
         summaryHtml = `
-          <div style="font-weight: 600; margin-bottom: 10px;">📦 Basket Summary (${itemCount} booking${itemCount > 1 ? 's' : ''})</div>
+          <div style="font-weight: 600; margin-bottom: 10px;">ðŸ“¦ Basket Summary (${itemCount} booking${itemCount > 1 ? 's' : ''})</div>
           <div style="max-height: 150px; overflow-y: auto; margin-bottom: 10px;">
             ${paymentDetails.items.map(item => `
               <div style="font-size: 13px; padding: 5px 0; border-bottom: 1px solid #eee;">
-                ${item.room} - ${item.formattedDate} at ${item.time} - £${(item.price / 100).toFixed(2)}
+                ${item.room} - ${item.formattedDate} at ${item.time} - Â£${(item.price / 100).toFixed(2)}
               </div>
             `).join('')}
           </div>
         `;
       } else {
         summaryHtml = `
-          <div style="font-weight: 600; margin-bottom: 10px;">📅 Booking Summary</div>
+          <div style="font-weight: 600; margin-bottom: 10px;">ðŸ“… Booking Summary</div>
           <div style="font-size: 14px;">
             <div>${paymentDetails.room}</div>
             <div>${paymentDetails.formattedDate} at ${paymentDetails.time}</div>
@@ -2174,24 +2117,24 @@ var outstandingBalance = window.counsellorAccount?.previousTotal || 0;
       summaryHtml += '<div style="border-top: 2px solid #ddd; margin-top: 15px; padding-top: 15px;">';
       summaryHtml += '  <div style="display: flex; justify-content: space-between; font-size: 16px;">';
       summaryHtml += '    <span>Booking:</span>';
-      summaryHtml += '    <span>£' + (total / 100).toFixed(2) + '</span>';
+      summaryHtml += '    <span>Â£' + (total / 100).toFixed(2) + '</span>';
       summaryHtml += '  </div>';
       
       if (outstandingBalance > 0) {
         summaryHtml += '  <div style="display: flex; justify-content: space-between; font-size: 14px; color: #c62828; margin-top: 5px;">';
         summaryHtml += '    <span>Outstanding balance:</span>';
-        summaryHtml += '    <span>£' + (outstandingBalance / 100).toFixed(2) + '</span>';
+        summaryHtml += '    <span>Â£' + (outstandingBalance / 100).toFixed(2) + '</span>';
         summaryHtml += '  </div>';
         summaryHtml += '  <div style="display: flex; justify-content: space-between; font-size: 16px; font-weight: bold; margin-top: 8px; border-top: 1px solid #eee; padding-top: 8px;">';
         summaryHtml += '    <span>Total to pay:</span>';
-        summaryHtml += '    <span>£' + (grandTotal / 100).toFixed(2) + '</span>';
+        summaryHtml += '    <span>Â£' + (grandTotal / 100).toFixed(2) + '</span>';
         summaryHtml += '  </div>';
       }
       
       if (credit > 0) {
         summaryHtml += '  <div style="display: flex; justify-content: space-between; font-size: 14px; color: #4caf50; margin-top: 5px;">';
         summaryHtml += '    <span>Your Credit:</span>';
-        summaryHtml += '    <span>£' + (credit / 100).toFixed(2) + '</span>';
+        summaryHtml += '    <span>Â£' + (credit / 100).toFixed(2) + '</span>';
         summaryHtml += '  </div>';
       }
       
@@ -2213,8 +2156,8 @@ var outstandingBalance = window.counsellorAccount?.previousTotal || 0;
         partialOption.style.display = 'block';
         
         const remainder = total - credit;
-        cardNote.textContent = 'Pay the full £' + (total / 100).toFixed(2) + ' by card';
-        partialNote.textContent = 'Use £' + (credit / 100).toFixed(2) + ' credit, pay £' + (remainder / 100).toFixed(2) + ' by card';
+        cardNote.textContent = 'Pay the full Â£' + (total / 100).toFixed(2) + ' by card';
+        partialNote.textContent = 'Use Â£' + (credit / 100).toFixed(2) + ' credit, pay Â£' + (remainder / 100).toFixed(2) + ' by card';
       } else {
         // No credit
         creditOption.style.display = 'none';
@@ -2248,9 +2191,12 @@ var outstandingBalance = window.counsellorAccount?.previousTotal || 0;
      * Service ID 1 = Room bookings, Service ID 9 = Car Park
      */
     function getServiceIdForRoom(roomName) {
-      if (!roomName) return '1';
-      const room = roomName.toLowerCase().replace(/_/g, ' ');
-      return (room === 'car park') ? '9' : '1';
+      // Delegate to room-config.js v2.0
+      if (window.getServiceIdForRoom) {
+        var roomKey = window.getRoomKey({room: roomName}) || roomName;
+        return window.getServiceIdForRoom(roomKey) || '1';
+      }
+      return '1';
     }
     
     /**
@@ -2384,7 +2330,7 @@ var outstandingBalance = window.counsellorAccount?.previousTotal || 0;
         
         statusEl.style.background = '#d4edda';
         statusEl.style.color = '#155724';
-        statusEl.textContent = '✅ Booking confirmed!';
+        statusEl.textContent = 'âœ… Booking confirmed!';
         
         // Get the booking date to navigate to
         const bookingDate = window.pendingPayment?.date;
@@ -2407,7 +2353,7 @@ var outstandingBalance = window.counsellorAccount?.previousTotal || 0;
         console.error('Credit payment error:', error);
         statusEl.style.background = '#f8d7da';
         statusEl.style.color = '#721c24';
-        statusEl.textContent = '⚠️ Error: ' + error.message;
+        statusEl.textContent = 'âš ï¸ Error: ' + error.message;
       }
     }
     
@@ -2437,7 +2383,7 @@ var outstandingBalance = window.counsellorAccount?.previousTotal || 0;
         console.error('Card payment error:', error);
         statusEl.style.background = '#f8d7da';
         statusEl.style.color = '#721c24';
-        statusEl.textContent = '⚠️ Error: ' + error.message;
+        statusEl.textContent = 'âš ï¸ Error: ' + error.message;
       }
     }
     
@@ -2461,7 +2407,7 @@ var outstandingBalance = window.counsellorAccount?.previousTotal || 0;
         console.error('Mixed payment error:', error);
         statusEl.style.background = '#f8d7da';
         statusEl.style.color = '#721c24';
-        statusEl.textContent = '⚠️ Error: ' + error.message;
+        statusEl.textContent = 'âš ï¸ Error: ' + error.message;
       }
     }
     
@@ -2544,10 +2490,10 @@ console.log('DEBUG outstanding:', outstandingBalance, outstandingWeeks, account_
         ? itemDescriptions + ' +' + (items.length - 3) + ' more'
         : itemDescriptions;
       if (totalCreditUsed > 0) {
-        description += ' [Credit: £' + (totalCreditUsed/100).toFixed(2) + ']';
+        description += ' [Credit: Â£' + (totalCreditUsed/100).toFixed(2) + ']';
       }
       if (outstandingBalance > 0) {
-        description += ' + Outstanding: £' + (outstandingBalance/100).toFixed(2);
+        description += ' + Outstanding: Â£' + (outstandingBalance/100).toFixed(2);
       }
       
       // Create Stripe checkout with basket reference only
@@ -2608,7 +2554,7 @@ async function processMixedPayment(items) {
       const creditToUse = Math.min(availableCredit, totalPrice);
       const stripeAmount = totalPrice - creditToUse;
       
-      console.log('📦 Mixed payment (unified):', {
+      console.log('ðŸ“¦ Mixed payment (unified):', {
         totalPrice: totalPrice,
         availableCredit: availableCredit,
         creditToUse: creditToUse,
@@ -2665,7 +2611,7 @@ async function processMixedPayment(items) {
           
           statusEl.style.background = '#d4edda';
           statusEl.style.color = '#155724';
-          statusEl.textContent = '✅ All bookings confirmed with credit!';
+          statusEl.textContent = 'âœ… All bookings confirmed with credit!';
           
           setTimeout(() => {
             closePaymentChoiceModal();
@@ -2675,7 +2621,7 @@ async function processMixedPayment(items) {
           console.error('Credit-only payment error:', error);
           statusEl.style.background = '#f8d7da';
           statusEl.style.color = '#721c24';
-          statusEl.textContent = '⚠️ Error: ' + error.message;
+          statusEl.textContent = 'âš ï¸ Error: ' + error.message;
         }
       }
     }
@@ -2735,10 +2681,8 @@ async function processMixedPayment(items) {
           }
         }
         
-        let roomForWebhook = room;
-        if (room && room.startsWith('Room ')) {
-          roomForWebhook = room.replace('Room ', 'Room_');
-        }
+        // Resolve room display name to key for webhook
+        const roomForWebhook = window.getRoomKey ? (window.getRoomKey({room: room}) || room) : room;
         
        // All cancellations now use cancel action (no more holding room)
         const payload = {
@@ -2859,32 +2803,31 @@ async function processMixedPayment(items) {
           (b.bookingId === changeData.originalBookingCode || b.code === changeData.originalBookingCode)
         );
         
-        const originalRoomUnderscore = convertRoomNameToUnderscore(changeData.originalRoom);
-        const newRoomUnderscore = changeData.newRoom ? convertRoomNameToUnderscore(changeData.newRoom) : originalRoomUnderscore;
+        const originalRoomKey = window.getRoomKey({room: changeData.originalRoom}) || changeData.originalRoom;
+        const newRoomKey = changeData.newRoom ? (window.getRoomKey({room: changeData.newRoom}) || changeData.newRoom) : originalRoomKey;
         
-      // Get room IDs from Firebase room_config
-       function getRoomIdFromConfig(roomName) {
-       const roomKey = roomName.replace(' ', '_');
+      // Get henleyRoomId from Firebase room_config
+       function getRoomIdFromConfig(roomKey) {
        if (window.roomConfig && window.roomConfig[roomKey]) {
         return window.roomConfig[roomKey].henleyRoomId;
    }
-        console.warn('Room not found in config:', roomName);
+        console.warn('Room not found in config:', roomKey);
          return null;
   }
 
-const originalRoomId = getRoomIdFromConfig(originalRoomUnderscore);
-const requestedRoomId = getRoomIdFromConfig(newRoomUnderscore);
+const originalRoomId = getRoomIdFromConfig(originalRoomKey);
+const requestedRoomId = getRoomIdFromConfig(newRoomKey);
 
 if (!requestedRoomId) {
-  throw new Error(`Room "${newRoomUnderscore}" not found in room configuration`);
+  throw new Error(`Room "${newRoomKey}" not found in room configuration`);
 }
         
         if (!requestedRoomId) {
-          throw new Error(`Room mapping failed for "${newRoomUnderscore}"`);
+          throw new Error(`Room mapping failed for "${newRoomKey}"`);
         }
         
-        const originalLocationId = getLocationIdFromRoom(originalRoomUnderscore);
-        const requestedLocationId = getLocationIdFromRoom(newRoomUnderscore);
+        const originalLocationId = getLocationIdFromRoom(originalRoomKey);
+        const requestedLocationId = getLocationIdFromRoom(newRoomKey);
         
         const webhookPayload = {
           timestamp: new Date().toISOString(),
@@ -2892,12 +2835,12 @@ if (!requestedRoomId) {
           client_id: window.clientId,
           counsellor_id: window.henleyClientId,
           original_booking_code: booking ? booking.bookingId : changeData.originalBookingCode,  // FIXED: Use bookingId from booking object
-          original_room: originalRoomUnderscore,
+          original_room: originalRoomKey,
           original_room_id: originalRoomId,
           original_location_id: originalLocationId,
           original_datetime: `${changeData.originalDate}T${changeData.originalTime}:00`,
           original_week: getWeekNumber(new Date(changeData.originalDate)),
-          requested_room: newRoomUnderscore,
+          requested_room: newRoomKey,
           requested_room_id: requestedRoomId,
           requested_location_id: requestedLocationId,
           requested_datetime: formatDateTimeForSimplybookMe(
@@ -3104,8 +3047,9 @@ async function lookupCounsellorId(counsellorName) {
         return { amount: 0, breakdown: 'Location not found', rate: null };
       }
       
-      // Normalize room name for matching (e.g., "Car Park" → "Car_Park")
-      const roomKey = room ? room.replace(' ', '_') : null;
+      // Normalize room name for matching (e.g., "Car Park" â†’ "Car_Park")
+      // Resolve room to config key (handles both display names and keys)
+      const roomKey = window.getRoomKey ? (window.getRoomKey({room: room}) || room) : room;
       
       // Find matching rule - check rooms array if present
       let matchedRule = null;
@@ -3150,19 +3094,19 @@ async function lookupCounsellorId(counsellorName) {
       return { amount: price, breakdown, rate: matchedRule.rate };
     }
     
-    // Get room to location mapping
+    // Get room to location mapping — delegates to getLocationIdFromRoom
     function getRoomLocationId(roomName) {
-      // Online is Buckhurst Hill (location 1), all others are Henley (location 2)
-      if (roomName === 'Online') {
-        return '1';
-      }
-      return '2';
+      return getLocationIdFromRoom(roomName);
     }
     
     // Get room ID for SimplybookMe
 	function getRoomProviderId(roomName) {
-      const roomKey = roomName.replace(' ', '_');
-      const roomCfg = (window.enabledRooms || []).find(r => r.displayName === roomName || r.key === roomKey);
+      // Try direct key lookup first (after migration, roomName may already be a key)
+      if (window.roomConfig && window.roomConfig[roomName]) {
+        return window.roomConfig[roomName].henleyRoomId || null;
+      }
+      // Fall back to display name lookup
+      const roomCfg = (window.enabledRooms || []).find(r => r.displayName === roomName || r.key === roomName);
       return roomCfg?.henleyRoomId || null;
     }
 
@@ -3175,7 +3119,9 @@ async function lookupCounsellorId(counsellorName) {
   <script>
     // Open new booking modal
     function openNewBookingModal(room, date, time) {
-      const locationId = getRoomLocationId(room);
+      // Resolve room display name to roomKey for internal lookups
+      const modalRoomKey = window.getRoomKey({room: room}) || room;
+      const locationId = window.getLocationIdForRoom ? (window.getLocationIdForRoom(modalRoomKey) || getRoomLocationId(room)) : getRoomLocationId(room);
       const locationName = locationId === '1' ? 'Buckhurst Hill' : 'Henley';
       const hour = parseInt(time.split(':')[0]);
       const endHour = hour + 1;
@@ -3215,7 +3161,7 @@ async function lookupCounsellorId(counsellorName) {
       if (priceLabel) priceLabel.textContent = 'Room Hire Cost';
       
       // Set hidden fields
-      document.getElementById('newBookingRoom').value = room;
+      document.getElementById('newBookingRoom').value = modalRoomKey;  // Store the roomKey (e.g. "H6")
       document.getElementById('newBookingRoomId').value = getRoomProviderId(room);
       document.getElementById('newBookingDate').value = date;
       document.getElementById('newBookingTime').value = time;
@@ -3223,8 +3169,8 @@ async function lookupCounsellorId(counsellorName) {
       document.getElementById('newBookingLocationId').value = locationId;
       document.getElementById('newBookingPrice').value = priceResult.amount;
       
-      // Set serviceId: Car Park = 9, all other rooms = 1
-      const serviceId = (room === 'Car Park' || room === 'Car_Park') ? '9' : '1';
+      // Set serviceId from room config (falls back to '1')
+      const serviceId = window.getServiceIdForRoom ? (window.getServiceIdForRoom(modalRoomKey) || '1') : '1';
       document.getElementById('newBookingServiceId').value = serviceId;
       
       // Update price display
@@ -3233,11 +3179,11 @@ async function lookupCounsellorId(counsellorName) {
       
       if (priceResult.amount > 0) {
         priceDisplay.classList.remove('no-rate');
-        priceAmount.textContent = `£${(priceResult.amount / 100).toFixed(2)}`;
+        priceAmount.textContent = `Â£${(priceResult.amount / 100).toFixed(2)}`;
         document.getElementById('confirmBookingBtn').disabled = false;
       } else {
         priceDisplay.classList.add('no-rate');
-        priceAmount.textContent = '£0.00';
+        priceAmount.textContent = 'Â£0.00';
         document.getElementById('confirmBookingBtn').disabled = true;
       }
       
@@ -3245,7 +3191,7 @@ async function lookupCounsellorId(counsellorName) {
       document.getElementById('bookingStatus').style.display = 'none';
       
       // Configure comments field based on room type
-      const isCarPark = (room === 'Car Park' || room === 'Car_Park');
+      const isCarPark = window.isCarPark ? window.isCarPark(modalRoomKey) : false;
       const commentsInput = document.getElementById('newBookingComments');
       const commentsLabelText = document.getElementById('commentsLabelText');
       const commentsRequired = document.getElementById('commentsRequired');
@@ -3305,7 +3251,7 @@ async function lookupCounsellorId(counsellorName) {
       
       if (duration > 1 || repeatSessions > 1) {
         // Multi-slot: validate then hand off to multi-slot handler
-        var isCarPark = (room === 'Car Park' || room === 'Car_Park');
+        var isCarPark = window.isCarPark ? window.isCarPark(window.getRoomKey({room: room})) : false;
         if (isCarPark && !comments) {
           alert('Please enter a car registration number for Car Park bookings');
           document.getElementById('newBookingComments').focus();
@@ -3317,7 +3263,8 @@ async function lookupCounsellorId(counsellorName) {
       }
       
       // Validate car park registration
-      var isCarPark = (room === 'Car Park' || room === 'Car_Park');
+      var roomKey = window.getRoomKey({room: room}) || room;
+      var isCarPark = window.isCarPark ? window.isCarPark(roomKey) : false;
       if (isCarPark && !comments) {
         alert('Please enter a car registration number for Car Park bookings');
         document.getElementById('newBookingComments').focus();
@@ -3380,7 +3327,7 @@ async function lookupCounsellorId(counsellorName) {
           
           statusDiv.className = 'booking-status success';
           statusDiv.innerHTML = `
-            <strong>✓ Booking Created!</strong><br>
+            <strong>âœ“ Booking Created!</strong><br>
             <small>${room} on ${date} at ${time}<br>
             The calendar will refresh shortly.</small>
           `;
@@ -3440,7 +3387,7 @@ async function lookupCounsellorId(counsellorName) {
               comments: comments || null
             };
             
-            console.log('💳 Opening payment choice modal:', paymentDetails);
+            console.log('ðŸ’³ Opening payment choice modal:', paymentDetails);
             showPaymentChoiceModal(paymentDetails, false);
             break;
         }
@@ -3560,7 +3507,7 @@ async function lookupCounsellorId(counsellorName) {
       if (walletBalance < price) {
         statusDiv.className = 'booking-status error';
         statusDiv.innerHTML = '<strong>Insufficient Wallet Balance</strong><br>' +
-          '<small>Wallet: £' + (walletBalance / 100).toFixed(2) + ' | Required: £' + (price / 100).toFixed(2) + '</small>';
+          '<small>Wallet: Â£' + (walletBalance / 100).toFixed(2) + ' | Required: Â£' + (price / 100).toFixed(2) + '</small>';
         statusDiv.style.display = 'block';
         return;
       }
@@ -3618,7 +3565,7 @@ async function lookupCounsellorId(counsellorName) {
         statusDiv.className = 'booking-status success';
         statusDiv.innerHTML = '<strong>Paid with Wallet!</strong><br>' +
           '<small>' + room + ' on ' + date + ' at ' + time + '<br>' +
-          '£' + (price / 100).toFixed(2) + ' deducted from wallet</small>';
+          'Â£' + (price / 100).toFixed(2) + ' deducted from wallet</small>';
         
         setTimeout(() => {
           closeNewBookingModal();
@@ -3849,8 +3796,8 @@ async function lookupCounsellorId(counsellorName) {
       var counsellorId = window.clientId;
       var statusDiv = document.getElementById('bookingStatus');
       var confirmBtn = document.getElementById('confirmBookingBtn');
-      var isCarPark = (room === 'Car Park' || room === 'Car_Park');
-      var serviceId = isCarPark ? '9' : '1';
+      var isCarPark = window.isCarPark ? window.isCarPark(window.getRoomKey({room: room})) : false;
+      var serviceId = window.getServiceIdForRoom ? (window.getServiceIdForRoom(window.getRoomKey({room: room})) || '1') : '1';
       var totalSlots = slotData.slots.length;
       
       // Build formatted date for first slot (used for calendar navigation)
@@ -3859,7 +3806,8 @@ async function lookupCounsellorId(counsellorName) {
       // Build success message helper
       function buildSuccessMessage(action) {
         var msg = '<strong>' + totalSlots + ' Booking' + (totalSlots > 1 ? 's' : '') + ' ' + action + '!</strong><br><small>';
-        msg += room;
+        var roomDisplayForMsg = window.getRoomDisplayName ? window.getRoomDisplayName(room) : room;
+        msg += roomDisplayForMsg;
         if (slotData.duration > 1) msg += ' (' + slotData.duration + ' hours)';
         msg += '<br>';
         var dates = [];
@@ -4025,7 +3973,7 @@ async function lookupCounsellorId(counsellorName) {
         }
         
         // =====================
-        // CARD — use existing payment choice modal with items array
+        // CARD â€” use existing payment choice modal with items array
         // =====================
         else if (paymentMethod === 'card') {
           closeNewBookingModal();
@@ -4076,16 +4024,12 @@ async function lookupCounsellorId(counsellorName) {
 <!-- ================================ -->
  <script>
     // Check if a time slot is available (supports capacity for Car Park)
-    // Also checks repeatBookingData for slots loaded on-demand for repeat bookings
+    // Accepts either a roomKey (H6) or display name (Room 6) as 'room' parameter
     function isSlotAvailable(room, date, time) {
-      var roomKey = room.replace(' ', '_');
-      var roomCfg = (window.enabledRooms || []).find(function(r) { return r.displayName === room || r.key === roomKey; });
+      // Resolve to roomKey — works whether passed a key or display name
+      var resolvedKey = window.getRoomKey({room: room}) || room;
+      var roomCfg = window.roomConfig ? window.roomConfig[resolvedKey] : null;
       var capacity = roomCfg?.capacity || 1;
-      
-      var roomVariants = [room, roomKey, room.replace('Room ', '')];
-if (room === 'Car Park' || room === 'Car_Park' || room === 'car park') {
-    roomVariants.push('Car_Park', 'Car Park', 'Car park');
-}
       
       var hour = parseInt(time.split(':')[0]);
       
@@ -4097,13 +4041,8 @@ if (room === 'Car Park' || room === 'Car_Park' || room === 'car park') {
       
       for (var i = 0; i < dayBookings.length; i++) {
         var booking = dayBookings[i];
-        var bookingRoomMatches = roomVariants.some(function(variant) {
-          return booking.room === variant || 
-            booking.room === roomKey ||
-            (booking.location && booking.location.toLowerCase().includes('online') && room === 'Online');
-        });
-        
-        if (bookingRoomMatches) {
+        // After migration, booking.room is the roomKey (e.g. "H6")
+        if (booking.room === resolvedKey) {
           var startHour = parseInt(booking.start.split(':')[0]);
           var endHour = parseInt(booking.end.split(':')[0]);
           
@@ -4117,13 +4056,9 @@ if (room === 'Car Park' || room === 'Car_Park' || room === 'car park') {
     }
     
     // Get current booking count for a room/date/time (for capacity display)
+    // Accepts either a roomKey (H6) or display name (Room 6) as 'room' parameter
     function getSlotBookingCount(room, date, time) {
-      var roomKey = room.replace(' ', '_');
-      var roomVariants = [room, roomKey, room.replace('Room ', '')];
-if (room === 'Car Park' || room === 'Car_Park') {
-    roomVariants.push('Car_Park', 'Car Park', 'Car park');
-}
-
+      var resolvedKey = window.getRoomKey({room: room}) || room;
       
       var hour = parseInt(time.split(':')[0]);
       
@@ -4134,12 +4069,7 @@ if (room === 'Car Park' || room === 'Car_Park') {
       
       for (var i = 0; i < dayBookings.length; i++) {
         var booking = dayBookings[i];
-        var bookingRoomMatches = roomVariants.some(function(variant) {
-          return booking.room === variant || 
-            booking.room === roomKey;
-        });
-        
-        if (bookingRoomMatches) {
+        if (booking.room === resolvedKey) {
           var startHour = parseInt(booking.start.split(':')[0]);
           var endHour = parseInt(booking.end.split(':')[0]);
           
@@ -4171,19 +4101,10 @@ if (room === 'Car Park' || room === 'Car_Park') {
       (window.enabledRooms || []).forEach((room) => {
         const roomName = room.displayName;
         const capacity = room.capacity || 1;
-        const isCarPark = room.key === 'Car_Park';
+        const isCarPark = room.type === 'car_park';
         
-        // Generate cell ID to match createDayGrid format
-        let roomId;
-        if (room.key.startsWith('Room_')) {
-          roomId = room.key.replace('Room_', '');
-        } else if (room.key === 'Car_Park') {
-          roomId = 'car-park';
-        } else if (room.key === 'Online') {
-          roomId = 'online';
-        } else {
-          roomId = room.key.toLowerCase().replace('_', '-');
-        }
+        // Cell ID uses room.key directly (matches createDayGrid)
+        const roomId = room.key;
         
         businessHours.forEach(time => {
           const cellId = `cell-${roomId}-${time}`;
@@ -4419,7 +4340,7 @@ if (room === 'Car Park' || room === 'Car_Park') {
     // Create day view grid - DYNAMIC FROM ROOM CONFIG
     function createDayGrid(grid) {
       const rooms = window.enabledRooms || [];
-      console.log('🔍 createDayGrid called - rooms:', rooms.length, rooms.map(r => r.displayName));
+      console.log('ðŸ”Â createDayGrid called - rooms:', rooms.length, rooms.map(r => r.displayName));
       
       // Set grid columns based on enabled rooms
       const numRooms = rooms.length;
@@ -4447,26 +4368,15 @@ if (room === 'Car Park' || room === 'Car_Park') {
           const cell = document.createElement("div");
           cell.className = "grid-cell";
           
-          // Generate cell ID to match populateDayView format
-          let roomId;
-          if (room.key.startsWith('Room_')) {
-            roomId = room.key.replace('Room_', ''); // "Room_6" -> "6"
-          } else if (room.key === 'Car_Park') {
-            roomId = 'car-park';
-          } else if (room.key === 'Online') {
-            roomId = 'online';
-          } else {
-            roomId = room.key.toLowerCase().replace('_', '-');
-          }
+          // Cell ID uses roomKey directly (e.g. "cell-H6-09:00")
+          cell.id = `cell-${room.key}-${time}`;
           
-          cell.id = `cell-${roomId}-${time}`;
-          
-          // Data attributes for future drag-and-drop support
+          // Data attributes
           cell.dataset.room = room.key;
           cell.dataset.time = time;
           
-          // Mark car park cells for special handling
-          if (room.key === 'Car_Park') {
+          // Mark car park cells for special handling (by type, not name)
+          if (room.type === 'car_park') {
             cell.classList.add('car-park-cell');
             cell.dataset.capacity = room.capacity || 1;
           }
@@ -4584,7 +4494,7 @@ if (room === 'Car Park' || room === 'Car_Park') {
       
       dayBookings.forEach(booking => {
         const {roomNumber, roomClass} = getRoomMapping(booking);
-        console.log('🔍 Booking:', booking.client, 'room:', booking.room, '→ roomNumber:', roomNumber, '→ cellId:', `cell-${roomNumber}-${booking.start}`);
+        console.log('ðŸ”Â Booking:', booking.client, 'room:', booking.room, 'â†’ roomNumber:', roomNumber, 'â†’ cellId:', `cell-${roomNumber}-${booking.start}`);
         if (!roomNumber) return;
         
         const startHour = parseInt(booking.start.split(':')[0]);
@@ -4691,10 +4601,10 @@ if (room === 'Car Park' || room === 'Car_Park') {
       }
       
       // Debug logging
-      console.log('🆔 populateWeekView called - counsellor:', selectedCounsellor, 'bookings:', filteredBookings.length);
+      console.log('ðŸ†” populateWeekView called - counsellor:', selectedCounsellor, 'bookings:', filteredBookings.length);
       
       if (!selectedCounsellor) {
-        console.warn('⚠️ No counsellor selected - week view requires a logged-in user');
+        console.warn('âš ï¸ No counsellor selected - week view requires a logged-in user');
         return;
       }
       
@@ -4703,7 +4613,7 @@ if (room === 'Car Park' || room === 'Car_Park') {
         booking.client && booking.client.toLowerCase().includes(selectedCounsellor.toLowerCase())
       );
       
-      console.log('🆔 Filtered to', counsellorBookings.length, 'bookings for', selectedCounsellor);
+      console.log('ðŸ†” Filtered to', counsellorBookings.length, 'bookings for', selectedCounsellor);
       
       // Build a map of cellId -> array of bookings
       const cellBookings = {};
@@ -4754,13 +4664,13 @@ if (room === 'Car Park' || room === 'Car_Park') {
         }
       });
       
-      console.log('🆔 Mapped bookings to', Object.keys(cellBookings).length, 'cells');
+      console.log('ðŸ†” Mapped bookings to', Object.keys(cellBookings).length, 'cells');
       
       // Now populate cells
       Object.entries(cellBookings).forEach(([cellId, bookings]) => {
         const cell = document.getElementById(cellId);
         if (!cell) {
-          console.warn('⚠️ Cell not found:', cellId);
+          console.warn('âš ï¸ Cell not found:', cellId);
           return;
         }
         
@@ -5095,7 +5005,7 @@ function initializeData() {
       });
   }
 }
-// Initialize when DOM is ready — wait for Firebase Auth to complete first
+// Initialize when DOM is ready â€” wait for Firebase Auth to complete first
     document.addEventListener('DOMContentLoaded', function() {
       console.log('DOM loaded, waiting for authentication...');
       handlePaymentReturn();
@@ -5105,64 +5015,9 @@ function initializeData() {
     document.addEventListener('counsellorAuthReady', function(e) {
       console.log('Auth ready, starting calendar initialization...');
       console.log('Counsellor:', e.detail.counsellorName, 'ClientId:', e.detail.clientId);
-      
-      // Set up location selector for multi-location counsellors
-      var locations = e.detail.locations || ['henley'];
-      console.log('Counsellor locations:', locations);
-      
-      if (locations.length > 1) {
-        // Load location_config from Firebase for display names
-        database.ref('location_config').once('value').then(function(snap) {
-          var locConfig = snap.val() || {};
-          var container = document.getElementById('locationSelectorContainer');
-          var selector = document.getElementById('locationSelector');
-          if (container && selector) {
-            selector.innerHTML = '';
-            locations.forEach(function(loc) {
-              var opt = document.createElement('option');
-              opt.value = loc;
-              opt.textContent = (locConfig[loc] && locConfig[loc].name) ? locConfig[loc].name : loc;
-              if (loc === window.activeLocation) opt.selected = true;
-              selector.appendChild(opt);
-            });
-            container.style.display = 'block';
-          }
-        });
-      }
-      
       parseURLParams();
     });
   </script>
-  
-  
-  <!-- Location switching handler -->
-  <script>
-    function handleLocationChange(newLocation) {
-      console.log('Switching location to:', newLocation);
-      
-      // Update the filter
-      if (typeof switchLocation === 'function') {
-        switchLocation(newLocation);
-      } else {
-        sessionStorage.setItem('activeLocation', newLocation);
-        window.activeLocation = newLocation;
-      }
-      
-      // Rebuild calendar grid with filtered rooms
-      createCalendarGrid();
-      populateCalendar();
-      
-      // Update page title using location_config display name
-      database.ref('location_config/' + newLocation + '/name').once('value').then(function(snap) {
-        var displayName = snap.val() || newLocation;
-        var title = document.getElementById('pageTitle');
-        if (title) {
-          title.textContent = 'Cherry Tree Therapy Centre - ' + displayName;
-        }
-      });
-    }
-  </script>
-  
   
 <!-- ================================ -->
 <!-- SECTION 9: EXTERNAL JS FILES -->
@@ -5171,30 +5026,9 @@ function initializeData() {
   <script src="js/room-config.js"></script>
   
   <!-- PATCH: Fix Car Park case sensitivity (room-config.js has missing return statement) -->
-  <script>
-  (function() {
-    // Wrap the getRoomKey function to handle 'Car park' (lowercase p)
-    // and fix missing return statement in room-config.js
-    const originalGetRoomKey = window.getRoomKey;
-    if (typeof originalGetRoomKey === 'function') {
-      window.getRoomKey = function(booking) {
-        if (!booking) return null;
-        
-        // Check for Car park with any case variation (fixes missing return in room-config.js)
-        const room = booking.room;
-        if (room && (room.toLowerCase() === 'car park' || room.toLowerCase() === 'car_park')) {
-          return 'Car_Park';
-        }
-        
-        // Call original function for other cases
-        return originalGetRoomKey(booking);
-      };
-      console.log('âœ… Car Park case-sensitivity patch applied');
-    }
-  })();
-  </script>
+  <!-- Car Park case-sensitivity patch REMOVED - handled by room-config.js v2.0 -->
   
-  <!-- Booking enhancements (Â£0 bookings, basket, etc) -->
+  <!-- Booking enhancements (Ã‚Â£0 bookings, basket, etc) -->
   <script src="js/booking-enhancements.js"></script>
 
   <!-- Firebase Auth for counsellor portal -->
