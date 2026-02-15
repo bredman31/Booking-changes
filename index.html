@@ -148,6 +148,10 @@
 <div class="header">
     <h2 id="pageTitle">Cherry Tree Therapy Centre - Room Booking Calendar</h2>
     <span id="headerCounsellorName" style="font-size: 15px; color: #555; margin-left: 12px; font-weight: 400;"></span>
+    <div id="locationSelectorContainer" style="display: none; margin-left: 12px;">
+      <select id="locationSelector" onchange="handleLocationChange(this.value)" style="padding: 6px 10px; border: 1px solid #43a047; border-radius: 6px; font-size: 13px; color: #333; background: #e8f5e9; cursor: pointer; font-weight: 500;">
+      </select>
+    </div>
     <div class="view-selector" style="margin-left: auto;">
       <button class="view-btn active" onclick="switchView('day')">Day View</button>
       <button class="view-btn" onclick="switchView('week')">Week View</button>
@@ -5101,9 +5105,64 @@ function initializeData() {
     document.addEventListener('counsellorAuthReady', function(e) {
       console.log('Auth ready, starting calendar initialization...');
       console.log('Counsellor:', e.detail.counsellorName, 'ClientId:', e.detail.clientId);
+      
+      // Set up location selector for multi-location counsellors
+      var locations = e.detail.locations || ['henley'];
+      console.log('Counsellor locations:', locations);
+      
+      if (locations.length > 1) {
+        // Load location_config from Firebase for display names
+        database.ref('location_config').once('value').then(function(snap) {
+          var locConfig = snap.val() || {};
+          var container = document.getElementById('locationSelectorContainer');
+          var selector = document.getElementById('locationSelector');
+          if (container && selector) {
+            selector.innerHTML = '';
+            locations.forEach(function(loc) {
+              var opt = document.createElement('option');
+              opt.value = loc;
+              opt.textContent = (locConfig[loc] && locConfig[loc].name) ? locConfig[loc].name : loc;
+              if (loc === window.activeLocation) opt.selected = true;
+              selector.appendChild(opt);
+            });
+            container.style.display = 'block';
+          }
+        });
+      }
+      
       parseURLParams();
     });
   </script>
+  
+  
+  <!-- Location switching handler -->
+  <script>
+    function handleLocationChange(newLocation) {
+      console.log('Switching location to:', newLocation);
+      
+      // Update the filter
+      if (typeof switchLocation === 'function') {
+        switchLocation(newLocation);
+      } else {
+        sessionStorage.setItem('activeLocation', newLocation);
+        window.activeLocation = newLocation;
+      }
+      
+      // Rebuild calendar grid with filtered rooms
+      createCalendarGrid();
+      populateCalendar();
+      
+      // Update page title using location_config display name
+      database.ref('location_config/' + newLocation + '/name').once('value').then(function(snap) {
+        var displayName = snap.val() || newLocation;
+        var title = document.getElementById('pageTitle');
+        if (title) {
+          title.textContent = 'Cherry Tree Therapy Centre - ' + displayName;
+        }
+      });
+    }
+  </script>
+  
   
 <!-- ================================ -->
 <!-- SECTION 9: EXTERNAL JS FILES -->
