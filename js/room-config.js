@@ -1,39 +1,32 @@
 /**
- * ROOM-CONFIG.JS
- * ===============
+ * ROOM-CONFIG.JS (v2.0)
+ * =====================
  * Shared room configuration module for Cherry Tree Centre
- * Loads room config from Firebase and generates dynamic CSS
+ * 
+ * FULLY DYNAMIC — no hardcoded room names, IDs, or mappings.
+ * Everything is driven by room_config in Firebase.
+ * 
+ * The Firebase key IS the roomID (e.g. "H1", "H6", "HCP", "BH1").
+ * displayName is for humans only (e.g. "Room 1", "Car Park").
+ * Multiple rooms can share the same displayName across locations.
  * 
  * Usage: Include after Firebase init, call loadRoomConfig() before loading bookings
- * <script src="js/room-config.js"></script>
+ * <script src="room-config.js"></script>
  */
 
 (function() {
   'use strict';
-  console.log('🏠 room-config.js loading...');
-
-  // ================================
-  // DEFAULT ROOM CONFIGURATION
-  // Fallback if Firebase unavailable
-  // ================================
-  const defaultRoomConfig = {
-    'Room_1': { enabled: true, color: '#d4a5a5', borderColor: '#b89090', displayName: 'Room 1', order: 1 },
-    'Room_2': { enabled: true, color: '#b299d4', borderColor: '#9680c0', displayName: 'Room 2', order: 2 },
-    'Room_4': { enabled: true, color: '#a5d4a5', borderColor: '#90b890', displayName: 'Room 4', order: 3 },
-    'Room_5': { enabled: true, color: '#e57373', borderColor: '#d32f2f', displayName: 'Room 5', order: 4 },
-    'Room_6': { enabled: true, color: '#c8a882', borderColor: '#b5946e', displayName: 'Room 6', order: 5 },
-    'Room_7': { enabled: true, color: '#e6d45a', borderColor: '#d4c347', displayName: 'Room 7', order: 6 },
-    'Room_8': { enabled: true, color: '#80cbc4', borderColor: '#4db6ac', displayName: 'Room 8', order: 7 },
-    'Room_9': { enabled: true, color: '#ce93d8', borderColor: '#ba68c8', displayName: 'Room 9', order: 8 },
-    'Car_Park': { enabled: true, color: '#90caf9', borderColor: '#42a5f5', displayName: 'Car Park', order: 9 },
-    'Online': { enabled: true, color: '#7dd87d', borderColor: '#6bc46b', displayName: 'Online', order: 10 }
-  };
+  console.log('🏠 room-config.js v2.0 loading...');
 
   // ================================
   // STATE (exposed globally)
   // ================================
-  window.roomConfig = {};
-  window.enabledRooms = [];
+  window.roomConfig = {};       // Full config keyed by roomID
+  window.enabledRooms = [];     // Sorted array of enabled rooms [{key, displayName, ...}]
+
+  // Internal lookup indexes — built on load for fast resolution
+  let _displayNameIndex = {};   // displayName → [roomID, roomID, ...] (may have duplicates)
+  let _locationRoomIndex = {};  // location → [roomID, roomID, ...]
 
   // ================================
   // LOAD ROOM CONFIG FROM FIREBASE
@@ -42,63 +35,99 @@
     console.log('🏠 Loading room configuration from Firebase...');
     
     try {
-      // Check if Firebase database is available
       if (typeof database === 'undefined') {
-        console.warn('⚠️ Firebase database not available, using defaults');
-        window.roomConfig = JSON.parse(JSON.stringify(defaultRoomConfig));
+        console.error('❌ Firebase database not available — cannot load room config');
+        window.roomConfig = {};
+        window.enabledRooms = [];
+        return window.roomConfig;
+      }
+
+      const snapshot = await database.ref('room_config').once('value');
+      const config = snapshot.val();
+      
+      if (config && Object.keys(config).length > 0) {
+        window.roomConfig = config;
+        console.log('✅ Loaded room config from Firebase:', Object.keys(config).length, 'rooms');
       } else {
-        const snapshot = await database.ref('room_config').once('value');
-        const config = snapshot.val();
-        
-        if (config && Object.keys(config).length > 0) {
-          window.roomConfig = config;
-          console.log('✅ Loaded room config from Firebase');
-        } else {
-          window.roomConfig = JSON.parse(JSON.stringify(defaultRoomConfig));
-          console.log('ℹ️ No Firebase config found, using defaults');
-        }
+        console.warn('⚠️ No room config found in Firebase — calendar will be empty');
+        window.roomConfig = {};
       }
       
       // Build enabled rooms array sorted by order
-      window.allEnabledRooms = Object.entries(window.roomConfig)
-        .filter(([key, room]) => room.enabled)
-        .sort((a, b) => (a[1].order || 99) - (b[1].order || 99))
-        .map(([key, room]) => ({ key, ...room }));
-
-      // Apply location filter if a counsellor location is set
-      const activeLocation = window.activeLocation || sessionStorage.getItem('activeLocation');
-      if (activeLocation) {
-        window.enabledRooms = window.allEnabledRooms.filter(r => r.location === activeLocation);
-        console.log(`🏠 ${window.enabledRooms.length} rooms for location: ${activeLocation} (${window.allEnabledRooms.length} total)`);
-      } else {
-        window.enabledRooms = window.allEnabledRooms;
-        console.log(`🏠 ${window.enabledRooms.length} enabled rooms loaded (no location filter)`);
-      }
+      _buildEnabledRooms();
+      
+      // Build lookup indexes
+      _buildIndexes();
       
       // Generate dynamic CSS for room colours
-      generateRoomStyles();
+      _generateRoomStyles();
       
       return window.roomConfig;
       
     } catch (error) {
       console.error('❌ Error loading room config:', error);
-      window.roomConfig = JSON.parse(JSON.stringify(defaultRoomConfig));
-      window.enabledRooms = Object.entries(defaultRoomConfig)
-        .filter(([key, room]) => room.enabled)
-        .sort((a, b) => (a[1].order || 99) - (b[1].order || 99))
-        .map(([key, room]) => ({ key, ...room }));
-      
-      generateRoomStyles();
+      window.roomConfig = {};
+      window.enabledRooms = [];
       return window.roomConfig;
     }
   };
 
   // ================================
-  // GENERATE DYNAMIC CSS
-  // Same approach as admin pages
+  // BUILD ENABLED ROOMS ARRAY
   // ================================
-  function generateRoomStyles() {
-    // Remove existing dynamic styles if present
+  function _buildEnabledRooms() {
+    window.enabledRooms = Object.entries(window.roomConfig)
+      .filter(([key, room]) => room.enabled)
+      .sort((a, b) => {
+        // Primary sort: location (group rooms by location)
+        const locA = a[1].location || '';
+        const locB = b[1].location || '';
+        if (locA !== locB) return locA.localeCompare(locB);
+        // Secondary sort: order within location
+        return (a[1].order || 99) - (b[1].order || 99);
+      })
+      .map(([key, room]) => ({ key, ...room }));
+    
+    console.log(`🏠 ${window.enabledRooms.length} enabled rooms loaded`);
+  }
+
+  // ================================
+  // BUILD LOOKUP INDEXES
+  // ================================
+  function _buildIndexes() {
+    _displayNameIndex = {};
+    _locationRoomIndex = {};
+    
+    Object.entries(window.roomConfig).forEach(([roomID, room]) => {
+      // Index by displayName (lowercased for case-insensitive lookup)
+      const nameKey = (room.displayName || '').toLowerCase().trim();
+      if (nameKey) {
+        if (!_displayNameIndex[nameKey]) _displayNameIndex[nameKey] = [];
+        _displayNameIndex[nameKey].push(roomID);
+      }
+      
+      // Also index by displayName with underscores (handles "Room_1" → "room 1")
+      const underscoreKey = nameKey.replace(/_/g, ' ');
+      if (underscoreKey !== nameKey) {
+        if (!_displayNameIndex[underscoreKey]) _displayNameIndex[underscoreKey] = [];
+        _displayNameIndex[underscoreKey].push(roomID);
+      }
+      
+      // Index by location
+      const loc = room.location || 'unknown';
+      if (!_locationRoomIndex[loc]) _locationRoomIndex[loc] = [];
+      _locationRoomIndex[loc].push(roomID);
+    });
+    
+    console.log('🔍 Lookup indexes built:',
+      Object.keys(_displayNameIndex).length, 'display names,',
+      Object.keys(_locationRoomIndex).length, 'locations');
+  }
+
+  // ================================
+  // GENERATE DYNAMIC CSS
+  // ================================
+  function _generateRoomStyles() {
     let styleEl = document.getElementById('room-dynamic-styles');
     if (!styleEl) {
       styleEl = document.createElement('style');
@@ -106,10 +135,10 @@
       document.head.appendChild(styleEl);
     }
     
-    let css = '/* Dynamic room colours - generated by room-config.js */\n';
+    let css = '/* Dynamic room colours — generated by room-config.js v2.0 */\n';
     
     window.enabledRooms.forEach(room => {
-      const className = room.key.toLowerCase().replace('_', '-');
+      const className = _cssClass(room.key);
       
       // Grid cell styles for booked cells (day view)
       css += `.grid-cell.booked.${className} { background: ${room.color}; border-left: 4px solid ${room.borderColor}; }\n`;
@@ -119,57 +148,146 @@
       
       // Legend colour styles
       css += `.legend-color.${className} { background: ${room.color}; border-color: ${room.borderColor}; }\n`;
+      
+      // Car park type gets slightly transparent
+      if (room.type === 'car_park') {
+        css += `.grid-cell.booked.${className} { opacity: 0.85; }\n`;
+        css += `.booking-segment.${className} { opacity: 0.85; }\n`;
+      }
     });
-    
-    // Special styling for car park (slightly transparent)
-    css += `.grid-cell.booked.car-park { opacity: 0.85; }\n`;
-    css += `.booking-segment.car-park { opacity: 0.85; }\n`;
     
     styleEl.textContent = css;
     console.log('🎨 Dynamic room styles generated');
   }
 
   // ================================
-  // ROOM MAPPING FUNCTIONS
+  // CSS CLASS HELPER
+  // ================================
+  function _cssClass(roomKey) {
+    // Convert roomID to a safe CSS class name
+    // "H6" → "room-h6", "HCP" → "room-hcp", "BH1" → "room-bh1"
+    return 'room-' + roomKey.toLowerCase().replace(/[^a-z0-9]/g, '-');
+  }
+
+  // ================================
+  // ROOM LOOKUP FUNCTIONS
   // ================================
 
   /**
-   * Get room key from booking data
-   * Handles various room formats in the database
+   * Get roomID from a booking record.
+   * 
+   * Resolution order:
+   * 1. Direct match: booking.room matches a key in roomConfig (new format)
+   * 2. Display name match: booking.room matches a displayName
+   *    - If unique, returns that roomID
+   *    - If ambiguous (e.g. three "Room 1"s), uses booking.locationId/location to disambiguate
+   * 3. Normalised match: tries underscores→spaces, case-insensitive
+   * 4. Online detection: checks booking.location for "online"
+   * 5. Returns null if no match (logs warning)
+   * 
+   * NO HARDCODED ROOM NAMES — everything comes from the loaded config.
    */
   window.getRoomKey = function(booking) {
     if (!booking) return null;
     
     const room = booking.room;
     
-    // Check location for online bookings
+    // 1. Direct key match (new format: "H6", "HCP", etc.)
+    if (room && window.roomConfig[room]) {
+      return room;
+    }
+    
+    // 2. Online detection via location field
     if (booking.location && booking.location.toLowerCase().includes('online')) {
-      return 'Online';
+      const onlineRoom = _findByType('online');
+      if (onlineRoom) return onlineRoom;
     }
     
     if (!room) return null;
     
-    // Direct match with config keys
-    if (window.roomConfig[room]) return room;
+    // 3. Display name match (handles "Room 6", "Car Park", etc.)
+    const normalised = room.toLowerCase().replace(/_/g, ' ').trim();
+    const candidates = _displayNameIndex[normalised];
     
-    // Handle various formats
-    if (room === '1' || room === 'Room_1' || room === 'Room 1') return 'Room_1';
-    if (room === '2' || room === 'Room_2' || room === 'Room 2') return 'Room_2';
-    if (room === '4' || room === 'Room_4' || room === 'Room 4') return 'Room_4';
-    if (room === '5' || room === 'Room_5' || room === 'Room 5') return 'Room_5';
-    if (room === '6' || room === 'Room_6' || room === 'Room 6') return 'Room_6';
-    if (room === '7' || room === 'Room_7' || room === 'Room 7') return 'Room_7';
-    if (room === '8' || room === 'Room_8' || room === 'Room 8') return 'Room_8';
-    if (room === '9' || room === 'Room_9' || room === 'Room 9') return 'Room_9';
-    if (room === 'Car Park' || room === 'Car_Park' || room.toLowerCase() === 'car park') return 'Car_Park';
-    if (room === 'Online' || room === 'online') return 'Online';
+    if (candidates && candidates.length === 1) {
+      // Unambiguous match
+      return candidates[0];
+    }
     
+    if (candidates && candidates.length > 1) {
+      // Ambiguous — multiple rooms with same display name (e.g. "Room 1" at 3 locations)
+      // Use booking's location to disambiguate
+      const resolved = _disambiguateByLocation(candidates, booking);
+      if (resolved) return resolved;
+      
+      // Can't disambiguate — log warning and return first match
+      console.warn(`⚠️ Ambiguous room "${room}" — ${candidates.length} matches, using first:`, candidates[0]);
+      return candidates[0];
+    }
+    
+    // 4. Try matching just the room value as-is (handles edge cases)
+    // e.g. if someone stored just "6", try matching against displayName containing "6"
+    for (const [roomID, config] of Object.entries(window.roomConfig)) {
+      const dn = (config.displayName || '').toLowerCase();
+      // Match "6" to "Room 6", "1" to "Room 1", etc.
+      if (dn === `room ${normalised}` || dn === normalised) {
+        return roomID;
+      }
+    }
+    
+    // 5. No match
+    console.warn(`⚠️ Could not resolve room "${room}" to any roomID in config`);
     return null;
   };
 
   /**
-   * Get room mapping (roomNumber and roomClass) from booking
-   * Used for cell styling and identification
+   * Disambiguate multiple roomID candidates using the booking's location info.
+   */
+  function _disambiguateByLocation(candidates, booking) {
+    // Try locationId first (more reliable)
+    if (booking.locationId) {
+      for (const roomID of candidates) {
+        const cfg = window.roomConfig[roomID];
+        // Check if location config has a matching locationId
+        // locationId "2" = henley, "1" = buckhurst_hill (from pricing_config convention)
+        if (cfg && cfg.locationId === booking.locationId) return roomID;
+      }
+    }
+    
+    // Try location name
+    if (booking.location) {
+      const bookingLoc = booking.location.toLowerCase().trim();
+      for (const roomID of candidates) {
+        const cfg = window.roomConfig[roomID];
+        if (!cfg) continue;
+        const roomLoc = (cfg.location || '').toLowerCase().replace(/_/g, ' ');
+        if (roomLoc === bookingLoc || bookingLoc.includes(roomLoc) || roomLoc.includes(bookingLoc)) {
+          return roomID;
+        }
+      }
+    }
+    
+    return null;
+  }
+
+  /**
+   * Find first roomID with a given type.
+   */
+  function _findByType(type) {
+    for (const [roomID, config] of Object.entries(window.roomConfig)) {
+      if (config.type === type && config.enabled) return roomID;
+    }
+    return null;
+  }
+
+  /**
+   * Get room mapping for cell IDs and CSS classes.
+   * 
+   * Returns { roomNumber, roomClass } where:
+   *   roomNumber = the roomID (used in cell IDs like "cell-H6-09:00")
+   *   roomClass  = CSS-safe class (used for colour styling)
+   * 
+   * NO HARDCODED MAPPINGS — derived directly from the roomID.
    */
   window.getRoomMapping = function(booking) {
     const roomKey = window.getRoomKey(booking);
@@ -178,79 +296,202 @@
       return { roomNumber: null, roomClass: '' };
     }
     
-    const roomClass = roomKey.toLowerCase().replace('_', '-');
-    
-    // Room number for cell ID generation
-    let roomNumber = null;
-    if (roomKey === 'Room_1') roomNumber = '1';
-    else if (roomKey === 'Room_2') roomNumber = '2';
-    else if (roomKey === 'Room_4') roomNumber = '4';
-    else if (roomKey === 'Room_5') roomNumber = '5';
-    else if (roomKey === 'Room_6') roomNumber = '6';
-    else if (roomKey === 'Room_7') roomNumber = '7';
-    else if (roomKey === 'Room_8') roomNumber = '8';
-    else if (roomKey === 'Room_9') roomNumber = '9';
-    else if (roomKey === 'Car_Park') roomNumber = 'car-park';
-    else if (roomKey === 'Online') roomNumber = 'online';
-    
-    return { roomNumber, roomClass };
+    return {
+      roomNumber: roomKey,              // "H6" — used for cell IDs
+      roomClass: _cssClass(roomKey)     // "room-h6" — used for CSS
+    };
   };
 
   /**
-   * Get display name for a room from booking
+   * Get the cell ID prefix for a room key.
+   * Used when building grid cells and looking up cells for bookings.
+   * 
+   * Returns the roomKey directly — cell IDs are "cell-{roomKey}-{time}"
    */
-  window.getRoomDisplayName = function(booking) {
-    const roomKey = window.getRoomKey(booking);
+  window.getRoomCellId = function(roomKey) {
+    return roomKey;
+  };
+
+  /**
+   * Get display name for a room from a booking or roomID.
+   * 
+   * Can accept either:
+   *   - A booking object (resolves via getRoomKey)
+   *   - A roomID string (direct lookup)
+   */
+  window.getRoomDisplayName = function(bookingOrKey) {
+    let roomKey;
     
-    if (!roomKey) {
-      return booking?.room || 'Unknown';
+    if (typeof bookingOrKey === 'string') {
+      roomKey = bookingOrKey;
+    } else {
+      roomKey = window.getRoomKey(bookingOrKey);
     }
     
-    // Get from config if available
+    if (!roomKey) {
+      // Return raw room value if available
+      if (bookingOrKey && typeof bookingOrKey === 'object') {
+        return bookingOrKey.room || 'Unknown';
+      }
+      return 'Unknown';
+    }
+    
     if (window.roomConfig[roomKey] && window.roomConfig[roomKey].displayName) {
       return window.roomConfig[roomKey].displayName;
     }
     
-    // Fallback: convert key to display name
-    return roomKey.replace('_', ' ');
+    // Fallback: return the key itself
+    return roomKey;
   };
 
   /**
-   * Get room colour from config
+   * Get room colour from config.
    */
   window.getRoomColor = function(roomKey) {
     if (window.roomConfig[roomKey]) {
       return {
-        color: window.roomConfig[roomKey].color,
-        borderColor: window.roomConfig[roomKey].borderColor
+        color: window.roomConfig[roomKey].color || '#e0e0e0',
+        borderColor: window.roomConfig[roomKey].borderColor || '#ccc'
       };
     }
-    
-    // Fallback
-    if (defaultRoomConfig[roomKey]) {
-      return {
-        color: defaultRoomConfig[roomKey].color,
-        borderColor: defaultRoomConfig[roomKey].borderColor
-      };
-    }
-    
     return { color: '#e0e0e0', borderColor: '#ccc' };
   };
 
- /**
-   * Switch location filter and rebuild enabledRooms
-   * Call this when the location dropdown changes, then rebuild the calendar
+  /**
+   * Get the type of a room ("therapy_room", "car_park", "online").
    */
-  window.switchLocation = function(newLocation) {
-    sessionStorage.setItem('activeLocation', newLocation);
-    window.activeLocation = newLocation;
-    
-    if (window.allEnabledRooms) {
-      window.enabledRooms = window.allEnabledRooms.filter(r => r.location === newLocation);
-      generateRoomStyles();
-      console.log(`🏠 Switched to ${newLocation}: ${window.enabledRooms.length} rooms`);
+  window.getRoomType = function(roomKey) {
+    if (window.roomConfig[roomKey]) {
+      return window.roomConfig[roomKey].type || 'therapy_room';
     }
+    return null;
   };
 
-  console.log('✅ room-config.js loaded - call loadRoomConfig() after Firebase init');
+  /**
+   * Check if a room is a car park (by type, not by name).
+   * Accepts a roomID string.
+   */
+  window.isCarPark = function(roomKey) {
+    return window.getRoomType(roomKey) === 'car_park';
+  };
+
+  /**
+   * Check if a room is an online room (by type, not by name).
+   * Accepts a roomID string.
+   */
+  window.isOnline = function(roomKey) {
+    return window.getRoomType(roomKey) === 'online';
+  };
+
+  /**
+   * Get all enabled rooms for a specific location.
+   * Returns array of {key, displayName, ...} sorted by order.
+   * 
+   * @param {string} locationKey - e.g. "henley", "buckhurst_hill"
+   */
+  window.getRoomsForLocation = function(locationKey) {
+    return window.enabledRooms.filter(r => r.location === locationKey);
+  };
+
+  /**
+   * Get all enabled rooms of a specific type.
+   * Returns array of {key, displayName, ...} sorted by order.
+   * 
+   * @param {string} type - e.g. "therapy_room", "car_park", "online"
+   */
+  window.getRoomsByType = function(type) {
+    return window.enabledRooms.filter(r => r.type === type);
+  };
+
+  /**
+   * Get the locationId for a room (from room config, not hardcoded).
+   * Used for pricing lookups.
+   * 
+   * @param {string} roomKey - the roomID
+   * @returns {string|null} locationId (e.g. "1", "2")
+   */
+  window.getLocationIdForRoom = function(roomKey) {
+    const cfg = window.roomConfig[roomKey];
+    if (!cfg) return null;
+    return cfg.locationId || null;
+  };
+
+  /**
+   * Get the location key (e.g. "henley") for a room.
+   */
+  window.getLocationKeyForRoom = function(roomKey) {
+    const cfg = window.roomConfig[roomKey];
+    if (!cfg) return null;
+    return cfg.location || null;
+  };
+
+  /**
+   * Get the capacity for a room (defaults to 1).
+   * Car parks typically have higher capacity.
+   */
+  window.getRoomCapacity = function(roomKey) {
+    const cfg = window.roomConfig[roomKey];
+    if (!cfg) return 1;
+    return cfg.capacity || 1;
+  };
+
+  /**
+   * Get the legacy SBM henleyRoomId for a room (used in Make.com scenarios).
+   * Returns null if not set.
+   */
+  window.getHenleyRoomId = function(roomKey) {
+    const cfg = window.roomConfig[roomKey];
+    if (!cfg) return null;
+    return cfg.henleyRoomId || null;
+  };
+
+  /**
+   * Get the legacy SBM serviceId for a room.
+   * Returns null if not set.
+   */
+  window.getServiceIdForRoom = function(roomKey) {
+    const cfg = window.roomConfig[roomKey];
+    if (!cfg) return null;
+    return cfg.serviceId || null;
+  };
+
+  /**
+   * Get all unique locations that have enabled rooms.
+   * Returns array of {key, name, rooms} objects.
+   */
+  window.getActiveLocations = function() {
+    const locations = {};
+    
+    window.enabledRooms.forEach(room => {
+      const loc = room.location || 'unknown';
+      if (!locations[loc]) {
+        locations[loc] = { key: loc, name: _locationDisplayName(loc), rooms: [] };
+      }
+      locations[loc].rooms.push(room);
+    });
+    
+    return Object.values(locations);
+  };
+
+  /**
+   * Convert a location key to a display name.
+   */
+  function _locationDisplayName(locationKey) {
+    const names = {
+      'henley': 'Henley',
+      'buckhurst_hill': 'Buckhurst Hill',
+      'online': 'Online'
+    };
+    return names[locationKey] || locationKey.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+  }
+
+  /**
+   * Utility: Get the CSS class for a roomID.
+   * Exposed globally for use by other files.
+   */
+  window.getRoomCssClass = function(roomKey) {
+    return _cssClass(roomKey);
+  };
+
+  console.log('✅ room-config.js v2.0 loaded — call loadRoomConfig() after Firebase init');
 })();
