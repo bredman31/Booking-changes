@@ -60,12 +60,20 @@
       }
       
       // Build enabled rooms array sorted by order
-      window.enabledRooms = Object.entries(window.roomConfig)
+      window.allEnabledRooms = Object.entries(window.roomConfig)
         .filter(([key, room]) => room.enabled)
         .sort((a, b) => (a[1].order || 99) - (b[1].order || 99))
         .map(([key, room]) => ({ key, ...room }));
-      
-      console.log(`🏠 ${window.enabledRooms.length} enabled rooms loaded`);
+
+      // Apply location filter if a counsellor location is set
+      const activeLocation = window.activeLocation || sessionStorage.getItem('activeLocation');
+      if (activeLocation) {
+        window.enabledRooms = window.allEnabledRooms.filter(r => r.location === activeLocation);
+        console.log(`🏠 ${window.enabledRooms.length} rooms for location: ${activeLocation} (${window.allEnabledRooms.length} total)`);
+      } else {
+        window.enabledRooms = window.allEnabledRooms;
+        console.log(`🏠 ${window.enabledRooms.length} enabled rooms loaded (no location filter)`);
+      }
       
       // Generate dynamic CSS for room colours
       generateRoomStyles();
@@ -227,6 +235,21 @@
     }
     
     return { color: '#e0e0e0', borderColor: '#ccc' };
+  };
+
+ /**
+   * Switch location filter and rebuild enabledRooms
+   * Call this when the location dropdown changes, then rebuild the calendar
+   */
+  window.switchLocation = function(newLocation) {
+    sessionStorage.setItem('activeLocation', newLocation);
+    window.activeLocation = newLocation;
+    
+    if (window.allEnabledRooms) {
+      window.enabledRooms = window.allEnabledRooms.filter(r => r.location === newLocation);
+      generateRoomStyles();
+      console.log(`🏠 Switched to ${newLocation}: ${window.enabledRooms.length} rooms`);
+    }
   };
 
   console.log('✅ room-config.js loaded - call loadRoomConfig() after Firebase init');
