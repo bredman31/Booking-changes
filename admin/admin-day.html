@@ -9,6 +9,7 @@
  <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-database-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-auth-compat.js"></script>
+  <script src="room-config.js"></script>
   
   <style>
     * {
@@ -848,17 +849,17 @@
   
   <header class="admin-header">
     <div class="header-left">
-      <a href="admin-index.html" class="back-link">← Admin Portal</a>
-      <h1>📅 Admin Day View</h1>
+      <a href="admin-index.html" class="back-link">â† Admin Portal</a>
+      <h1>ðŸ“… Admin Day View</h1>
     </div>
     <div class="header-right">
       <div class="date-nav">
-        <button onclick="changeDate(-1)">← Prev</button>
+        <button onclick="changeDate(-1)">â† Prev</button>
         <input type="date" id="dateSelector" onchange="dateChanged()">
-        <button onclick="changeDate(1)">Next →</button>
+        <button onclick="changeDate(1)">Next â†’</button>
         <button onclick="goToToday()">Today</button>
       </div>
-      <button class="refresh-btn" onclick="refreshData()">↻ Refresh</button>
+      <button class="refresh-btn" onclick="refreshData()">â†» Refresh</button>
     </div>
   </header>
   
@@ -886,7 +887,7 @@
       <div class="form-content">
         <!-- No selection state -->
         <div class="no-selection" id="noSelection">
-          <div class="no-selection-icon">👆</div>
+          <div class="no-selection-icon">ðŸ‘†</div>
           <p>Click on any booking in the calendar to select it for modification.</p>
         </div>
         
@@ -972,7 +973,7 @@
   <!-- New Booking Modal -->
   <div class="modal-overlay" id="newBookingModal">
     <div class="modal">
-      <h3>➕ New Booking</h3>
+      <h3>âž• New Booking</h3>
       
       <div class="modal-info">
         <div class="info-row">
@@ -1010,13 +1011,13 @@
       
       <div class="modal-price">
         <div class="price-label">Estimated Price</div>
-        <div class="price-amount" id="nbPrice">£0.00</div>
+        <div class="price-amount" id="nbPrice">Â£0.00</div>
         <div class="price-label" id="nbPriceBreakdown">-</div>
       </div>
       
       <div class="modal-actions">
-        <button class="btn-free" id="nbFreeBtn" onclick="createAdminBooking('free')">📋 Book Free</button>
-        <button class="btn-account" id="nbAccountBtn" onclick="createAdminBooking('account')">📝 Book on Account</button>
+        <button class="btn-free" id="nbFreeBtn" onclick="createAdminBooking('free')">ðŸ“‹ Book Free</button>
+        <button class="btn-account" id="nbAccountBtn" onclick="createAdminBooking('account')">ðŸ“ Book on Account</button>
         <button class="btn-cancel-modal" onclick="closeNewBookingModal()">Cancel</button>
       </div>
       
@@ -1045,37 +1046,21 @@
     const FREE_BOOKING_WEBHOOK_URL = 'https://hook.eu2.make.com/eq57vfwrpkw2rtozjeiy71j88e5sw1kr'; // Scenario 05 - free bookings
     const ACCOUNT_BOOKING_WEBHOOK_URL = 'https://hook.eu2.make.com/a6ua2a1yl13y7h7k9aphi9iow53dvwpv'; // Scenario 07B - account/credit bookings
     
-   // Get room ID from Firebase room config — no hardcoded mapping
+   // Get room ID from Firebase room config â€” no hardcoded mapping
     function getRoomId(roomKey) {
-      if (roomConfig[roomKey] && roomConfig[roomKey].henleyRoomId) {
-        return roomConfig[roomKey].henleyRoomId;
+      if (window.roomConfig[roomKey] && window.roomConfig[roomKey].henleyRoomId) {
+        return window.roomConfig[roomKey].henleyRoomId;
       }
       console.warn('No henleyRoomId found for room:', roomKey);
       return null;
     }
-    
-    // Default room config (fallback)
-    const defaultRoomConfig = {
-      'Room_1': { enabled: true, color: '#d4a5a5', borderColor: '#b89090', displayName: 'Room 1', location: 'henley', order: 1 },
-      'Room_2': { enabled: true, color: '#b299d4', borderColor: '#9680c0', displayName: 'Room 2', location: 'henley', order: 2 },
-      'Room_4': { enabled: true, color: '#a5d4a5', borderColor: '#90b890', displayName: 'Room 4', location: 'henley', order: 3 },
-      'Room_5': { enabled: true, color: '#e57373', borderColor: '#d32f2f', displayName: 'Room 5', location: 'henley', order: 4 },
-      'Room_6': { enabled: true, color: '#c8a882', borderColor: '#b5946e', displayName: 'Room 6', location: 'henley', order: 5 },
-      'Room_7': { enabled: true, color: '#e6d45a', borderColor: '#d4c347', displayName: 'Room 7', location: 'henley', order: 6 },
-      'Room_8': { enabled: true, color: '#80cbc4', borderColor: '#4db6ac', displayName: 'Room 8', location: 'henley', order: 7 },
-      'Room_9': { enabled: true, color: '#ce93d8', borderColor: '#ba68c8', displayName: 'Room 9', location: 'henley', order: 8 },
-      'Car_Park': { enabled: true, color: '#bdbdbd', borderColor: '#9e9e9e', displayName: 'Car Park', location: 'henley', order: 9 },
-      'Online': { enabled: true, color: '#7dd87d', borderColor: '#6bc46b', displayName: 'Online', location: 'buckhurst_hill', order: 1 }
-    };
     
     const businessHours = [];
     for (let h = 8; h <= 20; h++) {
       businessHours.push(`${String(h).padStart(2, '0')}:00`);
     }
     
-    // State
-    let roomConfig = {};
-    let enabledRooms = [];
+    // State (roomConfig & enabledRooms provided by room-config.js via window)
     let bookingData = [];
     let selectedBooking = null;
     let currentDate = new Date().toISOString().split('T')[0];
@@ -1098,73 +1083,23 @@
     // ROOM CONFIGURATION
     // ================================
     async function loadRoomConfig() {
-      try {
-        const snapshot = await database.ref('room_config').once('value');
-        const config = snapshot.val();
-        
-        if (config && Object.keys(config).length > 0) {
-          roomConfig = config;
-        } else {
-          roomConfig = defaultRoomConfig;
-        }
-        
-        // Filter enabled rooms and sort by order
-        enabledRooms = Object.entries(roomConfig)
-          .filter(([key, room]) => room.enabled)
-          .sort((a, b) => (a[1].order || 99) - (b[1].order || 99))
-          .map(([key, room]) => ({ key, ...room }));
-        
-        // Generate dynamic CSS
-        generateDynamicStyles();
-        
-        // Generate legend
-        generateLegend();
-        
-        // Populate room dropdown
-        populateRoomDropdown();
-        
-        console.log(`Loaded ${enabledRooms.length} enabled rooms`);
-        
-      } catch (error) {
-        console.error('Error loading room config:', error);
-        roomConfig = defaultRoomConfig;
-        enabledRooms = Object.entries(defaultRoomConfig)
-          .filter(([key, room]) => room.enabled)
-          .sort((a, b) => (a[1].order || 99) - (b[1].order || 99))
-          .map(([key, room]) => ({ key, ...room }));
-        
-        generateDynamicStyles();
-        generateLegend();
-        populateRoomDropdown();
-      }
+      // Delegates to shared room-config.js (loads from Firebase, generates CSS)
+      await window.loadRoomConfig();
+      
+      // Admin-specific setup
+      generateLegend();
+      populateRoomDropdown();
+      
+      console.log(`Admin day view: ${window.enabledRooms.length} enabled rooms`);
     }
     
-    function generateDynamicStyles() {
-      let css = '';
-      
-      enabledRooms.forEach(room => {
-        const className = room.key.toLowerCase().replace('_', '-');
-        
-        // Grid cell styles
-        css += `.grid-cell.booked.${className} { background: ${room.color}; border-left: 4px solid ${room.borderColor}; }\n`;
-        
-        // Car park special styling
-        if (room.key === 'Car_Park') {
-          css += `.grid-cell.booked.${className} { opacity: 0.7; }\n`;
-        }
-        
-        // Legend color
-        css += `.legend-color.${className} { background: ${room.color}; border-color: ${room.borderColor}; }\n`;
-      });
-      
-      document.getElementById('dynamicStyles').textContent = css;
-    }
+    // generateDynamicStyles() removed - handled by room-config.js
     
     function generateLegend() {
       const container = document.getElementById('legendContainer');
       container.innerHTML = '';
       
-      enabledRooms.forEach(room => {
+      window.enabledRooms.forEach(room => {
         const className = room.key.toLowerCase().replace('_', '-');
         const item = document.createElement('div');
         item.className = 'legend-item';
@@ -1180,7 +1115,7 @@
       const select = document.getElementById('newRoom');
       select.innerHTML = '<option value="">No change</option>';
       
-      enabledRooms.forEach(room => {
+      window.enabledRooms.forEach(room => {
         const option = document.createElement('option');
         option.value = room.displayName;
         option.textContent = room.displayName;
@@ -1253,7 +1188,7 @@
       grid.innerHTML = '';
       
       // Set grid columns based on enabled rooms
-      const numRooms = enabledRooms.length;
+      const numRooms = window.enabledRooms.length;
       grid.style.gridTemplateColumns = `70px repeat(${numRooms}, 1fr)`;
       
       // Header row
@@ -1262,7 +1197,7 @@
       timeHeader.textContent = 'Time';
       grid.appendChild(timeHeader);
       
-      enabledRooms.forEach(room => {
+      window.enabledRooms.forEach(room => {
         const header = document.createElement('div');
         header.className = 'grid-header';
         header.textContent = room.displayName;
@@ -1276,7 +1211,7 @@
         timeCell.textContent = time;
         grid.appendChild(timeCell);
         
-        enabledRooms.forEach(room => {
+        window.enabledRooms.forEach(room => {
           const cell = document.createElement('div');
           cell.className = 'grid-cell';
           cell.id = `cell-${room.key}-${time}`;
@@ -1312,7 +1247,7 @@
         const roomKey = getRoomKey(booking);
         if (!roomKey) return;
         
-        const roomCfg = enabledRooms.find(r => r.key === roomKey);
+        const roomCfg = window.enabledRooms.find(r => r.key === roomKey);
         if (!roomCfg) return; // Room not enabled
         
         const startHour = parseInt(booking.start.split(':')[0]);
@@ -1343,7 +1278,7 @@
       });
       
       // Add click handlers on empty cells for new bookings
-      enabledRooms.forEach(room => {
+      window.enabledRooms.forEach(room => {
         businessHours.forEach(time => {
           const cellId = `cell-${room.key}-${time}`;
           if (!bookedCells.has(cellId)) {
@@ -1356,21 +1291,7 @@
       });
     }
     
-    function getRoomKey(booking) {
-      // Map booking room value to config key
-      if (booking.room === 'Room_1' || booking.room === '1') return 'Room_1';
-      if (booking.room === 'Room_2' || booking.room === '2') return 'Room_2';
-      if (booking.room === 'Room_4' || booking.room === '4') return 'Room_4';
-      if (booking.room === 'Room_5' || booking.room === '5') return 'Room_5';
-      if (booking.room === 'Room_6' || booking.room === '6') return 'Room_6';
-      if (booking.room === 'Room_7' || booking.room === '7') return 'Room_7';
-      if (booking.room === 'Room_8' || booking.room === '8') return 'Room_8';
-      if (booking.room === 'Room_9' || booking.room === '9') return 'Room_9';
-      if (booking.room === 'Car_Park' || booking.room === 'Car Park') return 'Car_Park';
-      if (booking.location && booking.location.toLowerCase().includes('online')) return 'Online';
-      if (booking.room === 'Online') return 'Online';
-      return null;
-    }
+    // getRoomKey() removed - using window.getRoomKey() from room-config.js
     
     // ================================
     // BOOKING SELECTION
@@ -1406,7 +1327,7 @@
       document.getElementById('displayRoom').textContent = roomName;
       document.getElementById('displayDate').textContent = booking.date;
       document.getElementById('displayTime').textContent = `${booking.start} - ${booking.end}`;
-      document.getElementById('displayPayment').textContent = booking.isPaid ? '💳 Paid' : '📝 Unpaid';
+      document.getElementById('displayPayment').textContent = booking.isPaid ? 'ðŸ’³ Paid' : 'ðŸ“ Unpaid';
       
       // Clear form fields
       document.getElementById('newRoom').value = '';
@@ -1614,7 +1535,7 @@
         let requestedRoom = originalRoom;
         if (newRoom) {
           // Convert display name to key
-          const roomEntry = enabledRooms.find(r => r.displayName === newRoom);
+          const roomEntry = window.enabledRooms.find(r => r.displayName === newRoom);
           if (roomEntry) {
             requestedRoom = roomEntry.key;
           }
@@ -1633,7 +1554,7 @@
           original_datetime: `${selectedBooking.date}T${selectedBooking.start}:00`,
           original_week: getWeekNumber(new Date(selectedBooking.date)),
           requested_room: requestedRoom,
-          grequested_room_id: getRoomId(requestedRoomKey),
+          requested_room_id: getRoomId(requestedRoom),
           requested_location_id: getLocationId(requestedRoom),
           requested_datetime: `${newDate || selectedBooking.date}T${newTime || selectedBooking.start}:00`,
           requested_date: newDate || selectedBooking.date,
@@ -1785,7 +1706,7 @@
         newBookingSlot.roomKey
       );
       
-      document.getElementById('nbPrice').textContent = `£${(priceInfo.amount / 100).toFixed(2)}`;
+      document.getElementById('nbPrice').textContent = `Â£${(priceInfo.amount / 100).toFixed(2)}`;
       document.getElementById('nbPriceBreakdown').textContent = priceInfo.breakdown;
       
       // Store on slot for use in booking
