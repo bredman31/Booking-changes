@@ -1007,15 +1007,17 @@ if (isBookingToday(changeData.originalDate)) {
       
       // Normal booking - location-based restrictions
       const currentLocationId = getLocationIdFromRoom(currentRoom);
-      const availableRooms = getRoomsForLocation(currentLocationId);
+      const locationKey = currentLocationId === '2' ? 'henley' : 'buckhurst_hill';
+      const locationRooms = getRoomsForLocation(locationKey);
       
       newRoomInput.innerHTML = '<option value="">No change</option>';
       
-      availableRooms.forEach(roomName => {
-        if (roomName !== currentRoom) {
+      locationRooms.forEach(room => {
+        const displayName = room.displayName || room;
+        if (displayName !== currentRoom) {
           const option = document.createElement('option');
-          option.value = roomName;
-          option.textContent = roomName;
+          option.value = displayName;
+          option.textContent = displayName;
           newRoomInput.appendChild(option);
         }
       });
