@@ -10,6 +10,7 @@
   <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-database-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-auth-compat.js"></script>
+  <script src="room-config.js"></script>
   
   <style>
     * {
@@ -370,30 +371,30 @@
   <!-- Header -->
   <header class="admin-header">
     <div class="header-left">
-      <a href="admin-index.html" class="back-link">← Admin Portal</a>
-      <h1>⚠️ Clash Detection</h1>
+      <a href="admin-index.html" class="back-link">â† Admin Portal</a>
+      <h1>âš ï¸ Clash Detection</h1>
     </div>
   </header>
   
   <!-- Controls -->
   <div class="controls-bar">
     <div class="month-nav">
-      <button onclick="changeMonth(-1)">← Prev</button>
+      <button onclick="changeMonth(-1)">â† Prev</button>
       <span class="current-month" id="currentMonth">December 2025</span>
-      <button onclick="changeMonth(1)">Next →</button>
+      <button onclick="changeMonth(1)">Next â†’</button>
     </div>
-    <button class="refresh-btn" onclick="refreshData()">↻ Refresh</button>
+    <button class="refresh-btn" onclick="refreshData()">â†» Refresh</button>
   </div>
   
   <!-- Summary -->
   <div class="summary-bar">
     <div class="summary-stat room-clash">
-      <span class="icon">🚪</span>
+      <span class="icon">ðŸšª</span>
       <span class="count" id="roomClashCount">0</span>
       <span class="label">Room Double-Bookings</span>
     </div>
     <div class="summary-stat counsellor-clash">
-      <span class="icon">👤</span>
+      <span class="icon">ðŸ‘¤</span>
       <span class="count" id="counsellorClashCount">0</span>
       <span class="label">Counsellor Conflicts</span>
     </div>
@@ -402,7 +403,7 @@
   <!-- Main Content -->
   <main class="main-content" id="mainContent">
     <div class="loading">
-      <div class="loading-spinner">⏳</div>
+      <div class="loading-spinner">â³</div>
       <p>Loading bookings...</p>
     </div>
   </main>
@@ -427,8 +428,7 @@
     let currentMonth = new Date();
     currentMonth.setDate(1); // First of current month
     
-    // Room configuration for colours
-    let roomConfig = {};
+    // Room config provided by room-config.js via window.roomConfig
     
     // Initialize
     document.addEventListener('DOMContentLoaded', () => {
@@ -437,71 +437,29 @@
       });
     });
     
-    // Load room config from Firebase
+    // Load room config via shared room-config.js
     async function loadRoomConfig() {
-      try {
-        const snapshot = await database.ref('room_config').once('value');
-        roomConfig = snapshot.val() || {};
-      } catch (e) {
-        console.error('Error loading room config:', e);
-      }
+      await window.loadRoomConfig();
     }
     
-    // Get room colour
+    // Get room colour - delegates to room-config.js
     function getRoomColor(roomKey) {
-      const room = roomConfig[roomKey];
-      if (room) {
-        return room.borderColor || room.color || '#ccc';
-      }
-      
-      // Fallback colours
-      const fallback = {
-        'Room_1': '#b89090',
-        'Room_2': '#9680c0',
-        'Room_4': '#90b890',
-        'Room_5': '#d32f2f',
-        'Room_6': '#b5946e',
-        'Room_7': '#d4c347',
-        'Room_8': '#6b8e8e',
-        'Room_9': '#7b68a0',
-        'Car_Park': '#888',
-        'Online': '#6bc46b'
-      };
-      
-      return fallback[roomKey] || '#ccc';
+      const colors = window.getRoomColor(roomKey);
+      return colors.borderColor || colors.color || '#ccc';
     }
     
-    // Normalize room key
+    // getRoomKey - delegates to room-config.js, with fallback for unknown rooms
     function getRoomKey(booking) {
-      if (booking.room === 'Room_1' || booking.room === '1') return 'Room_1';
-      if (booking.room === 'Room_2' || booking.room === '2') return 'Room_2';
-      if (booking.room === 'Room_4' || booking.room === '4') return 'Room_4';
-      if (booking.room === 'Room_5' || booking.room === '5') return 'Room_5';
-      if (booking.room === 'Room_6' || booking.room === '6') return 'Room_6';
-      if (booking.room === 'Room_7' || booking.room === '7') return 'Room_7';
-      if (booking.room === 'Room_8' || booking.room === '8') return 'Room_8';
-      if (booking.room === 'Room_9' || booking.room === '9') return 'Room_9';
-      if (booking.room === 'Car_Park' || booking.room === 'Car Park') return 'Car_Park';
-      if (booking.location && booking.location.toLowerCase().includes('online')) return 'Online';
-      if (booking.room === 'Online') return 'Online';
-      return booking.room || 'Unknown';
+      const key = window.getRoomKey(booking);
+      return key || booking.room || 'Unknown';
     }
     
-    // Get display name for room
+    // Get display name - delegates to room-config.js
     function getRoomDisplayName(roomKey) {
-      const names = {
-        'Room_1': 'Room 1',
-        'Room_2': 'Room 2',
-        'Room_4': 'Room 4',
-        'Room_5': 'Room 5',
-        'Room_6': 'Room 6',
-        'Room_7': 'Room 7',
-        'Room_8': 'Room 8',
-        'Room_9': 'Room 9',
-        'Car_Park': 'Car Park',
-        'Online': 'Online'
-      };
-      return names[roomKey] || roomKey;
+      if (window.roomConfig[roomKey] && window.roomConfig[roomKey].displayName) {
+        return window.roomConfig[roomKey].displayName;
+      }
+      return roomKey ? roomKey.replace('_', ' ') : roomKey;
     }
     
     // Load booking data
@@ -542,7 +500,7 @@
     function refreshData() {
       document.getElementById('mainContent').innerHTML = `
         <div class="loading">
-          <div class="loading-spinner">⏳</div>
+          <div class="loading-spinner">â³</div>
           <p>Loading bookings...</p>
         </div>
       `;
@@ -579,7 +537,7 @@
       if (roomClashes.length === 0 && counsellorClashes.length === 0) {
         container.innerHTML = `
           <div class="no-clashes">
-            <div class="no-clashes-icon">✅</div>
+            <div class="no-clashes-icon">âœ…</div>
             <h2>No Clashes Found</h2>
             <p>There are no booking conflicts for ${monthNames[month]} ${year}</p>
           </div>
@@ -594,7 +552,7 @@
         html += `
           <div class="clash-section">
             <div class="section-header room-clash">
-              <span>🚪 Room Double-Bookings</span>
+              <span>ðŸšª Room Double-Bookings</span>
               <span class="badge">${roomClashes.length}</span>
             </div>
             <div class="clash-list">
@@ -612,7 +570,7 @@
         html += `
           <div class="clash-section">
             <div class="section-header counsellor-clash">
-              <span>👤 Counsellor Conflicts</span>
+              <span>ðŸ‘¤ Counsellor Conflicts</span>
               <span class="badge">${counsellorClashes.length}</span>
             </div>
             <div class="clash-list">
