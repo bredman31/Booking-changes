@@ -531,10 +531,12 @@
   // ================================
   async function doSignOut() {
     try {
-      // Clear old session storage items from token era
+     // Clear old session storage items from token era
       sessionStorage.removeItem('accessToken');
       sessionStorage.removeItem('counsellorName');
       sessionStorage.removeItem('henleyClientId');
+      sessionStorage.removeItem('counsellorLocations');
+      sessionStorage.removeItem('activeLocation');
       await firebase.auth().signOut();
     } catch (error) {
       console.error('Sign out error:', error);
@@ -568,7 +570,8 @@
       clientId: clientId,
       name: client.name || '',
       henleyClientId: client.henleyClientId || null,
-      active: client.active !== false // default to active if field missing
+      active: client.active !== false, // default to active if field missing
+      locations: client.locations || ['henley'] // default to Henley if not set
     };
   }
 
@@ -613,6 +616,26 @@
       sessionStorage.setItem('henleyClientId', counsellorData.henleyClientId);
     }
 
+    // Store counsellor locations for room filtering
+    const locations = counsellorData.locations || ['henley'];
+    sessionStorage.setItem('counsellorLocations', JSON.stringify(locations));
+    window.counsellorLocations = locations;
+
+    // If single location, set it as active immediately
+    // If multi-location, check for a previously chosen one, otherwise default to first
+    if (locations.length === 1) {
+      sessionStorage.setItem('activeLocation', locations[0]);
+      window.activeLocation = locations[0];
+    } else {
+      const saved = sessionStorage.getItem('activeLocation');
+      if (saved && locations.includes(saved)) {
+        window.activeLocation = saved;
+      } else {
+        sessionStorage.setItem('activeLocation', locations[0]);
+        window.activeLocation = locations[0];
+      }
+    }
+
     // Update header welcome text
     const headerName = document.getElementById('headerCounsellorName');
     if (headerName) {
@@ -633,13 +656,14 @@
 
 // Keep styles — change password modal still needs them
 
-    // Dispatch event so the page can initialise the calendar
+// Dispatch event so the page can initialise the calendar
     document.dispatchEvent(new CustomEvent('counsellorAuthReady', {
       detail: {
         uid: uid,
         clientId: counsellorData.clientId,
         counsellorName: counsellorData.name,
-        henleyClientId: counsellorData.henleyClientId
+        henleyClientId: counsellorData.henleyClientId,
+        locations: counsellorData.locations || ['henley']
       }
     }));
   }
